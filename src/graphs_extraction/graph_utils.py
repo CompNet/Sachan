@@ -18,7 +18,7 @@ def relabeled_with_id(G: nx.Graph, attribute: str) -> nx.Graph:
 
 
 def graph_edges_attributes(G: nx.Graph) -> Set[str]:
-    """Compute the set of all attributes of a graph"""
+    """Compute the set of all edges attributes of a graph"""
     return set(flatten(list(data.keys()) for *_, data in G.edges.data()))  # type: ignore
 
 
@@ -47,6 +47,8 @@ def cumulative_graph(graphs: List[nx.Graph]) -> List[nx.Graph]:
                 H_attr = H.edges.get([n1, n2], default={attr: 0})[attr]
                 attrs[attr] = G_attr + H_attr
             K.add_edge(n1, n2, **attrs)
+        # We also re-add the graph and nodes attributes from G
+        K.graph = H.graph
         # finally, add the newly created graph to the sequence of
         # cumulative graphs
         cumulative_graph.append(K)

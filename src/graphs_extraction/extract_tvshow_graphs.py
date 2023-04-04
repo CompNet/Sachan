@@ -38,11 +38,11 @@ if __name__ == "__main__":
 
     graphs = load_got_tvshow_graphs(args.jeffrey_lancaster_repo_path, args.granularity)
 
-    if args.relabel:
-        graphs = [relabeled_with_id(G, "name") for G in graphs]
-
     if args.cumulative:
         graphs = cumulative_graph(graphs)
+
+    if args.relabel:
+        graphs = [relabeled_with_id(G, "name") for G in graphs]
 
     output_directory = args.output_directory
     os.makedirs(output_directory, exist_ok=True)
