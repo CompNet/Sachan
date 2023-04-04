@@ -276,14 +276,22 @@ def load_got_tvshow_graphs(
 
     for episode in got_data["episodes"]:
 
+        season_i = episode["seasonNum"]
+        episode_i = episode["episodeNum"]
+
         G = None
         if granularity == "episode":
             G = nx.Graph()
+            G.graph["season"] = season_i
+            G.graph["episode"] = episode_i
 
-        for scene in episode["scenes"]:
+        for scene_i, scene in enumerate(episode["scenes"]):
 
             if granularity == "scene":
                 G = nx.Graph()
+                G.graph["season"] = season_i
+                G.graph["episode"] = episode_i
+                G.graph["scene"] = scene_i
             assert not G is None
 
             for character in scene["characters"]:
