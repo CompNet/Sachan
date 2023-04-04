@@ -3,6 +3,7 @@ import os
 import networkx as nx
 from got_extraction import load_got_tvshow_graphs
 from graph_utils import cumulative_graph, relabeled_with_id
+from tqdm import tqdm
 
 
 if __name__ == "__main__":
@@ -37,15 +38,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     graphs = load_got_tvshow_graphs(args.jeffrey_lancaster_repo_path, args.granularity)
+    graphs_len = len(graphs)
 
     if args.cumulative:
         graphs = cumulative_graph(graphs)
 
-    if args.relabel:
-        graphs = [relabeled_with_id(G, "name") for G in graphs]
-
     output_directory = args.output_directory
     os.makedirs(output_directory, exist_ok=True)
-    for i, G in enumerate(graphs):
+    for i, G in tqdm(enumerate(graphs), total=graphs_len):
+        if args.relabel:
+            G = relabeled_with_id(G, "name")
         output_file = os.path.join(output_directory, f"{i}.graphml")
         nx.write_graphml(G, output_file)

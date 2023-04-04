@@ -28,7 +28,7 @@ if __name__ == "__main__":
     for book_path in args.csv_paths:
         graphs += load_got_book_graphs(book_path)
     if args.cumulative:
-        graphs = cumulative_graph(graphs)
+        graphs = list(cumulative_graph(graphs))
 
     output_directory = args.output_directory
     os.makedirs(output_directory, exist_ok=True)
