@@ -46,6 +46,7 @@ Aemon Targaryen;;;
 Aemon Targaryen (son of Viserys II);House Targaryen, Kingsguard;Crownlander;Valyrian
 Aemon Targaryen (son of Maekar I);House Targaryen, Citadel, Night's Watch;Crownlander;Valyrian
 Aemond Targaryen;House Targaryen, Greens;Crownlander;Valyrian
+Aenar Targaryen;House Targaryen;Valyrian;Valyrian
 Aenys Blackfyre;House Blackfyre;Crownlander;Valyrian
 Aenys Frey;House Frey;Rivermen;
 Aenys I Targaryen;;Crownlander;Valyrian
@@ -61,7 +62,7 @@ Aethan;Night's Watch;Westerosi;
 Aethan Velaryon;House Velaryon;Crownlander;Valyrian
 Aethelmure;Citadel;;
 Aggar;House Greyjoy;Ironborn;
-Aggo;Drogo's khalasar, House Targaryen, Queensguard;Dothraki;Dothraki
+Aggo;Drogo's Khalasar, House Targaryen, Queensguard;Dothraki;Dothraki
 Aglantine;Faith of the Seven;;
 Agnes Blackwood;House Blackwood;Rivermen;
 Agramore Cobb;House Cobb, Kingsguard;Reach;
@@ -250,7 +251,7 @@ Arryk;;;
 Arryk Cargyll;House Cargyll, Kingsguard, Greens;Crownlander;
 Lord Arryn (father of Jeyne);House Arryn;Valemen;
 Arsa Stark;House Stark;Northmen;
-Arson;;Free Folk;
+Arson Iceaxe;;Free Folk;
 Arstan Selmy;House Selmy;Marcher;
 Arthor Celtigar;House Celtigar, Blacks;Crownlander;Valyrian
 Arthor Karstark;House Karstark;Northmen;
@@ -404,7 +405,7 @@ Bennis of the Brown Shield;House Osgrey;;
 Bent-backed man;House Roote;Rivermen;
 Benton Glover;House Glover, Night's Watch;Northmen;
 Beony Beesbury;House Beesbury, House Frey;Reach;
-Beqqo;;Braavosi;
+Blind Beqqo;;Braavosi;
 Beren Tallhart;House Tallhart;Northmen;
 Berena Hornwood;House Hornwood, House Tallhart;Northmen;
 Berena Stark;House Stark;Northmen;
@@ -509,7 +510,7 @@ Brella;House Baratheon, House Lannister;;
 Brendel Byrne;Golden Company;;
 Brenett;Citadel, House Frey;;
 Briar;;Free Folk;
-Brienne Tarth;House Tarth, House Baratheon, Storm's End, Rainbow Guard, House Stark, House Tully, Brotherhood Without Banners;Stormlander;
+Brienne of Tarth;House Tarth, House Baratheon, Storm's End, Rainbow Guard, House Stark, House Tully, Brotherhood Without Banners;Stormlander;
 Briony;;Westermen;
 Brogg;Mance Rayder;Free Folk;
 Bronn;House Lannister, City Watch of King's Landing, House Stokeworth;;
@@ -608,6 +609,7 @@ Cersei Frey;House Frey;Rivermen;
 Cersei Lannister;House Lannister, House Baratheon;Westermen;
 Ceryse Hightower;House Hightower, House Targaryen;Reach;
 Cetheres;Citadel;;
+Cetherys;Unsullied, House Targaryen;;
 Chai Duq;;YiTish;
 Chain;Golden Company;Free Cities;
 Lord Chambers;House Chambers, Blacks;Rivermen;
@@ -653,7 +655,7 @@ Clifford Swann;House Swann;Marcher;
 Clubfoot Karl;Night's Watch;Westerosi;
 Clydas;Night's Watch;;
 Coals;Last Greenseer;;Children of the forest
-Cohollo;Drogo's khalasar;Dothraki;
+Cohollo;Drogo's Khalasar;Dothraki;
 Coldhands;Night's Watch, Three-eyed crow;;
 Colemon;Citadel, House Arryn;Westerosi;
 Colen of Greenpools;House Baratheon;;
@@ -680,7 +682,7 @@ Corwyn Velaryon;House Velaryon;Crownlander;Valyrian
 Coryanne Martell;House Martell;Dornish;
 Coryanne Wylde;House Wylde, House Targaryen, Faith of the Seven;Stormlander;
 Cosgrove;House Butterwell;Rivermen;
-Cossomo;;Braavosi;
+Cossomo the Conjurer;;Braavosi;
 Lord Costayne (Daeron II);House Costayne;Reach;
 Lord Costayne (Aerys I);House Costayne;Reach;
 Cotter Pyke;Night's Watch;Ironborn;
@@ -746,7 +748,7 @@ Daeron Vaith;House Vaith;Dornish;
 Daeron Velaryon;House Velaryon;Crownlander;Valyrian
 Daeryssa;;;
 Dafyn Vance;House Vance;Rivermen;
-Dagmer;House Greyjoy;Ironborn;
+Dagmer Cleftjaw;House Greyjoy;Ironborn;
 Dagon Codd;House Codd;Ironborn;
 Dagon Ironmaker;House Ironmaker;Ironborn;
 Dagon Greyjoy;House Greyjoy;Ironborn;
@@ -755,7 +757,7 @@ Dagos Manwoody;House Manwoody;Dornish;
 Dake;House Osgrey;Reach;
 Dake (guard);House Lannister;;
 Dalbridge;Night's Watch, House Targaryen;;
-Dale;;;
+Droopeye Dale;;;
 Dale Drumm;House Drumm;Ironborn;
 Dale Seaworth;House Seaworth;;
 Dalla;Mance Rayder;Free Folk;
@@ -894,7 +896,7 @@ Doran Martell;House Martell;Dornish;
 Dorcas;House Lannister;;
 Dorden the Dour;House Baratheon, Queen's Men;;
 Dorea Sand;House Martell;Dornish;
-Doreah;Drogo's khalasar, House Targaryen;Lyseni;
+Doreah;Drogo's Khalasar, House Targaryen;Lyseni;
 Dorian Hightower;House Hightower;Reach;First Men
 Dormund;Mance Rayder;Free Folk;
 Dorna Sarwyck;House Sarwyck;Westermen;
@@ -910,7 +912,7 @@ Draqaz;;Ghiscari;
 Drazenko Rogare;House Rogare, House Martell;Lyseni;
 Drennan;House Greyjoy;Ironborn;
 Drinkwater twins;House Drinkwater, House Yronwood;Dornish;
-Drogo;Drogo's khalasar;Dothraki;Dothraki
+Drogo;Drogo's Khalasar;Dothraki;Dothraki
 Drox the Corpse-Maker;;Andal;
 Drunken Daughter;;Braavosi;
 Druselka;Rhoynar;Rhoynar;Rhoynar
@@ -927,7 +929,7 @@ Dunstan Drumm;House Drumm;Ironborn;
 Dunstan Pryor;House Pryor;Valemen;
 Duram Bar Emmon;House Bar Emmon;Crownlander;
 Duran;Unsullied;;
-Durran;;First Men;
+Durran Godsgrief;;First Men;
 Durran II Durrandon;;First Men;
 Durran Durrandon (Bronze-Axe);;First Men;
 Durran Durrandon (the Dour);;First Men;
@@ -1072,7 +1074,7 @@ Ermesande Hayford;House Hayford, House Lannister;Crownlander;
 Ernest Dabell;;Westerosi;
 Eroeh;;Lhazarene;
 Erreck;Citadel;;
-Erreg;;Andal;Andal
+Erreg the Kinslayer;;Andal;Andal
 Erren Florent;House Florent;Reach;
 Errok;Mance Rayder;Free Folk;
 Errold Stark;House Stark;Northmen;
@@ -1337,7 +1339,7 @@ Greydon Gardener;;;
 Greydon Goodbrother;House Goodbrother;Ironborn;
 Griffin King;;First Men;
 Griffith Goode;House Goode, Kingsguard;Westerosi;
-Grigg;Mance Rayder;Free Folk;
+Grigg the Goat;Mance Rayder;Free Folk;
 Grimtongue;House Greyjoy;Ironborn;
 Grisel;House Baelish;Valemen;
 Grisella;;Free Folk;
@@ -1391,19 +1393,19 @@ Gyles Rosby;House Rosby;Crownlander;
 Gyles Yronwood;House Yronwood, Blacks;Dornish;
 Gylo Rhegan;Long Lances;;
 Gyloro Dothare;;Braavosi;
-Gynir;House Greyjoy;Ironborn;
+Gynir Rednose;House Greyjoy;Ironborn;
 Gysella Goodbrother;House Goodbrother;Ironborn;
 Haegon Blackfyre;House Blackfyre;Crownlander;Valyrian
 Haereg;Citadel;;
-Hagen;;Ironborn;
+Hagen the Horn;;Ironborn;
 Hagen's daughter;House Greyjoy;Ironborn;
-Haggo;Drogo's khalasar;Dothraki;
+Haggo;Drogo's Khalasar;Dothraki;
 Haggon;;Free Folk;
 Hagon Hoare;;;
 Hake;Night's Watch, Others;;
 Hake (archmaester);Citadel;;
 Hairy Hal;Night's Watch;Westerosi;
-Hal;;;
+Hal the Hog; House Baratheon;Crownlands;
 Halder;Night's Watch;;
 Haldon;House Targaryen;;
 Hali;;Free Folk;
@@ -1543,7 +1545,7 @@ Hilmar Drumm;House Drumm;Ironborn;
 Hizdahr zo Loraq;;Ghiscari;
 Lord Commander Hoare;House Hoare, Night's Watch;Ironborn;
 Hoarfrost Umber;House Umber;Northmen;
-Hobb;Night's Watch;;
+Hobb Three-Finger;Night's Watch;;
 Hobb the Hewer;;Crownlander;
 Hobber Redwyne;House Redwyne;Reach;
 Hobert Hightower;House Hightower, Greens, Caltrops;Reach;
@@ -1585,7 +1587,7 @@ Hubard Rambton;House Rambton, House Baratheon;Crownlander;
 Hubb;;;
 Hubert;Citadel;;
 Hubert Arryn;House Arryn;Valemen;
-Hugh;House Arryn;Valemen;
+Hugh of the Vale;House Arryn;Valemen;
 Hugh (ranger);;;
 Hugh Arryn;;Andal;
 Hugh Beesbury;House Beesbury;Reach;
@@ -1630,7 +1632,7 @@ Ilyn Payne;House Payne, House Lannister, House Baratheon;Westermen;
 Imry Florent;House Florent;Reach;
 Iris Dannett;;;
 Ironbelly;;Crownlander;
-Irri;Drogo's khalasar, House Targaryen;Dothraki;
+Irri;Drogo's Khalasar, House Targaryen;Dothraki;
 Isembard Arryn;House Arryn;Valemen;
 Ithoke;House of Loraq;Ghiscari;
 Izembaro;The Gate;Braavosi;
@@ -1730,9 +1732,9 @@ Jeyne Westerling (wife of Maegor I);House Westerling, House Tarbeck, House Targa
 Jeyne Westerling;House Westerling, House Stark;Westermen;
 Jez;;;
 Jezhene;;Ghiscari;
-Jhaqo;Drogo's khalasar, Jhaqo's khalasar;Dothraki;Dothraki
-Jhiqui;Drogo's khalasar, House Targaryen;Dothraki;
-Jhogo;Drogo's khalasar, House Targaryen, Queensguard;Dothraki;
+Jhaqo;Drogo's Khalasar, Jhaqo's Khalasar;Dothraki;Dothraki
+Jhiqui;Drogo's Khalasar, House Targaryen;Dothraki;
+Jhogo;Drogo's Khalasar, House Targaryen, Queensguard;Dothraki;
 Jirelle Mooton;House Mooton;Rivermen;
 Joanna Lannister;House Lannister;Westermen;
 Joanna Swyft;House Swyft;Westermen;
@@ -1925,7 +1927,7 @@ Lanna (Peach);Peach;Rivermen;
 Lanna Lannister;House Lannister, House Jast;Westermen;
 Larence Snow;House Hornwood, House Glover;Northmen;
 Larissa Velaryon;House Velaryon, House Tarth;Crownlander;Valyrian
-Lark;Night's Watch, Others;Sistermen;
+Lark the Sisterman;Night's Watch, Others;Sistermen;
 Larra Blackmont;House Blackmont;Dornish;
 Larra Rogare;House Rogare, House Targaryen;Lyseni;Valyrian
 Larraq;;Ghiscari;
@@ -2000,6 +2002,7 @@ Loras Tyrell;House Tyrell, Rainbow Guard, Kingsguard;Reach;
 Lorcas;Citadel;Reach;
 Lorcas the Learned;Poor Fellows;Westerosi;
 Lord of Bones;Mance Rayder;Free Folk;
+Lord Penrose;House Penrose;Stormlands;
 Lord Pigface;;;
 Lordling;Faceless Men;Braavosi;
 Loren I Lannister;;;
@@ -2147,7 +2150,7 @@ Maegor Towers;House Towers;Rivermen;
 Maekar I Targaryen;;;
 Maelor Targaryen;House Targaryen, Greens;Crownlander;Valyrian
 Maelys Blackfyre;House Blackfyre, Golden Company, Band of Nine;Free Cities;Valyrian
-Maerie;;;
+Goodwife Maerie;;;
 Maerie the Whore;;;
 Maezon zo Rhaezn;Wise Masters, House of Rhaezn;Ghiscari;
 Mag Mar Tun Doh Weg;;;Giant
@@ -2224,6 +2227,7 @@ Marq Ambrose;House Ambrose, Greens, Caltrops;Reach;
 Marq Farman;House Farman;Westermen;
 Marq Grafton;House Grafton;Valemen;
 Marq Piper;House Piper;Rivermen;
+Marq Mandrake;Golden Company;Westerosi;
 Marq Merryweather;House Merryweather;Reach;
 Marq Mudd;House Mudd;;
 Marq Rankenfell;House Rankenfell, Night's Watch;Westerosi;
@@ -2273,7 +2277,7 @@ Maynard Holt;House Holt, Night's Watch;;
 Maynard Plumm;House Plumm;Westermen;
 Mazdhan zo Loraq;House of Loraq;Ghiscari;
 Mazor Alexi;Kingdom of Sarnor;Sarnori;Tall Men
-Mebble;;;
+Mebble Pinkeye;;;
 Medgar Tully;House Tully;Rivermen;
 Medger Cerwyn;House Cerwyn;Northmen;
 Medrick;Citadel, House Hornwood;;
@@ -2676,7 +2680,7 @@ Pol;Citadel;;
 Pol Qo;;YiTish;
 Pollitor;Alchemists' Guild;Crownlander;
 Polliver;House Clegane;;
-Pono;Drogo's khalasar;Dothraki;Dothraki
+Pono;Drogo's Khalasar;Dothraki;Dothraki
 Porridge;House Baratheon;;
 Porther;House Stark;Northmen;
 Portifer Woodwright;House Woodwright;Reach;
@@ -2725,9 +2729,9 @@ Qhorwyn Hoare;;;
 Qoren Martell;House Martell;Dornish;
 Lord Commander Qorgyle;House Qorgyle, Night's Watch;Dornish;
 Qos;;Braavosi, Myrish;
-Qotho;Drogo's khalasar;Dothraki;
-Quaithe;;Asshai'i;
-Quaro;Drogo's khalasar;Dothraki;
+Qotho;Drogo's Khalasar;Dothraki;
+Quaithe of the Shadow;;Asshai'i;
+Quaro;Drogo's Khalasar;Dothraki;
 Queen o' whores;House Frey;Rivermen;
 Queen Whore;;Astapori;
 Quellon Botley;House Botley;Ironborn;
@@ -2764,7 +2768,7 @@ Rafford;House Clegane, House Swyft;Westermen;
 Ragnor Pyke;House Greyjoy;Ironborn;
 Ragwyle;Mance Rayder;Free Folk;
 Rainbow Knight;;Westerosi;
-Rakharo;Drogo's khalasar, House Targaryen, Queensguard;Dothraki;Dothraki
+Rakharo;Drogo's Khalasar, House Targaryen, Queensguard;Dothraki;Dothraki
 Ralf the Limper;;Ironborn;
 Ralf of Lordsport;;Ironborn;
 Ralf the Shepherd;;Ironborn;
@@ -2830,7 +2834,7 @@ Rhae Targaryen;House Targaryen;Crownlander;Valyrian
 Rhaegar Frey;House Frey;Rivermen;
 Rhaegar Targaryen;House Targaryen;Crownlander;Valyrian
 Rhaegel Targaryen;House Targaryen;Crownlander;Valyrian
-Rhaego;House Targaryen;;
+Rhaego Targaryen;House Targaryen;;
 Rhaella Targaryen;House Targaryen;Crownlander;Valyrian
 Rhaella Targaryen (daughter of Aegon);House Targaryen, Faith of the Seven;Crownlander;Valyrian
 Rhaelle Targaryen;House Targaryen, House Baratheon;Crownlander;Valyrian
@@ -2894,6 +2898,7 @@ Robert Redwyne;House Redwyne, City Watch of King's Landing;Reach;
 Robert Reyne;House Reyne;Westermen;
 Robert Rowan;House Rowan;Reach;
 Robert Stone;;Valemen;
+Robert Strong;Kingsguard;;
 Robert Tyrell;House Tyrell, House Gardener;Reach;
 Robert Vance;House Vance;Rivermen;
 Robeson;Faith of the Seven, House Hightower;Reach;
@@ -2970,7 +2975,7 @@ Rolley;Night's Watch;Sistermen;
 Rollo;Faith of the Seven;Westerosi;
 Rolly Duckfield;House Caswell, Golden Company, House Targaryen, Kingsguard;Reach;
 Rolph Spicer;House Spicer, House Westerling;Westermen;
-Rommo;Drogo's khalasar, House Targaryen;Dothraki;Dothraki
+Rommo;Drogo's Khalasar, House Targaryen;Dothraki;Dothraki
 Romny Weaver;House Weaver;Ironborn;
 Ronald Connington;House Connington;Stormlander;
 Ronald Storm;House Connington;Stormlander;
@@ -3130,7 +3135,7 @@ Shae;;;
 Shaena Targaryen;House Targaryen;Valyrian;Valyrian
 Shaera Targaryen;House Targaryen;Crownlander;Valyrian
 Shagga;Stone Crows;Mountain clans;
-Shagwell;Brave Companions;;
+Shagwell the Fool;Brave Companions;;
 Sharako Lohar;Triarchy;Lyseni;
 Sharis Footly;House Footly;Reach;
 Sharna;Brotherhood Without Banners;Rivermen;
@@ -3613,7 +3618,7 @@ Warg King;;;
 Warren;;Rivermen;
 Warrick Manderly;House Manderly;Northmen;
 Warryn Beesbury;House Beesbury;Reach;
-Wat;;;
+Wat;House Tyrell;Reach;
 Wat (Night's Watch);Night's Watch;;
 Wat (orphan);Crossroads inn;Rivermen;
 Wat (sailor);;;
@@ -3759,3 +3764,103 @@ Zhea;;Jogos Nhai;Jogos Nhai
 Zhoe Blanetree;House Blanetree, House Frey;Rivermen;
 Zia Frey;House Frey;Rivermen;
 Zollo;Brave Companions;Dothraki;
+Balerion;House Targaryen;Valyrian;Dragon
+Drogon;House Targaryen;Dothraki;Dragon
+Ghost;House Stark;Northmen;Direwolf
+Grey Wind;House Stark;Northmen;Direwolf
+Lady;House Stark;Northmen;Direwolf
+Meraxes;House Targaryen;Valyrian;Dragon
+Nymeria (direwolf);House Stark;Northmen;Direwolf
+Rhaegal;House Targaryen;Dothraki;Dragon
+Shaggydog;House Stark;Northmen;Direwolf
+Summer;House Stark;Northmen;Direwolf
+Vhagar;House Targaryen;Valyrian;Dragon
+Viserion;House Targaryen;Dothraki;Dragon
+Vyman;Citadel, House Tully, House Frey;;
+Wolkan;Citadel, House Bolton, House Stark;;
+Alton Lannister;House Lannister;Andal;
+Anara;;Braavosi;
+Armeca;House Baelish;;
+Arthur;Varys, Qyburn;;
+Aya;;Braavosi;
+Belicho Paenymion;Old Blood;Volantene;
+Bernadette;House Lannister;Andal;
+Bianca;Izembaro's troupe;Braavosi;
+Brant;Night's Watch;;
+Ray;Faith of the Seven;Andal;
+Camello;Izembaro's troupe;Braavosi;
+Clarenzo;Izembaro's troupe;Braavosi;
+Clea;;Volantene;
+Cooper;Night's Watch;;
+Craya;;;
+Daisy;House Baelish;;
+Derek;Night's Watch;;
+Desmond Crakehall;House Crakehall;Andal;
+Dim Dalba;Mance Rayder, Jon Snow;Free Folk;
+Dirah;;;
+Dongo;;Giant;
+Dothraki Crones;Dosh Khaleen;Dothraki;
+Eldrick Sarsfield;House Sarsfield;Andal;
+Eleanor Swann;House Swann;Andal;
+Fennesz;Great Masters;Ghiscari;
+Fergus;House Stark;Northman;
+Frances;Varys, Qyburn;;
+Gatins;Brotherhood Without Banners;;
+Genna;House Baelish;;
+Ghita;;Braavosi;
+Gordy;House Bolton;Northern;
+Greizhen mo Ullhor;House of Ullhor, Good Masters;Ghiscari;
+Guymon;Night's Watch;Northern;
+Harald Karstark;House Karstark;Northern;
+Harrag;House Greyjoy;Ironborn;
+Henk;House Stark;Northern;
+Johnna;;Free Folk;
+Karsi;"
+Ice-River Clans, Mance Rayder";Free Folk;
+Kayla;House Baelish;;
+Kesh;;Ghiscari;
+Brozho;;Dothraki;
+Forzho;;Dothraki;
+Moro;;Dothraki;
+Qorro;;Dothraki;
+Rhalko;;Dothraki;
+Kinvara;Faith of R'hllor, House Targaryen;Volantene;
+Koner;House Stark;Northern;
+Kovarro;Drogo's Khalasar, House Targaryen;Dothraki;
+Lhara;;Braavosi;
+Loboda;Mance Rayder;Thenn;
+Locke;House Bolton;Northern;
+Sandhu;Citadel, Conclave;;
+Malko;;Summer Islander;
+Martha;House Stark, House Targaryen, Varys;Northern;
+Mhaegen;House Baelish;;
+Mirelle;House Baelish;;
+Morag;;Free Folk;
+Myranda;House Bolton;Northern;
+Ned Umber;House Umber;Northern;
+Olly;Night's Watch;Northern;
+Olyvar;House Baelish;;
+Ornela;Dosh khaleen, House Targaryen;Lhazareen, Dothraki;
+Qhono;Moro's Khalasar, House Targaryen;Dothraki;
+Razdal mo Eraz;House of Eraz, Wise Masters;Ghiscari;
+Reginald Lannister;House Lannister;Andal;
+Rennick;House Lannister;Andal;
+Riddell;Brotherhood Without Banners;;
+Ros;House Baelish, Varys;Northern;
+Silk King;Thirteen;Qartheen;
+Simpson;House Bolton;Northern;
+Sissy;;Free Folk;
+Soldier Tom;House Stark;Northern;
+Spice King;Thirteen;Qartheen;
+Steve;Brotherhood Without Banners;;
+Talisa Stark;Maegyr family, House Stark ;Volantene;
+Tansy;House Bolton;Northern;
+Teela;House Stark;Northern;
+Thenn Warg;Styr, Mance Rayder;Thenn;
+Thin Man;;Braavosi;
+Vala;Sons of the Harpy;Ghiscari;
+Vance Corbray;House Corbray;Andal;
+White Rat;Unsullied, Good Masters, House Targaryen;;
+Willa;;Free Folk;
+Yara Greyjoy;House Greyjoy;Ironborn;
+Zanrush;Faith of R'hllor, Daenerys Targaryen;Volantene;
