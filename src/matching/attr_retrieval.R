@@ -7,7 +7,7 @@
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/matching/attr_retrieval.R")
 ###############################################################################
-library(XML)
+library("XML")
 
 
 
