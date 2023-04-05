@@ -53,7 +53,7 @@ if __name__ == "__main__":
         raise ValueError
 
     if args.cumulative:
-        graphs = cumulative_graph(graphs)
+        graphs = list(cumulative_graph(graphs))
 
     output_directory = args.output_directory
     os.makedirs(output_directory, exist_ok=True)
