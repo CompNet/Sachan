@@ -414,7 +414,7 @@ for i,g in enumerate(graphs):
                     '% Unknown', '10% M&F Characters', '# of M nodes with k><k>', '# of F nodes with k><k>',
                     '# of U nodes with k><k>', '% of U nodes with k><k>', '10% of all nodes', '# of Unknowns in top 10%(BC)', '% of Unknowns in top 10%(BC)', '% F-F Interactions',
                      '% F-M Interactions', '% F-Any Interactions', '% M-Any Interactions', '% M-M Interactions',
-                     'Average Betweenness', '# of men in top 10%(BC)', '# of men', '# of men in bottom 10%(BC)', '# of women in bottom 10%(BC)','# of unknowns in bottom 10%(BC)', '# of women in top 10%(BC)',  'Categorical assortativity_Sex','Categorical assortativity_House', '% of Mix-M', '% of Mix-F', '% of Mix-U', '% of Mix-Mix',
+                     'Average Betweenness', '# of men in top 10%(BC)', '# of men', '# of men in bottom 10%(BC)', '# of women in bottom 10%(BC)','# of unknowns in bottom 10%(BC)', '# of women in top 10%(BC)',  'Categorical assortativity_Sex','Categorical assortativity_House',
                     '% of Mix-M', '% of Mix-F', '% of Mix-U', '% of Mix-Mix', '% Men', '% mix', '# of Mix nodes with k><k>', '# of mixed in top 10%(BC)', '# of mixed in bottom 10%(BC)']]
 
 
