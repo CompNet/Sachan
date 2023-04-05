@@ -241,19 +241,19 @@ def load_got_tvshow_graphs(
     with open(characters_path) as f:
         characters_data = json.load(f)
 
-    gender_path = os.path.join(root_dir, "data", "characters-gender-all.json")
-    with open(gender_path) as f:
-        genders_data = json.load(f)
-    male_characters = set(genders_data["male"])
-    female_characters = set(genders_data["female"])
+    sex_path = os.path.join(root_dir, "data", "characters-gender-all.json")
+    with open(sex_path) as f:
+        sex_data = json.load(f)
+    male_characters = set(sex_data["male"])
+    female_characters = set(sex_data["female"])
 
-    def get_gender(character: str) -> Literal["male", "female", "unknown"]:
+    def get_sex(character: str) -> Literal["Male", "Female", "Unknown"]:
         if character in male_characters:
-            return "male"
+            return "Male"
         elif character in female_characters:
-            return "female"
+            return "Female"
         else:
-            return "unknown"
+            return "Unknown"
 
     def get_houses(character: dict) -> str:
         houses = character.get("houseName")
@@ -267,7 +267,7 @@ def load_got_tvshow_graphs(
     characters_attributes = {
         character["characterName"]: {
             "house": get_houses(character),
-            "gender": get_gender(character["characterName"]),
+            "sex": get_sex(character["characterName"]),
         }
         for character in characters_data["characters"]
     }
@@ -297,14 +297,19 @@ def load_got_tvshow_graphs(
             for character in scene["characters"]:
                 name = character["name"]
                 attributes = characters_attributes.get(
-                    name, {"house": "", "gender": "unknown"}
+                    name, {"house": "", "sex": "Unknown"}
                 )
                 G.add_node(name, **attributes)
 
             for c1, c2 in itertools.combinations(scene["characters"], 2):
-                if c1["name"] == c2["name"]:
+                n1 = c1["name"]
+                n2 = c2["name"]
+                if n1 == n2:
                     continue
-                G.add_edge(c1["name"], c2["name"], weight=1)
+                if G.has_edge(n1, n2):
+                    G[n1][n2]["weight"] += 1
+                else:
+                    G.add_edge(n1, n2, weight=1)
 
             if granularity == "scene":
                 graphs.append(G)
