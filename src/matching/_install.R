@@ -7,8 +7,9 @@
 ###############################################################################
 
 
-install.packages("igraph")
-install.packages("iGraphMatch")
+install.packages("igraph")			# general graph library
+install.packages("iGraphMatch")		# graph matching
+install.packages("XML")				# HTML parsing
 
 
 
