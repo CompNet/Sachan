@@ -1,4 +1,4 @@
-# Retrieves attributes for all characters on the Wiki site
+# Retrieves attributes for all characters on the Wiki site:
 # https://awoiaf.westeros.org/index.php/List_of_characters
 # 
 # Author: Vincent Labatut
