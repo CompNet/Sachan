@@ -14,7 +14,7 @@ library("igraph")
 
 ###############################################################################
 # read the static tvshow graph
-g.tv <- read.graph("in/tvshow/cumul/episode/71.graphml", format="graphml")
+g.tv <- read.graph("in/tvshow/cumul/episode/72.graphml", format="graphml")
 names <- sort(V(g.tv)$name)
 tab.file <- "in/tvshow/charlist.csv"
 write.csv(x=names, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
