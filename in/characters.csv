@@ -279,7 +279,7 @@ Lord Ashford;House Ashford;Reach;;AWOIAF Wiki;;;House Ashford;Reach
 Assadora of Ibben;Happy Port;Ibbenese;;AWOIAF Wiki;;;Happy Port;Ibbenese
 Aubrey Ambrose;House Ambrose;Reach;;AWOIAF Wiki;;;House Ambrose;Reach
 Aubrey Crakehall;;;;AWOIAF Wiki;;;;
-Aurane Waters;House Velaryon, House Baratheon, House Baratheon;Crownlander;Valyrian;AWOIAF Wiki;;;House Velaryon, House Baratheon, House Baratheon;Crownlander
+Aurane Waters;House Velaryon, House Baratheon;Crownlander;Valyrian;AWOIAF Wiki;;;House Velaryon, House Baratheon;Crownlander
 Aurion;;Valyrian;;AWOIAF Wiki;;;;Valyrian
 Axel Tully;House Tully;Rivermen;;AWOIAF Wiki;;;House Tully;Rivermen
 Axell Florent;House Florent, Queen's Men;Reach;;AWOIAF Wiki;House Florent, House Tyrell, House Baratheon;Andal;House Florent, Queen's Men;Reach
@@ -334,7 +334,7 @@ Bass;Night's Watch;;;AWOIAF Wiki;;;Night's Watch;
 Bastard of Blackhaven;House Dondarrion;Marcher;;AWOIAF Wiki;;;House Dondarrion;Marcher
 Bastard of Harrenhal;House Lothston;Rivermen;;AWOIAF Wiki;;;House Lothston;Rivermen
 Bastard's bastard;;;;AWOIAF Wiki;;;;
-Bathi Ma Lo;Scarlet emperors;YiTish;YiTish;AWOIAF Wiki;;;Scarlet emperors;YiTish
+Bathi Ma Lo;Scarlet Emperors;YiTish;YiTish;AWOIAF Wiki;;;Scarlet Emperors;YiTish
 Bayard Norcross;House Norcross;Reach;;AWOIAF Wiki;;;House Norcross;Reach
 Bean;;Crownlander;;AWOIAF Wiki;;;;Crownlander
 Beans;Windblown;Myrish;;AWOIAF Wiki;;;Windblown;Myrish
@@ -700,7 +700,7 @@ Cregan Stark;House Stark, Blacks;Northmen;;AWOIAF Wiki;;;House Stark, Blacks;Nor
 Cregard Stark;House Stark;Northmen;;AWOIAF Wiki;;;House Stark;Northmen
 Creighton Longbough;;Westerosi;;AWOIAF Wiki;;;;Westerosi
 Creighton Redfort;House Redfort;Valemen;;AWOIAF Wiki;;;House Redfort;Valemen
-Cressen;Citadel, House Baratheon, House Baratheon;Westerosi;;AWOIAF Wiki;Citadel, House Baratheon, House Baratheon;Andal;Citadel, House Baratheon, House Baratheon;Westerosi
+Cressen;Citadel, House Baratheon;Westerosi;;AWOIAF Wiki;Citadel, House Baratheon;Andal;Citadel, House Baratheon;Westerosi
 Lord Cressey;House Cressey;Crownlander;;AWOIAF Wiki;;;House Cressey;Crownlander
 Crey;Citadel;;;AWOIAF Wiki;;;Citadel;
 Creylen;Citadel, House Lannister;;;AWOIAF Wiki;;;Citadel, House Lannister;
@@ -802,7 +802,7 @@ Davos Baratheon;House Baratheon;Stormlander;;AWOIAF Wiki;;;House Baratheon;Storm
 Davos Darklyn;House Darklyn, Kingsguard;Crownlander;;AWOIAF Wiki;;;House Darklyn, Kingsguard;Crownlander
 Davos Dayne;House Dayne, House Martell;Dornish;;AWOIAF Wiki;;;House Dayne, House Martell;Dornish
 Davos Deddings;House Deddings;Rivermen;;AWOIAF Wiki;;;House Deddings;Rivermen
-Davos Seaworth;House Seaworth, House Baratheon;Crownlander;;AWOIAF Wiki;House Seaworth, House Baratheon, House Baratheon, House Stark;Andal;House Seaworth, House Baratheon;Crownlander
+Davos Seaworth;House Seaworth, House Baratheon;Crownlander;;AWOIAF Wiki;House Seaworth, House Baratheon, House Stark;Andal;House Seaworth, House Baratheon;Crownlander
 Deana Hardyng;House Hardyng, House Frey;Valemen;;AWOIAF Wiki;;;House Hardyng, House Frey;Valemen
 Lady Deddings;House Deddings;Rivermen;;AWOIAF Wiki;;;House Deddings;Rivermen
 Lord Deddings;House Deddings;Rivermen;;AWOIAF Wiki;;;House Deddings;Rivermen
@@ -835,7 +835,7 @@ Denyse Hightower;House Hightower, House Redwyne;Reach;;AWOIAF Wiki;;;House Hight
 Denzo D'han;Windblown;Free Cities;;AWOIAF Wiki;;;Windblown;Free Cities
 Deremond;;;;AWOIAF Wiki;;;;
 Deria Martell;House Martell;Dornish;;AWOIAF Wiki;;;House Martell;Dornish
-Dermot of the Rainwood;House Baratheon, House Baratheon;Stormlander;;AWOIAF Wiki;;;House Baratheon, House Baratheon;Stormlander
+Dermot of the Rainwood;House Baratheon;Stormlander;;AWOIAF Wiki;;;House Baratheon;Stormlander
 Derrick Darry;House Darry, Blacks;Rivermen;;AWOIAF Wiki;;;House Darry, Blacks;Rivermen
 Derrick Fossoway;House Fossoway, Band of Nine;Reach;;AWOIAF Wiki;;;House Fossoway, Band of Nine;Reach
 Desmera Redwyne;House Redwyne;Reach;;AWOIAF Wiki;;;House Redwyne;Reach
@@ -1405,7 +1405,7 @@ Hagon Hoare;;;;AWOIAF Wiki;;;;
 Hake;Night's Watch, Others;;;AWOIAF Wiki;;;Night's Watch, Others;
 Hake (archmaester);Citadel;;;AWOIAF Wiki;;;Citadel;
 Hairy Hal;Night's Watch;Westerosi;;AWOIAF Wiki;;;Night's Watch;Westerosi
-Hal the Hog; House Baratheon;Crownlander;;AWOIAF Wiki;;; House Baratheon;Crownlander
+Hal the Hog;House Baratheon;Crownlander;;AWOIAF Wiki;;;House Baratheon;Crownlander
 Halder;Night's Watch;;;AWOIAF Wiki;;;Night's Watch;
 Haldon;House Targaryen;;;AWOIAF Wiki;;;House Targaryen;
 Hali;;Free Folk;;AWOIAF Wiki;;;;Free Folk
@@ -1842,7 +1842,7 @@ Joy Hill;House Lannister;Westermen;;AWOIAF Wiki;;;House Lannister;Westermen
 Joy Penrose;House Penrose;Stormlander;;AWOIAF Wiki;;;House Penrose;Stormlander
 Joyeuse Erenford;House Erenford, House Frey;Rivermen;;AWOIAF Wiki;House Erenford, House Frey;Andal;House Erenford, House Frey;Rivermen
 Julian Wormwood;House Wormwood, Greens;Westerosi;;AWOIAF Wiki;;;House Wormwood, Greens;Westerosi
-Jurne;Citadel, House Baratheon, House Baratheon;;;AWOIAF Wiki;;;Citadel, House Baratheon, House Baratheon;
+Jurne;Citadel, House Baratheon;;;AWOIAF Wiki;;;Citadel, House Baratheon;
 Justin Massey;House Massey, House Baratheon, Queen's Men;Crownlander;;AWOIAF Wiki;;;House Massey, House Baratheon, Queen's Men;Crownlander
 Justin Massey (Milk-Eye);;;;AWOIAF Wiki;;;;
 Jyana;House Reed;Crannogmen;;AWOIAF Wiki;;;House Reed;Crannogmen
@@ -2136,7 +2136,7 @@ Lysaro Rogare;House Rogare;Lyseni;;AWOIAF Wiki;;;House Rogare;Lyseni
 Lysono Maar;Golden Company;Lyseni;Valyrian;AWOIAF Wiki;;;Golden Company;Lyseni
 Lythene Frey;House Frey;Rivermen;;AWOIAF Wiki;;;House Frey;Rivermen
 Mace Baratheon;;;;AWOIAF Wiki;;;;
-Mace Tyrell;House Tyrell;Reach;;AWOIAF Wiki;House Tyrell, House Targaryen, House Baratheon, House Baratheon, Storm's End;Andal;House Tyrell;Reach
+Mace Tyrell;House Tyrell;Reach;;AWOIAF Wiki;House Tyrell, House Targaryen, House Baratheon, Storm's End;Andal;House Tyrell;Reach
 Mad Axe;Night's Watch;;;AWOIAF Wiki;;;Night's Watch;
 Mad Huntsman;Brotherhood Without Banners;Rivermen;;AWOIAF Wiki;;;Brotherhood Without Banners;Rivermen
 Maddy;House Arryn;;;AWOIAF Wiki;;;House Arryn;
@@ -2195,7 +2195,7 @@ Lady Manning;;;;AWOIAF Wiki;;;;
 Mara Manderly;House Manderly, House Targaryen;Northmen;;AWOIAF Wiki;;;House Manderly, House Targaryen;Northmen
 Mara Martell;House Martell;Dornish;;AWOIAF Wiki;;;House Martell;Dornish
 Marei;Chataya's brothel;Crownlander;;AWOIAF Wiki;House Baelish;;Chataya's brothel;Crownlander
-Margaery Tyrell;House Tyrell, House Baratheon, House Baratheon;Reach;Andal;AWOIAF Wiki;House Tyrell, House Baratheon, House Baratheon, Storm's End;Andal;House Tyrell, House Baratheon, House Baratheon;Reach
+Margaery Tyrell;House Tyrell, House Baratheon;Reach;Andal;AWOIAF Wiki;House Tyrell, House Baratheon, Storm's End;Andal;House Tyrell, House Baratheon;Reach
 Margaret Karstark;House Karstark, House Stark;Northmen;;AWOIAF Wiki;;;House Karstark, House Stark;Northmen
 Margate;Citadel;;;AWOIAF Wiki;;;Citadel;
 Marghaz zo Loraq;House of Loraq, Great Masters, Brazen Beasts;Ghiscari;;AWOIAF Wiki;;;House of Loraq, Great Masters, Brazen Beasts;Ghiscari
@@ -2255,7 +2255,7 @@ Marya Seaworth;House Seaworth;;;AWOIAF Wiki;;;House Seaworth;
 Maryam;Faith of the Seven, House Targaryen;Westerosi;;AWOIAF Wiki;;;Faith of the Seven, House Targaryen;Westerosi
 Masha Heddle;House Heddle;;;AWOIAF Wiki;;;House Heddle;
 Maslyn;Night's Watch;;;AWOIAF Wiki;;;Night's Watch;
-Master of the White Hart;House Baratheon, House Baratheon;;;AWOIAF Wiki;;;House Baratheon, House Baratheon;
+Master of the White Hart;House Baratheon;;;AWOIAF Wiki;;;House Baratheon;
 Matarys Targaryen;House Targaryen;Crownlander;;AWOIAF Wiki;;;House Targaryen;Crownlander
 Mathis;Citadel;Westerosi;;AWOIAF Wiki;;;Citadel;Westerosi
 Mathis Frey;House Frey;Rivermen;;AWOIAF Wiki;;;House Frey;Rivermen
@@ -2388,7 +2388,7 @@ Morgan Wylde;House Wylde;Stormlander;;AWOIAF Wiki;;;House Wylde;Stormlander
 Morgarth;House Baelish;Westerosi;;AWOIAF Wiki;;;House Baelish;Westerosi
 Morghaz zo Zherzyn;House of Zherzyn, Wise Masters;Ghiscari;;AWOIAF Wiki;;;House of Zherzyn, Wise Masters;Ghiscari
 Morgil Hastwyck;House Hastwyck;Reach;;AWOIAF Wiki;;;House Hastwyck;Reach
-Morgo;Yezzan zo Qaggaz;;;AWOIAF Wiki;;;Yezzan zo Qaggaz;
+Morgo;House of Qaggaz;;;AWOIAF Wiki;;;House of Qaggaz;
 Morgon Banefort;;First Men;;AWOIAF Wiki;;;;First Men
 Moriah Qorgyle;House Qorgyle;Dornish;;AWOIAF Wiki;;;House Qorgyle;Dornish
 Moribald Chester;House Chester;Reach;;AWOIAF Wiki;;;House Chester;Reach
@@ -2612,7 +2612,7 @@ Parmen Crane;House Crane, Rainbow Guard;Reach;;AWOIAF Wiki;;;House Crane, Rainbo
 Parquello Vaelaros;;Volantene;Valyrian;AWOIAF Wiki;;;;Volantene
 Lord Parren;House Parren;Westermen;;AWOIAF Wiki;;;House Parren;Westermen
 Pascal Dabell;;Westerosi;;AWOIAF Wiki;;;;Westerosi
-Patchface;House Baratheon, House Baratheon;;;AWOIAF Wiki;;;House Baratheon, House Baratheon;
+Patchface;House Baratheon;;;AWOIAF Wiki;;;House Baratheon;
 Pate (novice);Citadel;Westermen;;AWOIAF Wiki;;;Citadel;Westermen
 Pate (orphan);;;;AWOIAF Wiki;;;;
 Pate (ranger);Night's Watch;;;AWOIAF Wiki;;;Night's Watch;
@@ -3107,7 +3107,7 @@ Sauron Salt-Tongue;;Ironborn;;AWOIAF Wiki;;;;Ironborn
 Sawane Botley;House Botley;Ironborn;;AWOIAF Wiki;;;House Botley;Ironborn
 Sawwood;Night's Watch;;;AWOIAF Wiki;;;Night's Watch;
 Scales;Three-Eyed Raven;;Children of the forest;AWOIAF Wiki;;;Three-Eyed Raven;
-Scar;Yezzan zo Qaggaz;;;AWOIAF Wiki;;;Yezzan zo Qaggaz;
+Scar;House of Qaggaz;;;AWOIAF Wiki;;;House of Qaggaz;
 Scarb;;;;AWOIAF Wiki;;;;
 Scolera;Faith of the Seven;Dornish;;AWOIAF Wiki;;;Faith of the Seven;Dornish
 Scoro;;Dothraki;Dothraki;AWOIAF Wiki;;;;Dothraki
@@ -3202,7 +3202,7 @@ Lord Stackhouse;House Stackhouse;Reach;;AWOIAF Wiki;;;House Stackhouse;Reach
 Stafford Lannister;House Lannister;Westermen;;AWOIAF Wiki;;;House Lannister;Westermen
 Stalwart Shield;Unsullied;;;AWOIAF Wiki;;;Unsullied;
 First Ranger Stane;House Stane, Night's Watch;Skagosi;;AWOIAF Wiki;;;House Stane, Night's Watch;Skagosi
-Stannis Baratheon;;;;AWOIAF Wiki;House Baratheon, House Baratheon, House Baratheon;Andal;House Baratheon, House Baratheon, House Baratheon;
+Stannis Baratheon;;;;AWOIAF Wiki;House Baratheon, House Baratheon;Andal;House Baratheon, House Baratheon;
 Stannis Seaworth;House Seaworth;Stormlander;;AWOIAF Wiki;;;House Seaworth;Stormlander
 Stanton Piper;House Piper, Blacks;Rivermen;;AWOIAF Wiki;;;House Piper, Blacks;Rivermen
 Starved man;Faceless Men;Braavosi;;AWOIAF Wiki;;;Faceless Men;Braavosi
@@ -3728,7 +3728,7 @@ Xhobar Qhoqua;House Qhoqua, Band of Nine;Summer Islander;Summer Islander;AWOIAF 
 Xhondo Dhoru;;Summer Islander;;AWOIAF Wiki;;;;Summer Islander
 Yandel;Citadel;Reach;;AWOIAF Wiki;;;Citadel;Reach
 Yandry;House Targaryen;Dornish;;AWOIAF Wiki;;;House Targaryen;Dornish
-Yezzan zo Qaggaz;Wise Masters, House of Qaggaz;Ghiscari;;AWOIAF Wiki;House of Qaggaz, Wise Masters, Good Masters;Ghiscari, Yunkai'i;Wise Masters, House of Qaggaz;Ghiscari
+House of Qaggaz;Wise Masters, House of Qaggaz;Ghiscari;;AWOIAF Wiki;House of Qaggaz, Wise Masters, Good Masters;Ghiscari, Yunkai'i;Wise Masters, House of Qaggaz;Ghiscari
 Ygon Farwynd;House Farwynd;Ironborn;;AWOIAF Wiki;;;House Farwynd;Ironborn
 Ygon Oldfather;Mance Rayder;Free Folk;;AWOIAF Wiki;;;Mance Rayder;Free Folk
 Ygritte;Mance Rayder;Free Folk;;AWOIAF Wiki;Mance Rayder;Free Folk;Mance Rayder;Free Folk
@@ -3852,7 +3852,7 @@ Sissy;;Free Folk;;GoT Wiki;;Free Folk;;Free Folk
 Soldier Tom;House Stark;Northmen;;GoT Wiki;;;House Stark;Northmen
 Spice King;Thirteen;Qartheen;;GoT Wiki;Thirteen;;Thirteen;Qartheen
 Steve;Brotherhood Without Banners;;;GoT Wiki;Brotherhood Without Banners;;Brotherhood Without Banners;
-Talisa Stark;Maegyr Family, House Stark ;Volantene;;GoT Wiki;Maegyr Family, House Stark;Volantene;Maegyr Family, House Stark ;Volantene
+Talisa Stark;Maegyr Family, House Stark;Volantene;;GoT Wiki;Maegyr Family, House Stark;Volantene;Maegyr Family, House Stark;Volantene
 Tansy;House Bolton;Northmen;;GoT Wiki;House Bolton;Northmen;House Bolton;Northmen
 Teela;House Stark;Northmen;;GoT Wiki;House Stark;Northmen;House Stark;Northmen
 Thenn Warg;Styr, Mance Rayder;Thenn;;GoT Wiki;Styr, Mance Rayder;Thenn;Styr, Mance Rayder;Thenn
