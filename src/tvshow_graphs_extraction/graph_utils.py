@@ -33,6 +33,7 @@ def cumulative_graph(graphs: List[nx.Graph]) -> Generator[nx.Graph, None, None]:
     all_attrs = set(flatten([graph_edges_attributes(G) for G in graphs]))
 
     prev_G = graphs[0]
+    yield prev_G
     for H in graphs[1:]:
         # nx.compose creates a new graph with the nodes and edges
         # from both graphs...

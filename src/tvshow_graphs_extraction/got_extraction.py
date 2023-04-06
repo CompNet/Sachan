@@ -1,67 +1,10 @@
-from typing import List, Literal
+from typing import Dict, List, Literal
 from collections import defaultdict
-import re, json, math, os, itertools
+import json, os, itertools
 from tqdm import tqdm
 import numpy as np
 import networkx as nx
 import pandas as pd
-
-
-def _is_chapter_row(row: pd.core.series.Series) -> bool:
-    return (
-        isinstance(row["Character"], str)
-        and not re.search(r"CHAPTER|PROLOGUE|EPILOGUE", row["Character"]) is None
-        and all(
-            [
-                isinstance(row[key], float) and math.isnan(row[key])
-                for key in row.keys()
-                if not key == "Character"
-            ]
-        )
-    )
-
-
-def _row_links(row: pd.core.series.Series) -> List[str]:
-    links_keys = [k for k in row.keys() if k.startswith("Friendly Link")] + [
-        k for k in row.keys() if k.startswith("Hostile Link")
-    ]
-    return [row[key].strip() for key in links_keys if isinstance(row[key], str)]
-
-
-def load_got_book_graphs(path: str) -> List[nx.Graph]:
-    """
-    :param path: path to the book CSV
-    :return: a :class:`nx.Graph` per chapter
-    """
-    df = pd.read_csv(path)
-    graphs = []
-    G = nx.Graph()
-    for i, row in tqdm(df.iterrows(), total=len(df)):  # type: ignore
-        if _is_chapter_row(row):
-            if len(G) > 0:
-                graphs.append(G)
-            G = nx.Graph()
-            continue
-        character = row["Character"].strip()
-        G.add_node(character)
-        links = _row_links(row)
-        for link in links:
-            if not (character, link) in G.edges:
-                G.add_edge(character, link, weight=0)
-            G[character][link]["weight"] += 1
-    graphs.append(G)
-
-    return graphs
-
-
-def load_got_book_chapters(path: str) -> List[str]:
-    """
-    :param path: path to the GOT's .txt
-    :return: a :class:`str` per chapter
-    """
-    with open(path) as f:
-        text = f.read()
-    return re.split(r"\n\n\n[A-Z]+\n\n\n", text)
 
 
 def load_got_tvshow_conversational_scene_graphs(path: str) -> List[nx.Graph]:
@@ -225,29 +168,66 @@ def load_got_tvshow_episodes(
     return episodes
 
 
+def load_tvshow_character_map(path: str) -> Dict[str, str]:
+    """Load the character canonical names map from the ``charmap.csv`` file."""
+    df = pd.read_csv(os.path.expanduser(path))
+    charmap = {}
+    for _, row in df.iterrows():
+        tvshow_name = row["TvShowName"]
+        # account for NaN: some characters do not have a normalized
+        # name since they do not have a proper name (for example,
+        # 'Bolton Soldier'). In that case, we simply use the TVShow
+        # name.
+        canonical_name = (
+            row["NormalizedName"]
+            if isinstance(row["NormalizedName"], str)
+            else tvshow_name
+        )
+        charmap[tvshow_name] = canonical_name
+    return charmap
+
+
 def load_got_tvshow_graphs(
-    path: str, granularity: Literal["episode", "scene"]
+    path: str, granularity: Literal["episode", "scene"], charmap: Dict[str, str]
 ) -> List[nx.Graph]:
-    """
-    :param path: path to Jeffrey Lancaster's game-of-thrones repository
+    """Load character networks from the TVShow, using Jeffrey
+    Lancaster's Github repository.
+
+    :param path: path to Jeffrey Lancaster's game-of-thrones
+        repository
+    :param granularity:
+    :param charmap: A map from each character name in the TVShow to
+        its canonical name.  If a character is not in this map, it
+        will be _ignored_ by this function and wont appear in the
+        final graph.
+
     :return: a ``nx.Graph`` for each scene
     """
     root_dir = os.path.expanduser(path)
+
+    # * Load main 'episodes.json' file
     episodes_path = os.path.join(root_dir, "data", "episodes.json")
     with open(episodes_path) as f:
         got_data = json.load(f)
 
+    # * Load characters info file
     characters_path = os.path.join(root_dir, "data", "characters.json")
     with open(characters_path) as f:
         characters_data = json.load(f)
 
+    # * Load characters sex info file
     sex_path = os.path.join(root_dir, "data", "characters-gender-all.json")
     with open(sex_path) as f:
         sex_data = json.load(f)
     male_characters = set(sex_data["male"])
     female_characters = set(sex_data["female"])
 
+    # * Utils
     def get_sex(character: str) -> Literal["Male", "Female", "Unknown"]:
+        """
+        :param character: name of the character in
+            ``'characters-gender-all.json'``
+        """
         if character in male_characters:
             return "Male"
         elif character in female_characters:
@@ -264,14 +244,19 @@ def load_got_tvshow_graphs(
         else:
             return houses
 
-    characters_attributes = {
-        character["characterName"]: {
-            "house": get_houses(character),
-            "sex": get_sex(character["characterName"]),
+    # * Load characters attributes
+    # { canonical name => { attribute_name => attribute_value } }
+    characters_attributes = {}
+    for character_data in characters_data["characters"]:
+        canonical_name = charmap.get(character_data["characterName"])
+        if canonical_name is None:
+            continue
+        characters_attributes[canonical_name] = {
+            "house": get_houses(character_data),
+            "sex": get_sex(character_data["characterName"]),
         }
-        for character in characters_data["characters"]
-    }
 
+    # * Parsing of episodes.json
     graphs = []
 
     for episode in got_data["episodes"]:
@@ -295,16 +280,20 @@ def load_got_tvshow_graphs(
             assert not G is None
 
             for character in scene["characters"]:
-                name = character["name"]
+                canonical_name = charmap.get(character["name"])
+                # Character with no canonical names are ignored
+                if canonical_name is None:
+                    continue
                 attributes = characters_attributes.get(
-                    name, {"house": "", "sex": "Unknown"}
+                    canonical_name, {"house": "", "sex": "Unknown"}
                 )
-                G.add_node(name, **attributes)
+                G.add_node(canonical_name, **attributes)
 
             for c1, c2 in itertools.combinations(scene["characters"], 2):
-                n1 = c1["name"]
-                n2 = c2["name"]
-                if n1 == n2:
+                n1 = charmap.get(c1["name"])
+                n2 = charmap.get(c2["name"])
+                # Character with no canonical names are ignored
+                if n1 is None or n2 is None:
                     continue
                 if G.has_edge(n1, n2):
                     G[n1][n2]["weight"] += 1

@@ -1,15 +1,23 @@
 import argparse
-import os
+import os, sys
 import networkx as nx
-from got_extraction import load_got_tvshow_graphs
+from got_extraction import load_got_tvshow_graphs, load_tvshow_character_map
 from graph_utils import cumulative_graph, relabeled_with_id
 from tqdm import tqdm
+
+
+script_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output-directory", type=str)
+    parser.add_argument(
+        "-o",
+        "--output-directory",
+        type=str,
+        help="output directory. Default will be in the appropriate directory in ../../in/tvshow",
+    )
     parser.add_argument(
         "-g",
         "--granularity",
@@ -22,6 +30,13 @@ if __name__ == "__main__":
         "--jeffrey-lancaster-repo-path",
         type=str,
         help="path to Jeffrey Lancaster's game-of-thrones repo.",
+    )
+    parser.add_argument(
+        "-m",
+        "--charmap-path",
+        type=str,
+        help="path to the characters map csv",
+        default=os.path.join(script_dir, "../../in/tvshow/charmap.csv"),
     )
     parser.add_argument(
         "-c",
@@ -37,7 +52,17 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    graphs = load_got_tvshow_graphs(args.jeffrey_lancaster_repo_path, args.granularity)
+    if args.output_directory is None:
+        iscumulative_dir = "cumul" if args.cumulative else "instant"
+        args.output_directory = os.path.join(
+            script_dir, f"../../in/tvshow/{iscumulative_dir}/{args.granularity}"
+        )
+    print(f"output dir: {args.output_directory}", file=sys.stderr)
+
+    charmap = load_tvshow_character_map(args.charmap_path)
+    graphs = load_got_tvshow_graphs(
+        args.jeffrey_lancaster_repo_path, args.granularity, charmap
+    )
     graphs_len = len(graphs)
 
     if args.cumulative:
