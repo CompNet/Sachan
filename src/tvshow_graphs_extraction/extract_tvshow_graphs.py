@@ -70,8 +70,13 @@ if __name__ == "__main__":
 
     output_directory = args.output_directory
     os.makedirs(output_directory, exist_ok=True)
+    graph_i_str_len = len(str(graphs_len))
     for i, G in tqdm(enumerate(graphs), total=graphs_len):
         if args.relabel:
             G = relabeled_with_id(G, "name")
-        output_file = os.path.join(output_directory, f"{i}.graphml")
+        iscumulative_str = "cumulative" if args.cumulative else "instant"
+        graph_i_str = str(i).rjust(graph_i_str_len, "0")
+        output_file = os.path.join(
+            output_directory, f"{iscumulative_str}_{graph_i_str}.graphml"
+        )
         nx.write_graphml(G, output_file)
