@@ -33,7 +33,7 @@ for(file in files)
 map.file <- "in/comics/charmap.csv"
 cat("Conversion map \"",map.file,"\"\n",sep="")
 char.tab <- read.csv(map.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
-idx <- which(char.tab[,2]=="")
+idx <- which(char.tab[,"NormalizedName"]=="")
 char.tab[idx,"NormalizedName"] <- char.tab[idx,"ComicsName"]
 
 # clean each network
