@@ -5,7 +5,7 @@
 # 04/2023
 #
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/preprocessing/prepare_allegiances.R")
+# source("src/preprocessing/common/prepare_allegiances.R")
 ###############################################################################
 
 

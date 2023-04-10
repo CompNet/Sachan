@@ -5,7 +5,7 @@
 # 04/2023
 #
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/preprocessing/name_normalization.R")
+# source("src/preprocessing/common/name_normalization.R")
 ###############################################################################
 library("igraph")
 

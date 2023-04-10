@@ -5,7 +5,7 @@
 # 04/2023
 #
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/preprocessing/clean_comics_nets.R")
+# source("src/preprocessing/comics/clean_comics_nets.R")
 ###############################################################################
 library("igraph")
 
