@@ -18,7 +18,7 @@ base.url <- "https://awoiaf.westeros.org/index.php/"
 
 # get the list of characters
 char.file <- "in/characters.csv"
-char.tab <- read.csv(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+char.tab <- read.csv2(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
 
 # get the list of characters to ignore
 stop.file <- "in/char_stop.csv"
