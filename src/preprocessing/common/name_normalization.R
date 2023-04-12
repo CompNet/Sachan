@@ -14,10 +14,10 @@ library("igraph")
 
 ###############################################################################
 # read the static tvshow graph
-g.tv <- read.graph("in/tvshow/cumul/episode/72.graphml", format="graphml")
-names <- sort(V(g.tv)$name)
-tab.file <- "in/tvshow/charlist.csv"
-write.csv(x=names, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
+g.tv <- read.graph("in/tvshow/cumul/episode/cumulative_72.graphml", format="graphml")
+names.tv <- sort(V(g.tv)$name)
+#tab.file <- "in/tvshow/charlist.csv"
+#write.csv(x=names.tv, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 
 
 
@@ -25,9 +25,9 @@ write.csv(x=names, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 ###############################################################################
 # read the static novel graph
 g.nv <- read.graph("in/novels/cumul/5.ADwD_72_cumul.graphml", format="graphml")
-names <- sort(V(g.nv)$name)
-tab.file <- "in/novels/charlist.csv"
-write.csv(x=names, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
+names.nv <- sort(V(g.nv)$name)
+#tab.file <- "in/novels/charlist.csv"
+#write.csv(x=names.nv, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 
 
 
@@ -35,6 +35,29 @@ write.csv(x=names, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 ###############################################################################
 # comics already have been normalized
 g.cx <- read.graph("in/comics/cumul/chapter/cum_143.graphml", format="graphml")
-names <- sort(V(g.cx)$name)
-tab.file <- "in/comics/charlist.csv"
-write.csv(x=names, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
+names.cx <- sort(V(g.cx)$name)
+#tab.file <- "in/comics/charlist.csv"
+#write.csv(x=names.cx, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
+
+
+
+
+###############################################################################
+# compare the name lists
+cn <- c("Novels", "TV Show", "Comics")
+stats <- matrix(NA,nrow=length(cn),ncol=length(cn))
+rownames(stats) <- colnames(stats) <- cn
+stats["Novels","Novels"] <- length(names.nv)
+stats["Novels","TV Show"] <- length(intersect(names.nv,names.tv))
+stats["Novels","Comics"] <- length(intersect(names.nv,names.cx))
+stats["TV Show","TV Show"] <- length(names.tv)
+stats["TV Show","Comics"] <- length(intersect(names.tv,names.cx))
+stats["Comics","Comics"] <- length(names.cx)
+print(stats)
+
+# compare with normalized list of characters
+char.file <- "in/characters.csv"
+char.tab <- read.csv2(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+vals <- sapply(list(names.nv, names.tv, names.cx), function(l) length(intersect(l,char.tab[,"Name"])))
+stats2 <- cbind(diag(stats),vals,vals/diag(stats)*100)
+print(stats2)
