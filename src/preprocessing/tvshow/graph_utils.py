@@ -1,3 +1,7 @@
+# A few graphs utility functions
+#
+# Author: Arthur Amalvy
+# 04/2023
 from typing import List, Set, Generator
 import copy
 import networkx as nx

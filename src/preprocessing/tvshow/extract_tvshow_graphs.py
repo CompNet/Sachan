@@ -1,7 +1,12 @@
+# Extract the TVShow networks from the repository of Jeffrey Lancaster
+# (see https://github.com/jeffreylancaster/game-of-thrones).
+#
+# Author: Arthur Amalvy
+# 04/2023
 import argparse
 import os, sys
 import networkx as nx
-from got_extraction import load_got_tvshow_graphs, load_tvshow_character_map
+from extraction import load_got_tvshow_graphs, load_tvshow_character_map
 from graph_utils import cumulative_graph, relabeled_with_id
 from tqdm import tqdm
 
@@ -16,7 +21,7 @@ if __name__ == "__main__":
         "-o",
         "--output-directory",
         type=str,
-        help="output directory. Default will be in the appropriate directory in ../../in/tvshow",
+        help="output directory. Default will be in the appropriate directory in ../../../in/tvshow",
     )
     parser.add_argument(
         "-g",
@@ -36,7 +41,7 @@ if __name__ == "__main__":
         "--charmap-path",
         type=str,
         help="path to the characters map csv",
-        default=os.path.join(script_dir, "../../in/tvshow/charmap.csv"),
+        default=os.path.join(script_dir, "../../../in/tvshow/charmap.csv"),
     )
     parser.add_argument(
         "-c",
@@ -55,7 +60,7 @@ if __name__ == "__main__":
     if args.output_directory is None:
         iscumulative_dir = "cumul" if args.cumulative else "instant"
         args.output_directory = os.path.join(
-            script_dir, f"../../in/tvshow/{iscumulative_dir}/{args.granularity}"
+            script_dir, f"../../../in/tvshow/{iscumulative_dir}/{args.granularity}"
         )
     print(f"output dir: {args.output_directory}", file=sys.stderr)
 
