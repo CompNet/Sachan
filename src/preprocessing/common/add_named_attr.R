@@ -56,6 +56,7 @@ for(time in c("cumul","instant"))
 			cat("..Loading graph \"",path,"\"\n",sep="")
 			g <- read.graph(file=path, format="graphml")
 			
+			# if graph has vertices
 			if(gorder(g)>0)
 			{	# handle remaining name normalization error
 				if(any(V(g)$name %in% names(corrections)))
@@ -72,7 +73,15 @@ for(time in c("cumul","instant"))
 				V(g)$named <- named
 				cat("....Found the following ",length(which(!named))," unnamed characters: ",paste(V(g)$name[!named],collapse=", "),"\n",sep="")
 			}
-						
+			# if graph is empty 
+			else
+			{	cat("....Empty graph\n")
+				# add dummy vertex, add attribute, remove vertex
+				g <- add_vertices(g, 1)
+				g <- set_vertex_attr(g, name="named", value=TRUE)
+				g <- delete_vertices(g, 1)
+			}
+			
 			# record updated graph
 			cat("....Recording graph\n")
 			write.graph(g, file=path, format="graphml")
@@ -144,6 +153,7 @@ for(time in c("cumul","instant"))
 			g <- set_edge_attr(g, name=att, value=vals)
 		}
 		
+		# if graph has vertices
 		if(gorder(g)>0)
 		{	# handle remaining name normalization error
 			if(any(V(g)$name %in% names(corrections)))
@@ -180,9 +190,63 @@ for(time in c("cumul","instant"))
 			V(g)$named <- named
 			cat("....Found the following ",length(which(!named))," unnamed characters: ",paste(V(g)$name[!named],collapse=", "),"\n",sep="")
 		}
-		
+		# if graph is empty 
+		else
+		{	cat("....Empty graph\n")
+			# add dummy vertex, add attribute, remove vertex
+			g <- add_vertices(g, 1)
+			g <- set_vertex_attr(g, name="named", value=TRUE)
+			g <- delete_vertices(g, 1)
+		}
+
 		# record updated graph
 		cat("....Recording graph\n")
 		write.graph(g, file=path, format="graphml")
+	}
+}
+
+
+
+
+###############################################################################
+# the attribute already exists in the comics nets, 
+# but the name is not identical to the others, so it must be changed
+for(time in c("cumul","instant"))
+{	cat("Handling time mode '",time,"'\n",sep="")
+	
+	for(scale in c("chapter","scene"))
+	{	cat("Handling time scale '",scale,"'\n",sep="")
+		
+		# list all graphml files in the folder
+		net.folder <- file.path("in","comics",time,scale)
+		files <- list.files(path=net.folder, pattern=".+\\.graphml")
+		
+		# process each one
+		for(file in files)
+		{	# read graph
+			path <- file.path(net.folder, file)
+			cat("..Loading graph \"",path,"\"\n",sep="")
+			g <- read.graph(file=path, format="graphml")
+			
+			# if graph has vertices
+			if(gorder(g)>0)
+			{	vals <- V(g)$Named
+				g <- delete_vertex_attr(g, name="Named")
+				g <- set_vertex_attr(g, name="named", value=vals)
+				cat("....Updated attribute name\n")
+			}
+			# if graph is empty 
+			else
+			{	cat("....Empty graph\n")
+				# add dummy vertex, add attribute, remove vertex
+				g <- add_vertices(g, 1)
+				g <- set_vertex_attr(g, name="named", value=TRUE)
+				g <- delete_vertices(g, 1)
+			}
+			
+			# record updated graph
+			cat("....Recording graph\n")
+			write.graph(g, file=path, format="graphml")
+		}
 	}
 }
