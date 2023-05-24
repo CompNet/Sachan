@@ -49,6 +49,7 @@ for(i in 1:length(gs))
 		print(V(g)$name[idx])
 		stop("ERROR")
 	}
+	V(g)$name <- char.tab[idx,"NormalizedName"]
 	
 	# fix the weight attribute for edges
 	E(g)$weight <- E(g)$Duration
