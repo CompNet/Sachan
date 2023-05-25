@@ -1,6 +1,13 @@
 # Extract the TVShow networks from the repository of Jeffrey Lancaster
 # (see https://github.com/jeffreylancaster/game-of-thrones).
 #
+# Some example usage (assuming the user cloned Jeffrey Lancaster's repo at ~/game-of-thrones):
+#
+# python extract_tvshow_graphs.py -g episode -j ~/game-of-thrones -r
+# python extract_tvshow_graphs.py -g scene -j ~/game-of-thrones -r
+# python extract_tvshow_graphs.py -g block -bm locations -j ~/game-of-thrones -r
+# python extract_tvshow_graphs.py -g block -bm similarity -bmk '{"threshold": 0.1}' -j ~/game-of-thrones -r
+#
 # Author: Arthur Amalvy
 # 04/2023
 import os, sys, argparse, json
