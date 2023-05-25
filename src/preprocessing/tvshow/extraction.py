@@ -2,10 +2,8 @@
 #
 # Author: Arthur Amalvy
 # 04/2023
-from typing import Dict, List, Literal
-from collections import defaultdict
+from typing import Any, Dict, List, Literal, Optional
 import json, os, itertools
-from tqdm import tqdm
 import numpy as np
 import networkx as nx
 import pandas as pd
@@ -30,19 +28,263 @@ def load_tvshow_character_map(path: str) -> Dict[str, str]:
     return charmap
 
 
+def _parse_episodes_json_episode_graphs(
+    got_data: dict,
+    charmap: Dict[str, str],
+    char_attrs_map: Dict[str, Dict[str, Any]],
+    default_attrs: Dict[str, Any],
+) -> List[nx.Graph]:
+    """Parse ``episodes.json`` into a graph per episode
+
+    :param got_datas: ``episodes.json`` file as a dict
+    :param charmap: A map from each character name in the TVShow to
+        its canonical name.  If a character is not in this map, it
+        will be _ignored_ by this function and wont appear in the
+        final graph.
+    :param char_attrs_map: ``{ canonical_name => { attr_name =>
+        attr_value } }``
+    :param default_attrs: default attributes for characters
+    """
+    graphs = []
+
+    for episode in got_data["episodes"]:
+        G = nx.Graph()
+        G.graph["season"] = episode["seasonNum"]
+        G.graph["episode"] = episode["episodeNum"]
+
+        for scene in episode["scenes"]:
+            for character in scene["characters"]:
+                canonical_name = charmap.get(character["name"])
+                # Character with no canonical names are ignored
+                if canonical_name is None:
+                    continue
+                attributes = char_attrs_map.get(
+                    canonical_name, {"house": "", "sex": "Unknown"}
+                )
+                G.add_node(canonical_name, **attributes)
+
+            for c1, c2 in itertools.combinations(scene["characters"], 2):
+                n1 = charmap.get(c1["name"])
+                n2 = charmap.get(c2["name"])
+                # Character with no canonical names are ignored
+                if n1 is None or n2 is None:
+                    continue
+                if G.has_edge(n1, n2):
+                    G[n1][n2]["weight"] += 1
+                else:
+                    G.add_edge(n1, n2, weight=1)
+
+        graphs.append(G)
+
+    return graphs
+
+
+def _parse_episodes_json_scene_graphs(
+    got_data: dict,
+    charmap: Dict[str, str],
+    char_attrs_map: Dict[str, Dict[str, Any]],
+    default_attrs: Dict[str, Any],
+) -> List[nx.Graph]:
+    """Parse ``episodes.json`` into a graph per scene
+
+    :param got_datas: ``episodes.json`` file as a dict
+    :param charmap: A map from each character name in the TVShow to
+        its canonical name.  If a character is not in this map, it
+        will be _ignored_ by this function and wont appear in the
+        final graph.
+    :param char_attrs_map: ``{ canonical_name => { attr_name =>
+        attr_value } }``
+    :param default_attrs: default attributes for characters
+    """
+    # * Parsing of episodes.json
+    graphs = []
+
+    for episode in got_data["episodes"]:
+        season_i = episode["seasonNum"]
+        episode_i = episode["episodeNum"]
+
+        for scene_i, scene in enumerate(episode["scenes"]):
+            G = nx.Graph()
+            G.graph["season"] = season_i
+            G.graph["episode"] = episode_i
+            G.graph["scene"] = scene_i
+
+            for character in scene["characters"]:
+                canonical_name = charmap.get(character["name"])
+                # Character with no canonical names are ignored
+                if canonical_name is None:
+                    continue
+                attributes = char_attrs_map.get(
+                    canonical_name, {"house": "", "sex": "Unknown"}
+                )
+                G.add_node(canonical_name, **attributes)
+
+            for c1, c2 in itertools.combinations(scene["characters"], 2):
+                n1 = charmap.get(c1["name"])
+                n2 = charmap.get(c2["name"])
+                # Character with no canonical names are ignored
+                if n1 is None or n2 is None:
+                    continue
+                if G.has_edge(n1, n2):
+                    G[n1][n2]["weight"] += 1
+                else:
+                    G.add_edge(n1, n2, weight=1)
+
+            graphs.append(G)
+
+    return graphs
+
+
+def _parse_episodes_json_block_graphs(
+    got_data: dict,
+    charmap: Dict[str, str],
+    char_attrs_map: Dict[str, Dict[str, Any]],
+    default_attrs: Dict[str, Any],
+    method: Literal["locations", "similarity"],
+    method_kwargs: Optional[dict],
+) -> List[nx.Graph]:
+    """Parse ``episodes.json`` into a graph per 'block' (several
+    consecutive scenes).  The definition of a 'block' depends on
+    ``method``.
+
+    :param got_datas: ``episodes.json`` file as a dict
+
+    :param charmap: A map from each character name in the TVShow to
+        its canonical name.  If a character is not in this map, it
+        will be _ignored_ by this function and wont appear in the
+        final graph.
+
+    :param char_attrs_map: ``{ canonical_name => { attr_name =>
+        attr_value } }``
+
+    :param default_attrs: default attributes for characters
+
+    :param method: block groupment method :
+
+            - ``'locations'``: cut blocks by considering that
+              consecutive scenes with common locations are in the same
+              block.
+
+            - ``'similarity'``: cut blocks by considering that
+              consecutive scenes with similar enough character graphs
+              are in the same block.  Similarity is computed using
+              Jaccard index on nodes.  If this method is chosen, the
+              caller must supply a ``'threshold'`` kwargs in
+              ``method_kwargs``.
+
+    :param method_kwargs: additional kwargs for the chosen ``method``.
+    """
+    assert method in ["locations", "similarity"]
+
+    # * Parsing of episodes.json
+    graphs = []
+
+    # * This function determines if a scene starts a new block, using
+    # A the previous scene. Depends on the supplied method.
+    def scene_starts_new_block(prev_scene: Optional[dict], scene: dict) -> bool:
+        if prev_scene is None:
+            return False
+
+        if method == "locations":
+            prev_locations = [
+                l
+                for l in [
+                    prev_scene.get("location"),
+                    prev_scene.get("subLocation"),
+                ]
+                if not l is None
+            ]
+            return (
+                not scene.get("location") in prev_locations
+                and not scene.get("subLocation") in prev_locations
+            )
+
+        elif method == "similarity":
+            characters = {c["name"] for c in scene["characters"]}
+            prev_characters = {c["name"] for c in prev_scene["characters"]}
+            intersection = characters.intersection(prev_characters)
+            union = characters.union(prev_characters)
+            if len(union) == 0:
+                return True
+            similarity = len(intersection) / len(union)
+            assert not method_kwargs is None
+            return similarity < method_kwargs["threshold"]
+
+    for episode in got_data["episodes"]:
+        G = nx.Graph()
+        G.graph["season"] = episode["seasonNum"]
+        G.graph["episode"] = episode["episodeNum"]
+
+        prev_scene = None
+
+        for scene in episode["scenes"]:
+            if scene_starts_new_block(prev_scene, scene):
+                graphs.append(G)  # flush current block
+                G = nx.Graph()
+                G.graph["season"] = episode["seasonNum"]
+                G.graph["episode"] = episode["episodeNum"]
+
+            for character in scene["characters"]:
+                canonical_name = charmap.get(character["name"])
+                # Character with no canonical names are ignored
+                if canonical_name is None:
+                    continue
+                attributes = char_attrs_map.get(canonical_name, default_attrs)
+                G.add_node(canonical_name, **attributes)
+
+            for c1, c2 in itertools.combinations(scene["characters"], 2):
+                n1 = charmap.get(c1["name"])
+                n2 = charmap.get(c2["name"])
+                # Character with no canonical names are ignored
+                if n1 is None or n2 is None:
+                    continue
+                if G.has_edge(n1, n2):
+                    G[n1][n2]["weight"] += 1
+                else:
+                    G.add_edge(n1, n2, weight=1)
+
+            prev_scene = scene
+
+        # flush last episode graph
+        graphs.append(G)
+
+    return graphs
+
+
 def load_got_tvshow_graphs(
-    path: str, granularity: Literal["episode", "scene"], charmap: Dict[str, str]
+    path: str,
+    granularity: Literal["episode", "scene", "block"],
+    charmap: Dict[str, str],
+    block_method: Optional[Literal["locations", "similarity"]] = None,
+    block_method_kwargs: Optional[dict] = None,
 ) -> List[nx.Graph]:
     """Load character networks from the TVShow, using Jeffrey
     Lancaster's Github repository.
 
     :param path: path to Jeffrey Lancaster's game-of-thrones
         repository
-    :param granularity:
+
+    :param granularity: either :
+
+            - ``'episode'``: A graph per episode
+
+            - ``'scene'``: A graph per scene (as defined is Jeffrey
+              Lancaster data)
+
+            - ``'block'``: A graph per 'block'.  A block is a group of
+              scene corresponding to a PoV
+
     :param charmap: A map from each character name in the TVShow to
         its canonical name.  If a character is not in this map, it
         will be _ignored_ by this function and wont appear in the
         final graph.
+
+    :param block_method: method to use for determining blocks - see
+        :func:`_parse_episodes_json_block_graphs`
+
+    :param block_method_kwargs: additional kwargs for the method use
+        to determine blocks - see
+        :func:`_parse_episodes_json_block_graphs`
 
     :return: a ``nx.Graph`` for each scene
     """
@@ -100,56 +342,29 @@ def load_got_tvshow_graphs(
         }
 
     # * Parsing of episodes.json
-    graphs = []
-
-    for episode in got_data["episodes"]:
-
-        season_i = episode["seasonNum"]
-        episode_i = episode["episodeNum"]
-
-        G = None
-        if granularity == "episode":
-            G = nx.Graph()
-            G.graph["season"] = season_i
-            G.graph["episode"] = episode_i
-
-        for scene_i, scene in enumerate(episode["scenes"]):
-
-            if granularity == "scene":
-                G = nx.Graph()
-                G.graph["season"] = season_i
-                G.graph["episode"] = episode_i
-                G.graph["scene"] = scene_i
-            assert not G is None
-
-            for character in scene["characters"]:
-                canonical_name = charmap.get(character["name"])
-                # Character with no canonical names are ignored
-                if canonical_name is None:
-                    continue
-                attributes = characters_attributes.get(
-                    canonical_name, {"house": "", "sex": "Unknown"}
-                )
-                G.add_node(canonical_name, **attributes)
-
-            for c1, c2 in itertools.combinations(scene["characters"], 2):
-                n1 = charmap.get(c1["name"])
-                n2 = charmap.get(c2["name"])
-                # Character with no canonical names are ignored
-                if n1 is None or n2 is None:
-                    continue
-                if G.has_edge(n1, n2):
-                    G[n1][n2]["weight"] += 1
-                else:
-                    G.add_edge(n1, n2, weight=1)
-
-            if granularity == "scene":
-                graphs.append(G)
-
-        if granularity == "episode":
-            graphs.append(G)
-
-    return graphs
+    default_char_attrs = {"house": "", "sex": "Unknown"}
+    if granularity == "episode":
+        return _parse_episodes_json_episode_graphs(
+            got_data, charmap, characters_attributes, default_char_attrs
+        )
+    elif granularity == "scene":
+        return _parse_episodes_json_scene_graphs(
+            got_data, charmap, characters_attributes, default_char_attrs
+        )
+    elif granularity == "block":
+        assert not block_method is None
+        if block_method_kwargs is None:
+            block_method_kwargs = {}
+        return _parse_episodes_json_block_graphs(
+            got_data,
+            charmap,
+            characters_attributes,
+            default_char_attrs,
+            block_method,
+            block_method_kwargs,
+        )
+    else:
+        raise ValueError(f"Unknown granularity: {granularity}")
 
 
 def load_got_episodes_chapters_alignment_matrix(path: str) -> np.ndarray:

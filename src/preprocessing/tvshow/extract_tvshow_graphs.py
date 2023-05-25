@@ -1,10 +1,16 @@
 # Extract the TVShow networks from the repository of Jeffrey Lancaster
 # (see https://github.com/jeffreylancaster/game-of-thrones).
 #
+# Some example usage (assuming the user cloned Jeffrey Lancaster's repo at ~/game-of-thrones):
+#
+# python extract_tvshow_graphs.py -g episode -j ~/game-of-thrones -r
+# python extract_tvshow_graphs.py -g scene -j ~/game-of-thrones -r
+# python extract_tvshow_graphs.py -g block -bm locations -j ~/game-of-thrones -r
+# python extract_tvshow_graphs.py -g block -bm similarity -bmk '{"threshold": 0.1}' -j ~/game-of-thrones -r
+#
 # Author: Arthur Amalvy
 # 04/2023
-import argparse
-import os, sys
+import os, sys, argparse, json
 import networkx as nx
 from extraction import load_got_tvshow_graphs, load_tvshow_character_map
 from graph_utils import cumulative_graph, relabeled_with_id
@@ -15,8 +21,9 @@ script_dir = os.path.abspath(os.path.dirname(__file__))
 
 
 if __name__ == "__main__":
-
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "-o",
         "--output-directory",
@@ -27,8 +34,22 @@ if __name__ == "__main__":
         "-g",
         "--granularity",
         type=str,
-        help="one of 'episode', 'scene'",
+        help="one of 'episode', 'scene' or 'block'",
         default="scene",
+    )
+    parser.add_argument(
+        "-bm",
+        "--block-method",
+        type=str,
+        help="one of 'locations', 'similarity'.",
+        default="locations",
+    )
+    parser.add_argument(
+        "-bmk",
+        "--block-method-kwargs",
+        type=str,
+        help="additional kwargs for the specified block method, as a json string. 'similarity' takes a 'threshold' argument between 0.0 and 1.0",
+        default="{}",
     )
     parser.add_argument(
         "-j",
@@ -59,14 +80,23 @@ if __name__ == "__main__":
 
     if args.output_directory is None:
         iscumulative_dir = "cumul" if args.cumulative else "instant"
+        granularity = (
+            f"block_{args.block_method}"
+            if args.granularity == "block"
+            else args.granularity
+        )
         args.output_directory = os.path.join(
-            script_dir, f"../../../in/tvshow/{iscumulative_dir}/{args.granularity}"
+            script_dir, f"../../../in/tvshow/{iscumulative_dir}/{granularity}"
         )
     print(f"output dir: {args.output_directory}", file=sys.stderr)
 
     charmap = load_tvshow_character_map(args.charmap_path)
     graphs = load_got_tvshow_graphs(
-        args.jeffrey_lancaster_repo_path, args.granularity, charmap
+        args.jeffrey_lancaster_repo_path,
+        args.granularity,
+        charmap,
+        block_method=args.block_method,
+        block_method_kwargs=json.loads(args.block_method_kwargs),
     )
     graphs_len = len(graphs)
 
