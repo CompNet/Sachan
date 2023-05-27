@@ -4,7 +4,7 @@
 # 04/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/exp_iGraphMatch.R.R")
+# source("src/matching/exp_iGraphMatch.R")
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
@@ -13,6 +13,9 @@ library("iGraphMatch")
 
 
 ###############################################################################
+# processing parameters
+COMMON_CHARS_ONLY <- TRUE
+
 # output folder
 out.folder <- file.path("out","matching")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
@@ -64,11 +67,14 @@ top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
 ###############################################################################
 gs <- list(g.nv, g.cx, g.tv)
 g.names <- c("novels","comics","tvshow")
-methods <- c("indefinite", "convex", "PATH", "Umeyama")	# "IsoRank" requires a vertex similarity matrix, "percolation" results in a matrix error
+methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix, "percolation" results in a matrix error
 
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
+colnames(tab.exact.matches) <- methods
+rownames(tab.exact.matches) <- rep(NA,nrow(tab.exact.matches))
 r <- 1
 
+# loop over pairs of networks
 for(i in 1:(length(gs)-1))
 {	cat("..Processing first network ",g.names[i],"\n",sep="")
 	
@@ -80,10 +86,23 @@ for(i in 1:(length(gs)-1))
 		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
 		rownames(tab.exact.matches)[r] <- comp.name
 		
+		# focus on characters common to both networks
+		if(COMMON_CHARS_ONLY)
+		{	mode.folder <- "common"
+			names <- intersect(V(g1)$name,V(g2)$name)
+			idx1 <- which(!(V(g1)$name %in% names))
+			g1 <- delete_vertices(g1,idx1)
+			idx2 <- which(!(V(g2)$name %in% names))
+			g2 <- delete_vertices(g2,idx2)
+		}
+		else
+			mode.folder <- "named"
+		
+		# loop over matching methods
 		for(m in 1:length(methods))
 		{	method <- methods[m]
 			cat("......Applying method ",method,"\n",sep="")
-			local.folder <- file.path(out.folder, comp.name, method)
+			local.folder <- file.path(out.folder, mode.folder, comp.name, method)
 			dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
 			
 			if(method=="indefinite")
@@ -123,18 +142,18 @@ for(i in 1:(length(gs)-1))
 					max_iter=200			# maximum number of replacing matches
 				)
 			}
-#			else if(method=="percolation")
-#			{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)
-#				res <- gm(
-#					A=g1, B=g2,				# graphs to compare 
-#					seeds=seed,				# known vertex matches
-#					#similarity,			# vertex-vertex similarity matrix
-#					
-#					method="percolation",	# matching method: percolation
-#					#r="2",					# threshold of neighboring pair scores
-#					#ExpandWhenStuck=FALSE	# expand the seed set when Percolation algorithm stops before matching all the vertices
-#				)
-#			}
+			else if(method=="percolation")
+			{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)
+				res <- gm(
+					A=g1, B=g2,				# graphs to compare 
+					seeds=seed,				# known vertex matches
+					#similarity,			# vertex-vertex similarity matrix
+					
+					method="percolation",	# matching method: percolation
+					#r="2",					# threshold of neighboring pair scores
+					ExpandWhenStuck=TRUE	# expand the seed set when Percolation algorithm stops before matching all the vertices (better when few seeds)
+				)
+			}
 #			else if(method=="IsoRank")
 #			{	res <- gm(
 #					A=g1, B=g2,				# graphs to compare 
@@ -164,13 +183,14 @@ for(i in 1:(length(gs)-1))
 			# number of perfect matches
 			idx.exact.matches <- which(V(g1)$name[res$corr_A]==V(g2)$name[res$corr_B])
 			nbr.exact.matches <- length(idx.exact.matches)
-			rownames(tab.exact.matches)[r,method] <- nbr.exact.matches
+			tab.exact.matches[r,method] <- nbr.exact.matches
 			cat("Number of perfect matches:",nbr.exact.matches,"\n")
 			sink()
 			
 			# list perfect matches
 			if(nbr.exact.matches>0)
 			{	exact.matches <- matrix(V(g1)$name[res$corr_A][idx.exact.matches],ncol=1)
+				colnames(exact.matches) <- "Character"
 				cat("List of exact matches:\n")
 				print(exact.matches)
 				write.csv(x=exact.matches, file=file.path(local.folder,"list_exact_matches.csv"), row.names=FALSE, fileEncoding="UTF-8")
@@ -178,10 +198,12 @@ for(i in 1:(length(gs)-1))
 			
 			# list all character matches
 			tab <- cbind(V(g1)$name[res$corr_A], V(g2)$name[res$corr_B])
+			colnames(tab) <- c("Corr_A","Corr_B")
 			#print(tab)
 			write.csv(x=tab, file=file.path(local.folder,"list_full.csv"), row.names=FALSE, fileEncoding="UTF-8")
 			# same thing for the 20 top characters
 			tab <- cbind(V(g1)$name[res$corr_A], V(g2)$name[res$corr_B])[V(g1)$name[res$corr_A] %in% top.chars | V(g2)$name[res$corr_B] %in% top.chars,]
+			colnames(tab) <- c("Top_Corr_A","Top_Corr_B")
 			print(tab)
 			write.csv(x=tab, file=file.path(local.folder,"list_top.csv"), row.names=FALSE, fileEncoding="UTF-8")
 			
@@ -190,11 +212,23 @@ for(i in 1:(length(gs)-1))
 			{	cat(".........Computing measure ",meas,"\n",sep="")
 				bm <- best_matches(A=g1, B=g2, match=res, measure=meas)			# "row_cor", "row_diff", or "row_perm_stat"
 				tab <- cbind(bm,V(g1)$name[bm$A_best], V(g2)$name[bm$B_best])
+				colnames(tab)[(ncol(bm)+1):(ncol(bm)+2)] <- c("Character_A","Character_B")
 				print(tab[1:20,])
 				write.csv(x=tab, file=file.path(local.folder,paste0("best_matches_",meas,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 			}
-			
-			r <- r + 1
 		}
+		
+		r <- r + 1
 	}
 }
+
+# record overall table
+print(tab.exact.matches)
+write.csv(x=tab.exact.matches, file=file.path(out.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
+
+# TODO
+# x focus on common characters
+# - try centering the graphs
+# - try the seed-based iterative approach
+# - use main characters as seeds
+# - use time
