@@ -14,11 +14,36 @@ library("iGraphMatch")
 
 ###############################################################################
 # processing parameters
+MAX_ITER <- 200
 COMMON_CHARS_ONLY <- TRUE
+CENTER_GRAPHS <- FALSE
+USE_SEEDS <- TRUE
+USE_SEEDS_NBR <- 15
+
+
+
+
+###############################################################################
 
 # output folder
 out.folder <- file.path("out","matching")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
+
+{	if(COMMON_CHARS_ONLY)
+		mode.folder <- "common"
+	else
+		mode.folder <- "named"
+	
+	if(CENTER_GRAPHS)
+		mode.folder <- paste0(mode.folder, "_centered")
+	else
+		mode.folder <- paste0(mode.folder, "_raw")
+	
+	if(USE_SEEDS)
+		mode.folder <- paste0(mode.folder, "_",USE_SEEDS_NBR,"seeds")
+	else
+		mode.folder <- paste0(mode.folder, "_noseeds")
+}
 
 
 
@@ -60,6 +85,7 @@ E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
 ###############################################################################
 # identify most important characters (according to novels)
 top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
+char.seeds <- top.chars[1:USE_SEEDS_NBR]
 
 
 
@@ -67,7 +93,7 @@ top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
 ###############################################################################
 gs <- list(g.nv, g.cx, g.tv)
 g.names <- c("novels","comics","tvshow")
-methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix, "percolation" results in a matrix error
+methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
 
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
 colnames(tab.exact.matches) <- methods
@@ -88,15 +114,25 @@ for(i in 1:(length(gs)-1))
 		
 		# focus on characters common to both networks
 		if(COMMON_CHARS_ONLY)
-		{	mode.folder <- "common"
-			names <- intersect(V(g1)$name,V(g2)$name)
+		{	names <- intersect(V(g1)$name,V(g2)$name)
 			idx1 <- which(!(V(g1)$name %in% names))
 			g1 <- delete_vertices(g1,idx1)
 			idx2 <- which(!(V(g2)$name %in% names))
 			g2 <- delete_vertices(g2,idx2)
 		}
-		else
-			mode.folder <- "named"
+		
+		
+		# possibly center the graphs
+		dg1 <- g1
+		dg2 <- g2
+		if(CENTER_GRAPHS)
+		{	dg1 <- center_graph(g1, scheme="center", use_splr=TRUE)
+			dg2 <- center_graph(g2, scheme="center", use_splr=TRUE)
+		}
+		# possibly handle seeds
+		seeds <- NULL
+		if(USE_SEEDS)
+			seeds <- cbind(match(char.seeds,V(g1)$name), match(char.seeds,V(g2)$name))
 		
 		# loop over matching methods
 		for(m in 1:length(methods))
@@ -107,45 +143,47 @@ for(i in 1:(length(gs)-1))
 			
 			if(method=="indefinite")
 			{	res <- gm(
-					A=g1, B=g2,				# graphs to compare 
-					#seeds,					# known vertex matches
+					A=dg1, B=dg2,			# graphs to compare 
+					seeds=seeds,			# known vertex matches
 					#similarity,			# vertex-vertex similarity matrix
 					
 					method="indefinite",	# matching method: indefinite relaxation of the objective function
 					start="bari", 			# initialization method for the matrix
 					#lap_method=NULL,		# method used to solve LAP
-					max_iter=200			# maximum number of replacing matches
+					max_iter=MAX_ITER		# maximum number of replacing matches
 				)
 			}
 			else if(method=="convex")
 			{	res <- gm(
-					A=g1, B=g2,				# graphs to compare 
-					#seeds,					# known vertex matches
+					A=dg1, B=dg2,			# graphs to compare 
+					seeds=seeds,			# known vertex matches
 					#similarity,			# vertex-vertex similarity matrix
 					
 					method="convex",		# matching method: convex relaxation of the objective function
 					start="bari", 			# initialization method for the matrix
 					#lap_method=NULL,		# method used to solve LAP
-					max_iter=200,			# maximum number of replacing matches
+					max_iter=MAX_ITER,		# maximum number of replacing matches
 					#tol = 1e-05			# tolerance of edge disagreements
 				)
 			}
 			else if(method=="PATH")
 			{	res <- gm(
-					A=g1, B=g2,				# graphs to compare 
-					#seeds,					# known vertex matches
+					A=dg1, B=dg2,			# graphs to compare 
+					seeds=seeds,			# known vertex matches
 					#similarity,			# vertex-vertex similarity matrix
 					
 					method="PATH",			# matching method: ?
 					#lap_method=NULL,		# method used to solve LAP
 					#epsilon=1,				# small value
-					max_iter=200			# maximum number of replacing matches
+					max_iter=MAX_ITER		# maximum number of replacing matches
 				)
 			}
 			else if(method=="percolation")
 			{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)
+				if(USE_SEEDS)
+					seed <- seeds
 				res <- gm(
-					A=g1, B=g2,				# graphs to compare 
+					A=dg1, B=dg2,			# graphs to compare 
 					seeds=seed,				# known vertex matches
 					#similarity,			# vertex-vertex similarity matrix
 					
@@ -156,19 +194,19 @@ for(i in 1:(length(gs)-1))
 			}
 #			else if(method=="IsoRank")
 #			{	res <- gm(
-#					A=g1, B=g2,				# graphs to compare 
+#					A=dg1, B=dg2,			# graphs to compare 
 #					#seeds,					# known vertex matches
 #					similarity=,			# vertex-vertex similarity matrix (required for method "IsoRank")
 #					
 #					method="IsoRank",		# matching method: IsoRank algorithm (spectral method)
 #					#lap_method=NULL,		# method used to solve LAP
-#					max_iter=200			# maximum number of replacing matches
+#					max_iter=MAX_ITER		# maximum number of replacing matches
 #				)
 #			}
 			else if(method=="Umeyama")
 			{	res <- gm(
-					A=g1, B=g2,				# graphs to compare 
-					#seeds,					# known vertex matches
+					A=dg1, B=dg2,			# graphs to compare 
+					seeds=seeds,			# known vertex matches
 					#similarity,			# vertex-vertex similarity matrix
 					
 					method="Umeyama"		# matching method: Umeyama algorithm (spectral)
@@ -179,13 +217,15 @@ for(i in 1:(length(gs)-1))
 			# ground truth (not useful due to the NAs resulting from different characters in the nets)
 			gt <- match(V(g1)$name, V(g2)$name)
 			# summary of the matching process
-			print(summary(res, g1, g2, true_label=gt))
+			print(summary(res, dg1, dg2, true_label=gt))
 			# number of perfect matches
 			idx.exact.matches <- which(V(g1)$name[res$corr_A]==V(g2)$name[res$corr_B])
 			nbr.exact.matches <- length(idx.exact.matches)
 			tab.exact.matches[r,method] <- nbr.exact.matches
 			cat("Number of perfect matches:",nbr.exact.matches,"\n")
 			sink()
+			print(summary(res, dg1, dg2, true_label=gt))
+			cat("Number of perfect matches:",nbr.exact.matches,"\n")
 			
 			# list perfect matches
 			if(nbr.exact.matches>0)
@@ -224,11 +264,11 @@ for(i in 1:(length(gs)-1))
 
 # record overall table
 print(tab.exact.matches)
-write.csv(x=tab.exact.matches, file=file.path(out.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
+write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
 
 # TODO
 # x focus on common characters
-# - try centering the graphs
+# x try centering the graphs
 # - try the seed-based iterative approach
-# - use main characters as seeds
-# - use time
+# x use main characters as seeds
+# - use time (ie. the narrative dynamics)
