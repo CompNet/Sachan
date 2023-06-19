@@ -1,55 +1,23 @@
-## -*- eval: (code-cells-mode); -*-
-#
-# Experiments with temporal matching
+# Temporal matching
 #
 # Author: Arthur Amalvy
 # 12/06
-
-# %% Setup
-from typing import *
-import os
+import json
+from typing import List, Optional, Literal
+import os, sys, argparse, glob, copy, pickle
+import networkx as nx
+import numpy as np
+from tqdm import tqdm
+import matplotlib.pyplot as plt
+from more_itertools import flatten
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../.."
-
-# TODO: get these from command line
-jeffrey_got_repo_path = "~/Dev/game-of-thrones"
-gold_alignment_path = "~/Nextcloud/phd/irp/alignment_gold.pickle"
-
-
-# %%
-import glob
-import networkx as nx
-from ..preprocessing.tvshow.extraction import (
+sys.path.append(f"{root_dir}/src")
+from preprocessing.tvshow.extraction import (
     load_got_tvshow_graphs,
     load_tvshow_character_map,
 )
-
-
-tvshow_charmap = load_tvshow_character_map(f"{root_dir}/in/tvshow/charmap.csv")
-tvshow_graphs = load_got_tvshow_graphs(
-    jeffrey_got_repo_path, "block", tvshow_charmap, "locations"
-)
-tvshow_graphs = [
-    G for G in tvshow_graphs if G.graph["season"] < 7
-]  # ignore season 7 and 8
-
-novel_graphs = []
-for path in sorted(glob.glob(f"{root_dir}/in/novels/instant/*.graphml")):
-    novel_graphs.append(nx.read_graphml(path))
-
-novel_graphs = [
-    nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
-    for G in novel_graphs
-]
-
-
-# %%
-import copy
-import matplotlib.pyplot as plt
-import numpy as np
-from tqdm import tqdm
-from more_itertools import flatten
 
 
 def filtered_graph(G: nx.Graph, nodes: list) -> nx.Graph:
@@ -132,26 +100,17 @@ def graph_similarity_matrix(
     return M
 
 
-# (chapters_nb, blocks_nb)
-M_sim = graph_similarity_matrix(tvshow_graphs, novel_graphs, "edges")
-
-
 def get_episode_i(G: nx.Graph) -> int:
     assert G.graph["season"] < 7
     return (G.graph["season"] - 1) * 10 + G.graph["episode"] - 1
 
 
-# (blocks_nb)
-M_block_to_episode = np.array([get_episode_i(G) for G in tvshow_graphs])
-
-
-# %%
-import pickle
-
-
-def get_align_matrix(M_sim: np.ndarray, threshold: float) -> np.ndarray:
-    """
+def get_align_matrix(
+    M_sim: np.ndarray, M_block_to_episode: np.ndarray, threshold: float
+) -> np.ndarray:
+    """Given similarity between blocks and chapters, return the mapping between chapters and episodes.
     :param M_sim: ``(chapters_nb, blocks_nb)``
+    :param M_block_to_episode: ``(blocks_nb)``
     :param threshold: between 0 and 1
     :return: ``(episodes_nb, chapters_nb)``
     """
@@ -167,36 +126,98 @@ def get_align_matrix(M_sim: np.ndarray, threshold: float) -> np.ndarray:
     return np.stack(M_align)
 
 
-M_align = get_align_matrix(M_sim, 0.1)
+def episodes_chapters_mapping(
+    tvshow_graphs: List[nx.Graph], novel_graphs: List[nx.Graph], threshold: float
+) -> np.ndarray:
+    """
+    :return: ``(episodes_nb, chapters_nb)``
+    """
+    # (chapters_nb, blocks_nb)
+    M_sim = graph_similarity_matrix(tvshow_graphs, novel_graphs, "edges")
 
-with open(gold_alignment_path, "rb") as f:
-    M_align_gold = pickle.load(f)
+    # (blocks_nb)
+    M_block_to_episode = np.array([get_episode_i(G) for G in tvshow_graphs])
 
-fig, axs = plt.subplots(2, 1)
-axs[0].set_title("Gold alignment")
-axs[0].imshow(M_align_gold)
-axs[0].set_xlabel("chapters")
-axs[0].set_ylabel("episodes")
-axs[1].set_title("jaccard-index based alignment")
-axs[1].imshow(M_align)
-axs[1].set_xlabel("chapters")
-axs[1].set_ylabel("episodes")
-plt.show()
+    return get_align_matrix(M_sim, M_block_to_episode, threshold)
 
-# %%
-from sklearn.metrics import precision_recall_fscore_support
 
-metrics = []
-thresholds = np.arange(0, 1, 0.01)
-for threshold in thresholds:
-    M_align = get_align_matrix(M_sim, threshold)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        M_align_gold.flatten(), M_align.flatten(), average="binary"
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-j",
+        "--jeffrey-lancaster-repo-path",
+        type=str,
+        help="path to Jeffrey Lancaster's game-of-thrones repo.",
     )
-    metrics.append((precision, recall, f1))
+    parser.add_argument("-g", "--gold-alignment-path", type=str)
+    args = parser.parse_args()
 
-plt.plot(thresholds, [m[0] for m in metrics], label="precision")
-plt.plot(thresholds, [m[1] for m in metrics], label="recall")
-plt.plot(thresholds, [m[2] for m in metrics], label="f1")
-plt.legend()
-plt.show()
+    tvshow_charmap = load_tvshow_character_map(f"{root_dir}/in/tvshow/charmap.csv")
+
+    novel_graphs = []
+    for path in sorted(glob.glob(f"{root_dir}/in/novels/instant/*.graphml")):
+        novel_graphs.append(nx.read_graphml(path))
+    novel_graphs = [
+        nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
+        for G in novel_graphs
+    ]
+
+    with open(os.path.expanduser(args.gold_alignment_path), "rb") as f:
+        M_align_gold = pickle.load(f)
+
+    M_aligns = []
+
+    block_methods: List[Literal["locations", "similarity"]] = [
+        "locations",
+        "similarity",
+    ]
+    block_kwargs_list = [{}, {"threshold": 0.1}]
+    threshold = 0.1
+
+    for block_method, block_kwargs in zip(block_methods, block_kwargs_list):
+        tvshow_graphs = load_got_tvshow_graphs(
+            os.path.expanduser(args.jeffrey_lancaster_repo_path),
+            "block",
+            tvshow_charmap,
+            block_method,
+            block_kwargs,
+        )
+        tvshow_graphs = [
+            G for G in tvshow_graphs if G.graph["season"] < 7
+        ]  # ignore season 7 and 8
+
+        M_aligns.append(
+            episodes_chapters_mapping(tvshow_graphs, novel_graphs, threshold)
+        )
+
+    fig, axs = plt.subplots(1 + len(block_methods), 1)
+    axs[0].set_title("Gold alignment")
+    axs[0].imshow(M_align_gold)
+    axs[0].set_xlabel("chapters")
+    axs[0].set_ylabel("episodes")
+    for i, (block_method, M_align) in enumerate(zip(block_methods, M_aligns)):
+        axs[i + 1].set_title(
+            f"jaccard-index based alignment ({block_method}, threshold={threshold})"
+        )
+        axs[i + 1].imshow(M_align)
+        axs[i + 1].set_xlabel("chapters")
+        axs[i + 1].set_ylabel("episodes")
+    plt.show()
+
+    # from sklearn.metrics import precision_recall_fscore_support
+
+    # metrics = []
+    # thresholds = np.arange(0, 1, 0.01)
+    # for threshold in thresholds:
+    #     M_align = get_align_matrix(M_sim, threshold)
+    #     precision, recall, f1, _ = precision_recall_fscore_support(
+    #         M_align_gold.flatten(), M_align.flatten(), average="binary"
+    #     )
+    #     metrics.append((precision, recall, f1))
+
+    # plt.plot(thresholds, [m[0] for m in metrics], label="precision")
+    # plt.plot(thresholds, [m[1] for m in metrics], label="recall")
+    # plt.plot(thresholds, [m[2] for m in metrics], label="f1")
+    # plt.legend()
+    # plt.show()
