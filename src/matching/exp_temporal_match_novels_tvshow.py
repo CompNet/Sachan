@@ -2,7 +2,6 @@
 #
 # Author: Arthur Amalvy
 # 12/06
-import json
 from typing import List, Optional, Literal
 import os, sys, argparse, glob, copy, pickle
 import networkx as nx
@@ -191,18 +190,20 @@ if __name__ == "__main__":
             episodes_chapters_mapping(tvshow_graphs, novel_graphs, threshold)
         )
 
-    fig, axs = plt.subplots(1 + len(block_methods), 1)
-    axs[0].set_title("Gold alignment")
+    FONTSIZE = 10
+    fig, axs = plt.subplots(1 + len(block_methods), 1, figsize=(8, 6))
+    axs[0].set_title("Gold alignment", fontsize=FONTSIZE)
     axs[0].imshow(M_align_gold)
-    axs[0].set_xlabel("chapters")
-    axs[0].set_ylabel("episodes")
+    axs[0].set_xlabel("chapters", fontsize=FONTSIZE)
+    axs[0].set_ylabel("episodes", fontsize=FONTSIZE)
     for i, (block_method, M_align) in enumerate(zip(block_methods, M_aligns)):
         axs[i + 1].set_title(
-            f"jaccard-index based alignment ({block_method}, threshold={threshold})"
+            f"jaccard-index based alignment ({block_method}, threshold={threshold})",
+            fontsize=FONTSIZE,
         )
         axs[i + 1].imshow(M_align)
-        axs[i + 1].set_xlabel("chapters")
-        axs[i + 1].set_ylabel("episodes")
+        axs[i + 1].set_xlabel("chapters", fontsize=FONTSIZE)
+        axs[i + 1].set_ylabel("episodes", fontsize=FONTSIZE)
     plt.show()
 
     # from sklearn.metrics import precision_recall_fscore_support
