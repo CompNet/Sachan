@@ -4,7 +4,7 @@
 # 06/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/igm/exp_simple.R")
+# source("src/matching/igm/exp_adaptive_hard_seeds.R")
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
@@ -109,6 +109,7 @@ for(i in 1:(length(gs)-1))
 			dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
 			
 			# loop over seed number
+			tab.evol <- c()
 			seeds <- NULL
 			for(s in sn)
 			{	cat("........Number of seeds: ",s,"\n",sep="")
@@ -201,6 +202,7 @@ for(i in 1:(length(gs)-1))
 				idx.exact.matches <- which(V(g1)$name[res$corr_A]==V(g2)$name[res$corr_B])
 				nbr.exact.matches <- length(idx.exact.matches)
 				tab.exact.matches[r,method] <- nbr.exact.matches
+				tab.evol <- c(tab.evol, nbr.exact.matches)
 				cat("Number of perfect matches:",nbr.exact.matches,"\n")
 				sink()
 				print(summary(res, dg1, dg2, true_label=gt))
@@ -236,6 +238,11 @@ for(i in 1:(length(gs)-1))
 					write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%02d",s),"_best_matches_",meas,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 				}
 			}
+			
+			# record evolution table
+			tab.evol <- data.frame(sn, tab.evol)
+			colnames(tab.evol) <- c("AdaptiveSeeds","ExactMatches")
+			write.csv(x=tab.evol, file=file.path(local.folder,"_exact_matches_evolution.csv"), row.names=FALSE, fileEncoding="UTF-8")
 		}
 		
 		r <- r + 1
@@ -245,17 +252,6 @@ for(i in 1:(length(gs)-1))
 # record overall table
 print(tab.exact.matches)
 write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
-
-
-match_w_soft_seeds <- function(ns)
-{	seeds_bm <- head(bm, ns)
-	precision <- mean(seeds_bm$A_best == seeds_bm$B_best)
-	start_soft <- init_start(start="bari", nns=max(dim(A)[1], dim(B)[1]), soft_seeds=seeds_bm[, 1:2])
-	match_FW_center_soft <- gm(A=A_center, B=B_center, start=start_soft, max_iter=200)
-	edge_info <- summary(match_FW_center_soft, A, B)$edge_match_info
-	cbind(ns, precision, edge_info)
-}
-map_dfr(seq(from = 0, to = 80, by = 20), match_w_soft_seeds)
 
 
 
