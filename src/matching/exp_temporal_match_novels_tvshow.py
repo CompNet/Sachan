@@ -1,7 +1,6 @@
-# Temporal matching
+# Temporal matching between novels and the TV show
 #
 # Author: Arthur Amalvy
-# 12/06
 from typing import List, Optional, Literal
 import os, sys, argparse, glob, copy, pickle
 import networkx as nx
@@ -143,14 +142,10 @@ def episodes_chapters_mapping(
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-j",
-        "--jeffrey-lancaster-repo-path",
-        type=str,
-        help="path to Jeffrey Lancaster's game-of-thrones repo.",
-    )
     parser.add_argument("-g", "--gold-alignment-path", type=str)
     args = parser.parse_args()
+
+    THRESHOLD = 0.1
 
     tvshow_charmap = load_tvshow_character_map(f"{root_dir}/in/tvshow/charmap.csv")
 
@@ -162,7 +157,7 @@ if __name__ == "__main__":
         for G in novel_graphs
     ]
 
-    with open(os.path.expanduser(args.gold_alignment_path), "rb") as f:
+    with open(args.gold_alignment_path, "rb") as f:
         M_align_gold = pickle.load(f)
 
     M_aligns = []
@@ -171,23 +166,27 @@ if __name__ == "__main__":
         "locations",
         "similarity",
     ]
-    block_kwargs_list = [{}, {"threshold": 0.1}]
-    threshold = 0.1
 
-    for block_method, block_kwargs in zip(block_methods, block_kwargs_list):
-        tvshow_graphs = load_got_tvshow_graphs(
-            os.path.expanduser(args.jeffrey_lancaster_repo_path),
-            "block",
-            tvshow_charmap,
-            block_method,
-            block_kwargs,
-        )
+    for block_method in block_methods:
+        tvshow_graphs = []
+        for path in sorted(
+            glob.glob(f"{root_dir}/in/tvshow/instant/block_{block_method}/*.graphml")
+        ):
+            tvshow_graphs.append(nx.read_graphml(path))
+
+        # ignore season 7 and 8
+        tvshow_graphs = [G for G in tvshow_graphs if G.graph["season"] < 7]
+
+        # relabeling
         tvshow_graphs = [
-            G for G in tvshow_graphs if G.graph["season"] < 7
-        ]  # ignore season 7 and 8
+            nx.relabel_nodes(
+                G, {node: data["name"] for node, data in G.nodes(data=True)}
+            )
+            for G in tvshow_graphs
+        ]
 
         M_aligns.append(
-            episodes_chapters_mapping(tvshow_graphs, novel_graphs, threshold)
+            episodes_chapters_mapping(tvshow_graphs, novel_graphs, THRESHOLD)
         )
 
     FONTSIZE = 10
@@ -198,7 +197,7 @@ if __name__ == "__main__":
     axs[0].set_ylabel("episodes", fontsize=FONTSIZE)
     for i, (block_method, M_align) in enumerate(zip(block_methods, M_aligns)):
         axs[i + 1].set_title(
-            f"jaccard-index based alignment ({block_method}, threshold={threshold})",
+            f"jaccard-index based alignment ({block_method}, threshold={THRESHOLD})",
             fontsize=FONTSIZE,
         )
         axs[i + 1].imshow(M_align)
