@@ -1,5 +1,8 @@
+# Temporal matching between novels and the TV show
+#
+# Author: Arthur Amalvy
 from typing import List, Literal, Optional
-import os, sys, glob, copy
+import os, sys, glob, copy, argparse, pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
@@ -94,6 +97,10 @@ def graph_similarity_matrix(
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-g", "--gold-alignment-path", type=str)
+    args = parser.parse_args()
+
     novels_graphs = []
     for path in sorted(glob.glob(f"{root_dir}/in/novels/instant/1.AGoT*.graphml")):
         novels_graphs.append(nx.read_graphml(path))
@@ -103,6 +110,7 @@ if __name__ == "__main__":
         nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
         for G in novels_graphs
     ]
+    assert len(novels_graphs) > 0
 
     comics_graphs = []
     for path in sorted(glob.glob(f"{root_dir}/in/comics/instant/chapter/*.graphml")):
@@ -112,14 +120,19 @@ if __name__ == "__main__":
         nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
         for G in comics_graphs
     ]
+    assert len(comics_graphs) > 0
 
     # TODO: compute gold alignment
+    with open(args.gold_alignment_path, "rb") as f:
+        # (novels_chapters_nb, comics_chapters_nb)
+        M_align_gold = pickle.load(f)
 
     # (novels_chapters_nb, comics_chapters_nb)
     M_sim = graph_similarity_matrix(comics_graphs, novels_graphs, "edges")
     M_align = M_sim > 0.1
 
     figs, axs = plt.subplots(1, 2)
+    axs[0].imshow(M_align_gold)
     axs[0].set_title("Gold alignment")
     axs[0].set_xlabel("chapters")
     axs[0].set_ylabel("comics")
