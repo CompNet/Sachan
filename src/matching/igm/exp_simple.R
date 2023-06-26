@@ -4,7 +4,7 @@
 # 04/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/exp_iGraphMatch.R")
+# source("src/matching/igm/exp_hard_adaptive_seeds.R")
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
@@ -17,14 +17,13 @@ library("iGraphMatch")
 MAX_ITER <- 200
 COMMON_CHARS_ONLY <- TRUE
 CENTER_GRAPHS <- FALSE
-USE_SEEDS <- TRUE
+USE_SEEDS <- FALSE
 USE_SEEDS_NBR <- 15
 
 
 
 
 ###############################################################################
-
 # output folder
 out.folder <- file.path("out","matching")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
@@ -120,7 +119,6 @@ for(i in 1:(length(gs)-1))
 			idx2 <- which(!(V(g2)$name %in% names))
 			g2 <- delete_vertices(g2,idx2)
 		}
-		
 		
 		# possibly center the graphs
 		dg1 <- g1
@@ -265,10 +263,3 @@ for(i in 1:(length(gs)-1))
 # record overall table
 print(tab.exact.matches)
 write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
-
-# TODO
-# x focus on common characters
-# x try centering the graphs
-# - try the seed-based iterative approach
-# x use main characters as seeds
-# - use time (ie. the narrative dynamics)
