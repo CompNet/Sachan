@@ -1,4 +1,7 @@
-# Experiments with vertex matching.
+# Experiments with vertex matching, using the standard approach.
+# We experiment using seeds, focusing on common characters (between
+# both compared graphs), centering the graphs (some preprocessing
+# supposed to improve the matching). 
 # 
 # Author: Vincent Labatut
 # 04/2023

@@ -1,4 +1,7 @@
-# Experiments with vertex matching.
+# Experiments with vertex matching, using the adaptive hard seed approach.
+# It is an iterative method where we take the first few best matches (according
+# to some heuristic) and use them as hard seeds in the next iteration. By using
+# an increasing number of seeds, the estimation is supposed to get better and better.
 # 
 # Author: Vincent Labatut
 # 06/2023
@@ -8,6 +11,7 @@
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
+library("RColorBrewer")
 
 
 
@@ -65,7 +69,6 @@ E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
 ###############################################################################
 # identify most important characters (according to novels)
 top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
-char.seeds <- top.chars[1:USE_SEEDS_NBR]
 
 
 
@@ -80,7 +83,7 @@ tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=l
 colnames(tab.exact.matches) <- methods
 rownames(tab.exact.matches) <- rep(NA,nrow(tab.exact.matches))
 r <- 1
-sn <- c(0, 5, 10, 15, 20)	# numbers of seeds
+sn <- c(0, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 115, 130)	# numbers of seeds
 
 # loop over pairs of networks
 for(i in 1:(length(gs)-1))
@@ -97,9 +100,9 @@ for(i in 1:(length(gs)-1))
 		# focus on characters common to both networks
 		names <- intersect(V(g1)$name,V(g2)$name)
 		idx1 <- which(!(V(g1)$name %in% names))
-		dg1 <- delete_vertices(g1,idx1)
+		g1 <- delete_vertices(g1,idx1)
 		idx2 <- which(!(V(g2)$name %in% names))
-		dg2 <- delete_vertices(g2,idx2)
+		g2 <- delete_vertices(g2,idx2)
 		
 		# loop over matching methods
 		for(m in 1:length(methods))
@@ -117,13 +120,14 @@ for(i in 1:(length(gs)-1))
 				# update seeds
 				if(s>0)
 				{	bm <- best_matches(A=g1, B=g2, match=res, measure="row_cor")			# "row_cor", "row_diff", or "row_perm_stat"
-					seeds_bm <- head(bm, s)
+					bm0 <- bm[!is.na(bm[,"A_best"]) & !is.na(bm[,"B_best"]),]
+					seeds_bm <- head(bm0, min(s,nrow(bm0)))
 					seeds <- seeds_bm[, 1:2]
 				}
 				
 				if(method=="indefinite")
 				{	res <- gm(
-						A=dg1, B=dg2,			# graphs to compare 
+						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
 						#similarity,			# vertex-vertex similarity matrix
 						
@@ -135,7 +139,7 @@ for(i in 1:(length(gs)-1))
 				}
 				else if(method=="convex")
 				{	res <- gm(
-						A=dg1, B=dg2,			# graphs to compare 
+						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
 						#similarity,			# vertex-vertex similarity matrix
 						
@@ -148,7 +152,7 @@ for(i in 1:(length(gs)-1))
 				}
 				else if(method=="PATH")
 				{	res <- gm(
-						A=dg1, B=dg2,			# graphs to compare 
+						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
 						#similarity,			# vertex-vertex similarity matrix
 						
@@ -163,7 +167,7 @@ for(i in 1:(length(gs)-1))
 					if(s!=0)
 						seed <- seeds
 					res <- gm(
-						A=dg1, B=dg2,			# graphs to compare 
+						A=g1, B=g2,				# graphs to compare 
 						seeds=seed,				# known vertex matches
 						#similarity,			# vertex-vertex similarity matrix
 						
@@ -174,7 +178,7 @@ for(i in 1:(length(gs)-1))
 				}
 #				else if(method=="IsoRank")
 #				{	res <- gm(
-#						A=dg1, B=dg2,			# graphs to compare 
+#						A=g1, B=g2,				# graphs to compare 
 #						#seeds,					# known vertex matches
 #						similarity=,			# vertex-vertex similarity matrix (required for method "IsoRank")
 #						
@@ -185,7 +189,7 @@ for(i in 1:(length(gs)-1))
 #				}
 				else if(method=="Umeyama")
 				{	res <- gm(
-						A=dg1, B=dg2,			# graphs to compare 
+						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
 						#similarity,			# vertex-vertex similarity matrix
 						
@@ -197,7 +201,7 @@ for(i in 1:(length(gs)-1))
 				# ground truth (not useful due to the NAs resulting from different characters in the nets)
 				gt <- match(V(g1)$name, V(g2)$name)
 				# summary of the matching process
-				print(summary(res, dg1, dg2, true_label=gt))
+				print(summary(res, g1, g2, true_label=gt))
 				# number of perfect matches
 				idx.exact.matches <- which(V(g1)$name[res$corr_A]==V(g2)$name[res$corr_B])
 				nbr.exact.matches <- length(idx.exact.matches)
@@ -205,7 +209,7 @@ for(i in 1:(length(gs)-1))
 				tab.evol <- c(tab.evol, nbr.exact.matches)
 				cat("Number of perfect matches:",nbr.exact.matches,"\n")
 				sink()
-				print(summary(res, dg1, dg2, true_label=gt))
+				print(summary(res, g1, g2, true_label=gt))
 				cat("Number of perfect matches:",nbr.exact.matches,"\n")
 				
 				# list perfect matches
@@ -252,6 +256,61 @@ for(i in 1:(length(gs)-1))
 # record overall table
 print(tab.exact.matches)
 write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
+
+
+
+
+###############################################################################
+# plot the evolution of the performance over iterations
+#colors <- 1:length(methods)
+colors <- brewer_pal(type="qual", palette=2)(length(methods))
+
+for(i in 1:(length(gs)-1))
+{	for(j in (i+1):length(gs))
+	{	comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+		local.folder <- file.path(out.folder, mode.folder, comp.name)
+		
+		# loop over matching methods
+		all.evol <- c()
+		for(m in 1:length(methods))
+		{	# read evolution table
+			method <- methods[m]
+			tab.evol <- read.csv(file=file.path(local.folder,method,"_exact_matches_evolution.csv"), header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+			all.evol <- c(all.evol, tab.evol[,"ExactMatches"])
+		}
+		
+		# create plot
+		plot.file <- file.path(local.folder,"exact_matches_evolution")
+		pdf(paste0(plot.file,".pdf"), bg="white")
+			plot(
+				NULL, 
+				main=paste0(g.names[i], " vs ", g.names[j]),
+				xlab="Adaptive hard seeds", ylab="Exact matches",
+				xlim=range(sn), ylim=range(all.evol)
+			)
+				
+			# loop over matching methods
+			for(m in 1:length(methods))
+			{	# read evolution table
+				method <- methods[m]
+				tab.evol <- read.csv(file=file.path(local.folder,method,"_exact_matches_evolution.csv"), header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+				
+				# plot values
+				lines(x=tab.evol[,"AdaptiveSeeds"], y=tab.evol[,"ExactMatches"], col=colors[m], lwd=2)
+			}
+		
+		# add legend
+		legend(
+			x="topleft",
+			legend=methods,
+			fill=colors
+		)
+		
+		# close plot
+		dev.off()
+	}
+}
+
 
 
 
