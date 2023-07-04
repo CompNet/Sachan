@@ -94,7 +94,7 @@ for(time in c("cumul","instant"))
 
 ###############################################################################
 # read the static novel graph
-g.nv <- read.graph("in/novels/cumul/5.ADwD_72_cumul.graphml", format="graphml")
+g.nv <- read.graph("in/novels/cumul/5.ADwD_71_cumul.graphml", format="graphml")
 names.nv <- sort(V(g.nv)$name)
 map <- match(names.nv, char.tab[,"Name"])
 idx <- which(is.na(map))
