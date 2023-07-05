@@ -94,7 +94,7 @@ for(time in c("cumul","instant"))
 
 ###############################################################################
 # read the static novel graph
-g.nv <- read.graph("in/novels/cumul/5.ADwD_71_cumul.graphml", format="graphml")
+g.nv <- read.graph("in/novels/cumul/5.ADwD_72_cumul.graphml", format="graphml")
 names.nv <- sort(V(g.nv)$name)
 map <- match(names.nv, char.tab[,"Name"])
 idx <- which(is.na(map))
@@ -106,7 +106,10 @@ print(unnamed.nv)
 		"Aewin Targaryen","Lord Cerwyn","Lord Farman","Lord Swann","Lord Corbray","Lord Goodbrook",
 		"Lord Whent","Lady Rykker","Lord Crakehall","Lord Harroway","Old Lord Dustin","Ser Morghil","Lord Darry",
 		"Lord Lothston","Ser Wilbert","Walda Frey","Lord Dondarrion","Lord Mooton","Walda Frey 3","Grazdan 2",
-		"Lord Blackwood", "Lord Estermont", "Lord of Godsgrace", "Walda Frey 4", "Grazdan 3", "Grazdan 4")
+		"Lord Blackwood", "Lord Estermont", "Lord of Godsgrace", "Walda Frey 4", "Grazdan 3", "Grazdan 4",
+		#
+		"Lord Brandon"
+	)
 	# character names that need to be fixed
 	corrections <- c(
 		"Oswyn Longneck the Thrice-Hanged"="Oswyn",
@@ -121,7 +124,17 @@ print(unnamed.nv)
 		"Henly (Maester)"="Henly (maester)",
 		"Pisswater Prince"="Pisswater prince",
 		"Fat Fellow"="Fat fellow",
-		"Septon Utt"="Utt"
+		"Septon Utt"="Utt",
+		#
+		"Archmaester Theobald"="Theobald",
+		"Benjen the Bitter"="Benjen Stark (Bitter)",
+		"Benjen the Sweet"="Benjen Stark (Sweet)",
+		"Brandon the Bad"="Brandon Stark (Bad)",
+		"Edderion the Bridegroom"="Edderion Stark",
+		"Gorghan"="Gorghan of Old Ghis",
+		"Pate"="Pate (novice)",
+		"Walton the Moon King"="Walton Stark",
+		"Annara Frey"="Annara Farring"
 	)
 
 # update the xml files with the new attribute
@@ -204,6 +217,14 @@ for(time in c("cumul","instant"))
 		write.graph(g, file=path, format="graphml")
 	}
 }
+
+# post test
+g.nv <- read.graph("in/novels/cumul/5.ADwD_72_cumul.graphml", format="graphml")
+names.nv <- sort(V(g.nv)$name)
+map <- match(names.nv, char.tab[,"Name"])
+idx <- which(is.na(map) & !(names.nv %in% exceptions))
+unnamed.nv <- names.nv[idx]
+print(unnamed.nv)
 
 
 
