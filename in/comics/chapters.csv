@@ -1,4 +1,4 @@
-﻿Volume,StartPage,EndPage,Chapter,Rank,PoV,Number
+Volume,StartPage,EndPage,Chapter,Rank,PoV,Number
 AGOT01,3,9,0,1,Prologue,I
 AGOT01,10,18,1,2,Bran,I
 AGOT01,19,23,2,3,Catelyn,I
@@ -142,4 +142,3 @@ ACOK31,4,13,67,141,Tyrion,XV
 ACOK31,14,24,66,140,Theon,VI
 ACOK32,4,15,68,142,Jon,VIII
 ACOK32,16,24,69,143,Bran,VII
-,,,,,,
