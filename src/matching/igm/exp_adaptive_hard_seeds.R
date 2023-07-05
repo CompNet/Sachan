@@ -11,7 +11,7 @@
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
-library("RColorBrewer")
+library("scales")
 
 
 
@@ -163,7 +163,7 @@ for(i in 1:(length(gs)-1))
 					)
 				}
 				else if(method=="percolation")
-				{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)
+				{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)	# this method needs at least one seed
 					if(s!=0)
 						seed <- seeds
 					res <- gm(
@@ -271,13 +271,18 @@ for(i in 1:(length(gs)-1))
 		local.folder <- file.path(out.folder, mode.folder, comp.name)
 		
 		# loop over matching methods
-		all.evol <- c()
+		all.evol <- matrix(NA,nrow=length(sn),ncol=length(methods))
 		for(m in 1:length(methods))
 		{	# read evolution table
 			method <- methods[m]
 			tab.evol <- read.csv(file=file.path(local.folder,method,"_exact_matches_evolution.csv"), header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
-			all.evol <- c(all.evol, tab.evol[,"ExactMatches"])
+			all.evol[,m] <- tab.evol[,"ExactMatches"]
 		}
+		
+		# record evolution table
+		tab <- data.frame(sn, all.evol)
+		colnames(tab) <- c("AdaptiveSeeds", methods)
+		write.csv(x=all.evol, file=file.path(local.folder,"exact_matches_evolution.csv"), row.names=TRUE, fileEncoding="UTF-8")
 		
 		# create plot
 		plot.file <- file.path(local.folder,"exact_matches_evolution")
@@ -286,18 +291,12 @@ for(i in 1:(length(gs)-1))
 				NULL, 
 				main=paste0(g.names[i], " vs ", g.names[j]),
 				xlab="Adaptive hard seeds", ylab="Exact matches",
-				xlim=range(sn), ylim=range(all.evol)
+				xlim=range(sn), ylim=range(c(all.evol))
 			)
 				
-			# loop over matching methods
+			# loop over matching methods and plot each as a series
 			for(m in 1:length(methods))
-			{	# read evolution table
-				method <- methods[m]
-				tab.evol <- read.csv(file=file.path(local.folder,method,"_exact_matches_evolution.csv"), header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
-				
-				# plot values
-				lines(x=tab.evol[,"AdaptiveSeeds"], y=tab.evol[,"ExactMatches"], col=colors[m], lwd=2)
-			}
+				lines(x=sn, y=all.evol[,m], col=colors[m], lwd=2)
 		
 		# add legend
 		legend(
@@ -310,12 +309,3 @@ for(i in 1:(length(gs)-1))
 		dev.off()
 	}
 }
-
-
-
-
-
-###############################################################################
-# TODO
-# - try the adaptive seed approach
-# - use time (ie. the narrative dynamics)

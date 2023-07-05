@@ -7,7 +7,7 @@
 # 04/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/igm/exp_hard_adaptive_seeds.R")
+# source("src/matching/igm/exp_simple.R")
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
@@ -20,7 +20,7 @@ library("iGraphMatch")
 MAX_ITER <- 200
 COMMON_CHARS_ONLY <- TRUE
 CENTER_GRAPHS <- FALSE
-USE_SEEDS <- FALSE
+USE_SEEDS <- TRUE
 USE_SEEDS_NBR <- 15
 
 
