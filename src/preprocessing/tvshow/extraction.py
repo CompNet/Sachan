@@ -68,9 +68,7 @@ def _parse_episodes_json_episode_graphs(
                 # Character with no canonical names are ignored
                 if canonical_name is None:
                     continue
-                attributes = char_attrs_map.get(
-                    canonical_name, {"house": "", "sex": "Unknown"}
-                )
+                attributes = char_attrs_map.get(canonical_name, default_attrs)
                 G.add_node(canonical_name, **attributes)
 
             for c1, c2 in itertools.combinations(scene["characters"], 2):
@@ -124,9 +122,7 @@ def _parse_episodes_json_scene_graphs(
                 # Character with no canonical names are ignored
                 if canonical_name is None:
                     continue
-                attributes = char_attrs_map.get(
-                    canonical_name, {"house": "", "sex": "Unknown"}
-                )
+                attributes = char_attrs_map.get(canonical_name, default_attrs)
                 G.add_node(canonical_name, **attributes)
 
             for c1, c2 in itertools.combinations(scene["characters"], 2):

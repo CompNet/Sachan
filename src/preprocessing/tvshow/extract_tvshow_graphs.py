@@ -111,14 +111,20 @@ if __name__ == "__main__":
         block_method_kwargs=json.loads(args.block_method_kwargs),
     )
     graphs_len = len(graphs)
+    # Exception: some characters have an incorrect name in the graphs
+    mapping_exceptions = {"Olenna Tyrell": "Olenna Redwyne"}
+    graphs = [nx.relabel_nodes(G, mapping_exceptions) for G in graphs]
 
     # Add the 'named' attribute for characters by using the
     # characters.csv file
     characters_df = load_characters_csv(args.characters_csv_path)
+    # Exceptions: some characters are *not* in the characters.csv
+    #             file, but should be named anyway
+    missing_exceptions = ["Lord Blackmont", "Lord Portan"]
     # by default, all characters will have a "False" named attribute
     for G in graphs:
         for node, data in G.nodes(data=True):
-            data["named"] = False
+            data["named"] = node in missing_exceptions
     # all characters found in characters.csv will get their named
     # attribute from there
     for _, line in characters_df.iterrows():
