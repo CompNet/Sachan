@@ -13,10 +13,6 @@ from more_itertools import flatten
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 sys.path.append(f"{root_dir}/src")
-from preprocessing.tvshow.extraction import (
-    load_got_tvshow_graphs,
-    load_tvshow_character_map,
-)
 
 
 def filtered_graph(G: nx.Graph, nodes: list) -> nx.Graph:
@@ -148,11 +144,10 @@ if __name__ == "__main__":
 
     THRESHOLD = 0.1
 
-    tvshow_charmap = load_tvshow_character_map(f"{root_dir}/in/tvshow/charmap.csv")
-
     novel_graphs = []
     for path in sorted(glob.glob(f"{root_dir}/in/novels/instant/*.graphml")):
         novel_graphs.append(nx.read_graphml(path))
+    assert len(novel_graphs) > 0
     novel_graphs = [
         nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
         for G in novel_graphs
@@ -174,6 +169,7 @@ if __name__ == "__main__":
             glob.glob(f"{root_dir}/in/tvshow/instant/block_{block_method}/*.graphml")
         ):
             tvshow_graphs.append(nx.read_graphml(path))
+        assert len(tvshow_graphs) > 0
 
         # ignore season 7 and 8
         tvshow_graphs = [G for G in tvshow_graphs if G.graph["season"] < 7]

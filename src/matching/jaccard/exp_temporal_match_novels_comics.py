@@ -49,6 +49,7 @@ def graph_similarity_matrix(
     comics_graphs: List[nx.Graph],
     book_graphs: List[nx.Graph],
     mode: Literal["nodes", "edges"],
+    use_weights: bool,
 ) -> np.ndarray:
     """
     :return: ``(b, t)``
@@ -83,11 +84,13 @@ def graph_similarity_matrix(
     # * Compute n^2 similarity
     for chapter_i, chapter_G in enumerate(tqdm(book_graphs)):
         for scene_i, scene_G in enumerate(comics_graphs):
-            weights = (
-                {c: 1 / n for c, n in characters_appearances.items()}
-                if mode == "nodes"
-                else {c: 1 / n for c, n in rel_appearances.items()}
-            )
+            weights = None
+            if use_weights:
+                weights = (
+                    {c: 1 / n for c, n in characters_appearances.items()}
+                    if mode == "nodes"
+                    else {c: 1 / n for c, n in rel_appearances.items()}
+                )
             M[chapter_i][scene_i] = jaccard_graph_sim(
                 chapter_G, scene_G, weights, mode=mode
             )
@@ -128,7 +131,9 @@ if __name__ == "__main__":
         M_align_gold = pickle.load(f)
 
     # (novels_chapters_nb, comics_chapters_nb)
-    M_sim = graph_similarity_matrix(comics_graphs, novels_graphs, "edges")
+    M_sim = graph_similarity_matrix(
+        comics_graphs, novels_graphs, "edges", use_weights=True
+    )
     M_align = M_sim > 0.1
 
     figs, axs = plt.subplots(1, 2)

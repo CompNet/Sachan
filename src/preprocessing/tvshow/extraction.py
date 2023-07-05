@@ -28,6 +28,16 @@ def load_tvshow_character_map(path: str) -> Dict[str, str]:
     return charmap
 
 
+def load_characters_csv(path: str, **kwargs) -> pd.DataFrame:
+    """Load the 'characters.csv' file as a pandas dataframe.
+
+    :param kwargs: kwargs passed to ``pd.read_csv``
+    """
+    if not "sep" in kwargs:
+        kwargs["sep"] = ";"
+    return pd.read_csv(path, **kwargs)
+
+
 def _parse_episodes_json_episode_graphs(
     got_data: dict,
     charmap: Dict[str, str],
@@ -58,9 +68,7 @@ def _parse_episodes_json_episode_graphs(
                 # Character with no canonical names are ignored
                 if canonical_name is None:
                     continue
-                attributes = char_attrs_map.get(
-                    canonical_name, {"house": "", "sex": "Unknown"}
-                )
+                attributes = char_attrs_map.get(canonical_name, default_attrs)
                 G.add_node(canonical_name, **attributes)
 
             for c1, c2 in itertools.combinations(scene["characters"], 2):
@@ -114,9 +122,7 @@ def _parse_episodes_json_scene_graphs(
                 # Character with no canonical names are ignored
                 if canonical_name is None:
                     continue
-                attributes = char_attrs_map.get(
-                    canonical_name, {"house": "", "sex": "Unknown"}
-                )
+                attributes = char_attrs_map.get(canonical_name, default_attrs)
                 G.add_node(canonical_name, **attributes)
 
             for c1, c2 in itertools.combinations(scene["characters"], 2):
