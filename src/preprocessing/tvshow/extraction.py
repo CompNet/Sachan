@@ -28,6 +28,16 @@ def load_tvshow_character_map(path: str) -> Dict[str, str]:
     return charmap
 
 
+def load_characters_csv(path: str, **kwargs) -> pd.DataFrame:
+    """Load the 'characters.csv' file as a pandas dataframe.
+
+    :param kwargs: kwargs passed to ``pd.read_csv``
+    """
+    if not "sep" in kwargs:
+        kwargs["sep"] = ";"
+    return pd.read_csv(path, **kwargs)
+
+
 def _parse_episodes_json_episode_graphs(
     got_data: dict,
     charmap: Dict[str, str],

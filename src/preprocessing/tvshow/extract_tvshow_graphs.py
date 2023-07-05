@@ -12,7 +12,11 @@
 # 04/2023
 import os, sys, argparse, json
 import networkx as nx
-from extraction import load_got_tvshow_graphs, load_tvshow_character_map
+from extraction import (
+    load_characters_csv,
+    load_got_tvshow_graphs,
+    load_tvshow_character_map,
+)
 from graph_utils import cumulative_graph, relabeled_with_id
 from tqdm import tqdm
 
@@ -65,6 +69,13 @@ if __name__ == "__main__":
         default=os.path.join(script_dir, "../../../in/tvshow/charmap.csv"),
     )
     parser.add_argument(
+        "-a",
+        "--characters-csv-path",
+        type=str,
+        help="path to the characters.csv file",
+        default=os.path.join(script_dir, "../../../in/characters.csv"),
+    )
+    parser.add_argument(
         "-c",
         "--cumulative",
         action="store_true",
@@ -90,6 +101,7 @@ if __name__ == "__main__":
         )
     print(f"output dir: {args.output_directory}", file=sys.stderr)
 
+    # Extract graphs from Jeffrey Lancaster repository
     charmap = load_tvshow_character_map(args.charmap_path)
     graphs = load_got_tvshow_graphs(
         args.jeffrey_lancaster_repo_path,
@@ -100,9 +112,25 @@ if __name__ == "__main__":
     )
     graphs_len = len(graphs)
 
+    # Add the 'named' attribute for characters by using the
+    # characters.csv file
+    characters_df = load_characters_csv(args.characters_csv_path)
+    # by default, all characters will have a "False" named attribute
+    for G in graphs:
+        for node, data in G.nodes(data=True):
+            data["named"] = False
+    # all characters found in characters.csv will get their named
+    # attribute from there
+    for _, line in characters_df.iterrows():
+        for G in graphs:
+            if line["Name"] in G.nodes:
+                G.nodes[line["Name"]]["named"] = line["Named"]
+
+    # Convert graphs to cumulative graphs if needed
     if args.cumulative:
         graphs = cumulative_graph(graphs)
 
+    # Export graphs
     output_directory = args.output_directory
     os.makedirs(output_directory, exist_ok=True)
     graph_i_str_len = len(str(graphs_len))
