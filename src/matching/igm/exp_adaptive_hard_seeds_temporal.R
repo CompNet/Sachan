@@ -106,8 +106,7 @@ chap.map <- tab[,"Rank"]
 # adaptive hard seeding
 gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
-#methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
-methods <- c("percolation")	# "IsoRank" requires a vertex similarity matrix
+methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
 
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
 colnames(tab.exact.matches) <- methods
