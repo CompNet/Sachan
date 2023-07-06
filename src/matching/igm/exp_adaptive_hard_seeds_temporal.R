@@ -11,7 +11,7 @@
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
-library("RColorBrewer")
+library("scales")
 
 
 
@@ -103,18 +103,11 @@ chap.map <- tab[,"Rank"]
 
 
 ###############################################################################
-# identify most important characters (according to degree, in the novels network)
-g.nv <- gs.nv[[length(gs.nv)]]
-top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
-
-
-
-
-###############################################################################
 # adaptive hard seeding
 gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
-methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
+#methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
+methods <- c("percolation")	# "IsoRank" requires a vertex similarity matrix
 
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
 colnames(tab.exact.matches) <- methods
@@ -195,8 +188,12 @@ for(i in 1:(length(gs)-1))
 					)
 				}
 				else if(method=="percolation")
-				{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)	# this method needs at least one seed
-					if(nrow(seeds)>0)
+				{	top.chars1 <- V(g1)$name[order(degree(g1),decreasing=TRUE)]
+					top.chars2 <- V(g2)$name[order(degree(g2),decreasing=TRUE)]
+					top.inter <- intersect(top.chars1,top.chars2)
+					seed <- matrix(c(which(V(g1)$name==top.inter[1]),which(V(g2)$name==top.inter[1])), ncol=2)	# this method needs at least one seed
+					# TODO what if the inter is empty ?
+					if(!is.null(seeds) && nrow(seeds)>0)
 						seed <- seeds
 					res <- gm(
 						A=g1, B=g2,				# graphs to compare 
@@ -231,7 +228,10 @@ for(i in 1:(length(gs)-1))
 				
 				# update seeds
 				if(k<length(gs[[i]]) && k<length(gs[[j]]))
-				{	bm <- best_matches(A=g1, B=g2, match=res, measure="row_cor")			# "row_cor", "row_diff", or "row_perm_stat"
+				{	if(method=="percolation" && k==1)
+						bm <- best_matches(A=g1, B=g2, match=res, measure="row_diff")
+					else
+						bm <- best_matches(A=g1, B=g2, match=res, measure="row_cor")	# "row_cor", "row_diff", or "row_perm_stat"
 					bm0 <- bm[!is.na(bm[,"A_best"]) & !is.na(bm[,"B_best"]),]
 					seeds <- bm0[, 1:2]
 					sn <- c(sn, nrow(seeds))
@@ -241,7 +241,8 @@ for(i in 1:(length(gs)-1))
 				# ground truth (not useful due to the NAs resulting from different characters in the nets)
 				gt <- match(V(g1)$name, V(g2)$name)
 				# summary of the matching process
-				print(summary(res, g1, g2, true_label=gt))
+				tryCatch(expr={print(summary(object=res, A=g1, B=g2, true_label=gt))}, 
+						error=function(e) {})
 				# number of perfect matches
 				idx.exact.matches <- which(V(g1)$name[res$corr_A]==V(g2)$name[res$corr_B])
 				nbr.exact.matches <- length(idx.exact.matches)
@@ -249,7 +250,8 @@ for(i in 1:(length(gs)-1))
 				tab.evol <- c(tab.evol, nbr.exact.matches)
 				cat("Number of perfect matches:",nbr.exact.matches,"\n")
 				sink()
-				print(summary(res, g1, g2, true_label=gt))
+				tryCatch(expr={print(summary(object=res, A=g1, B=g2, true_label=gt))}, 
+					error=function(e) {})
 				cat("Number of perfect matches:",nbr.exact.matches,"\n")
 				
 				# list perfect matches
@@ -275,10 +277,12 @@ for(i in 1:(length(gs)-1))
 				# best matches according to some internal criterion (no GT)
 				for(meas in c("row_cor", "row_diff", "row_perm_stat"))
 				{	cat(".........Computing measure ",meas,"\n",sep="")
-					bm <- best_matches(A=g1, B=g2, match=res, measure=meas)			# "row_cor", "row_diff", or "row_perm_stat"
-					tab <- cbind(bm,V(g1)$name[bm$A_best], V(g2)$name[bm$B_best])
-					colnames(tab)[(ncol(bm)+1):(ncol(bm)+2)] <- c("Character_A","Character_B")
-					print(tab[1:20,])
+					tryCatch(expr=
+					{	bm <- best_matches(A=g1, B=g2, match=res, measure=meas)			# "row_cor", "row_diff", or "row_perm_stat"
+						tab <- cbind(bm,V(g1)$name[bm$A_best], V(g2)$name[bm$B_best])
+						colnames(tab)[(ncol(bm)+1):(ncol(bm)+2)] <- c("Character_A","Character_B")
+						print(tab[1:20,])
+					}, error=function(e) NA)
 					write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%03d",k),"_best_matches_",meas,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 				}
 				
