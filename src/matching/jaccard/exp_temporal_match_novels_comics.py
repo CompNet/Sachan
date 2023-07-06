@@ -1,12 +1,15 @@
-# Temporal matching between novels and the TV show
+# Temporal matching between the novels and the comics
+#
+# Example usage: python exp_temporal_match_novels_comics.py -g ./novels_comics_gold_alignment.pickle
 #
 # Author: Arthur Amalvy
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Tuple
 import os, sys, glob, copy, argparse, pickle
 import matplotlib.pyplot as plt
 import numpy as np
 import networkx as nx
 from tqdm import tqdm
+from sklearn.metrics import precision_recall_fscore_support
 from more_itertools import flatten
 
 
@@ -100,6 +103,8 @@ def graph_similarity_matrix(
 
 if __name__ == "__main__":
 
+    FONTSIZE = 12
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--gold-alignment-path", type=str)
     args = parser.parse_args()
@@ -134,15 +139,47 @@ if __name__ == "__main__":
     M_sim = graph_similarity_matrix(
         comics_graphs, novels_graphs, "edges", use_weights=True
     )
-    M_align = M_sim > 0.1
 
-    figs, axs = plt.subplots(1, 2)
+    # Compute (precision, recall, F1) and the best threshold
+    metrics: List[Tuple[float, float, float]] = []
+    thresholds = np.arange(0, 1, 0.01)
+    best_f1 = 0.0
+    best_threshold = 0.0
+    best_M_align = M_sim >= 0.0
+    for threshold in thresholds:
+        M_align = M_sim > threshold
+        precision, recall, f1, _ = precision_recall_fscore_support(
+            M_align_gold.flatten(),
+            M_align.flatten(),
+            average="binary",
+            zero_division=0.0,
+        )
+        metrics.append((precision, recall, f1))
+        if f1 > best_f1:
+            best_f1 = f1
+            best_M_align = M_align
+            best_threshold = threshold
+
+    # Plot alignment in a first figure
+    fig, axs = plt.subplots(1, 2, figsize=(16, 10))
     axs[0].imshow(M_align_gold)
-    axs[0].set_title("Gold alignment")
-    axs[0].set_xlabel("chapters")
-    axs[0].set_ylabel("comics")
-    axs[1].imshow(M_align)
-    axs[1].set_title("Jaccard similarity alignment")
-    axs[1].set_xlabel("chapters")
-    axs[1].set_ylabel("comics")
+    axs[0].set_title("Gold alignment", fontsize=FONTSIZE)
+    axs[0].set_xlabel("chapters", fontsize=FONTSIZE)
+    axs[0].set_ylabel("comics", fontsize=FONTSIZE)
+    axs[1].imshow(best_M_align)
+    axs[1].set_title(
+        f"Jaccard similarity alignment (threshold: {best_threshold})", fontsize=FONTSIZE
+    )
+    axs[1].set_xlabel("chapters", fontsize=FONTSIZE)
+    axs[1].set_ylabel("comics", fontsize=FONTSIZE)
+
+    # Plot precision, recall and F1 in a second figure
+    plt.figure(2, figsize=(16, 10))
+    plt.plot(thresholds, [m[0] for m in metrics], label="precision")
+    plt.plot(thresholds, [m[1] for m in metrics], label="recall")
+    plt.plot(thresholds, [m[2] for m in metrics], label="f1")
+    plt.xlabel("Chapters similarity threshold", fontsize=FONTSIZE)
+    plt.legend(fontsize=FONTSIZE)
+
+    # Show both figures
     plt.show()
