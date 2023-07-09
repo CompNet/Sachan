@@ -362,3 +362,4 @@ for(i in 1:(length(gs)-1))
 # - common_raw_noseed is missing
 # - plots for temporal seeds are all messed up
 # - update report with new results
+# - try to integrate vertex attributes
