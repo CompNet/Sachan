@@ -60,18 +60,18 @@ def graph_similarity_matrix(
     M = np.zeros((len(book_graphs), len(comics_graphs)))
 
     # * Keep only common characters
-    tvshow_characters = set(flatten([G.nodes for G in comics_graphs]))
+    comics_characters = set(flatten([G.nodes for G in comics_graphs]))
     book_characters = set(flatten([G.nodes for G in book_graphs]))
-    tvshow_xor_book_characters = tvshow_characters ^ book_characters
+    comics_xor_book_characters = comics_characters ^ book_characters
     comics_graphs = [
-        filtered_graph(G, list(tvshow_xor_book_characters)) for G in comics_graphs
+        filtered_graph(G, list(comics_xor_book_characters)) for G in comics_graphs
     ]
     book_graphs = [
-        filtered_graph(G, list(tvshow_xor_book_characters)) for G in book_graphs
+        filtered_graph(G, list(comics_xor_book_characters)) for G in book_graphs
     ]
 
     # * Nodes mode
-    characters_appearances = {char: 0 for char in tvshow_characters & book_characters}
+    characters_appearances = {char: 0 for char in comics_characters & book_characters}
     for G in comics_graphs + book_graphs:
         for node in G.nodes:
             characters_appearances[node] += 1
@@ -85,8 +85,8 @@ def graph_similarity_matrix(
             )
 
     # * Compute n^2 similarity
-    for chapter_i, chapter_G in enumerate(tqdm(book_graphs)):
-        for scene_i, scene_G in enumerate(comics_graphs):
+    for novels_chapter_i, chapter_G in enumerate(tqdm(book_graphs)):
+        for comics_chapter_i, scene_G in enumerate(comics_graphs):
             weights = None
             if use_weights:
                 weights = (
@@ -94,7 +94,7 @@ def graph_similarity_matrix(
                     if mode == "nodes"
                     else {c: 1 / n for c, n in rel_appearances.items()}
                 )
-            M[chapter_i][scene_i] = jaccard_graph_sim(
+            M[novels_chapter_i][comics_chapter_i] = jaccard_graph_sim(
                 chapter_G, scene_G, weights, mode=mode
             )
 
@@ -164,14 +164,14 @@ if __name__ == "__main__":
     fig, axs = plt.subplots(1, 2, figsize=(16, 10))
     axs[0].imshow(M_align_gold)
     axs[0].set_title("Gold alignment", fontsize=FONTSIZE)
-    axs[0].set_xlabel("chapters", fontsize=FONTSIZE)
-    axs[0].set_ylabel("comics", fontsize=FONTSIZE)
+    axs[0].set_xlabel("comics chapters", fontsize=FONTSIZE)
+    axs[0].set_ylabel("novels chapters", fontsize=FONTSIZE)
     axs[1].imshow(best_M_align)
     axs[1].set_title(
         f"Jaccard similarity alignment (threshold: {best_threshold})", fontsize=FONTSIZE
     )
-    axs[1].set_xlabel("chapters", fontsize=FONTSIZE)
-    axs[1].set_ylabel("comics", fontsize=FONTSIZE)
+    axs[1].set_xlabel("comics chapters", fontsize=FONTSIZE)
+    axs[1].set_ylabel("novels chapters", fontsize=FONTSIZE)
 
     # Plot precision, recall and F1 in a second figure
     plt.figure(2, figsize=(16, 10))
