@@ -19,7 +19,7 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200
-ATTR <- "sex"		# attribute used: none sex affiliation both
+ATTR <- "none"		# attribute used: none sex affiliation both
 
 
 
@@ -63,6 +63,32 @@ E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weigh
 g.tv <- read.graph("in/tvshow/cumul/scene/cumulative_0753.graphml", format="graphml")
 g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
 E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
+
+
+
+
+###############################################################################
+# retrieve the characters' affiliations
+char.file <- "in/characters.csv"
+char.tab <- read.csv2(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+# clean up a bit
+aff.map <- char.tab[,"AllegianceBoth"]
+names(aff.map) <- char.tab[,"Name"]
+aff.map[aff.map==""] <- "Unknown"
+aff.map <- sapply(strsplit(x=aff.map, split=",", fixed=TRUE), function(v) v[1])
+
+# add to novel network
+aff <- aff.map[V(g.nv)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.nv)$affiliation <- aff
+# add to comics network
+aff <- aff.map[V(g.cx)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.cx)$affiliation <- aff
+# add to TV show network
+aff <- aff.map[V(g.tv)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.tv)$affiliation <- aff
 
 
 
