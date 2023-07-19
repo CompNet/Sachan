@@ -332,36 +332,49 @@ for(i in 1:(length(gs)-1))
 		colnames(all.sn) <- methods
 		write.csv(x=all.sn, file=file.path(local.folder,"exact_matches_evolution._seeds.csv"), row.names=TRUE, fileEncoding="UTF-8")
 		
-		# create plot
+		### create performance plot
 		plot.file <- file.path(local.folder,"exact_matches_evolution")
 		pdf(paste0(plot.file,".pdf"), bg="white")
 		plot(
 			NULL, 
 			main=paste0(g.names[i], " vs ", g.names[j]),
-			xlab="Adaptive hard seeds", ylab="Exact matches",
-			xlim=range(c(all.sn)), ylim=range(c(all.evol))
+			xlab="Time", ylab="Exact matches",
+			xlim=c(1,nrow(all.evol)), ylim=range(c(all.evol))
 		)
-		
 		# loop over matching methods and plot each as a series
 		for(m in 1:length(methods))
-			lines(x=all.sn[,m], y=all.evol[,m], col=colors[m], lwd=2)
-		
+			lines(x=1:nrow(all.evol), y=all.evol[,m], col=colors[m], lwd=2)
 		# add legend
 		legend(
 			x="topleft",
 			legend=methods,
 			fill=colors
 		)
+		# close plot
+		dev.off()
 		
+		### create seed number plot
+		plot.file <- file.path(local.folder,"seed_number_evolution")
+		pdf(paste0(plot.file,".pdf"), bg="white")
+		plot(
+			NULL, 
+			main=paste0(g.names[i], " vs ", g.names[j]),
+			xlab="Time", ylab="Seed number",
+			xlim=c(1,nrow(all.sn)), ylim=range(c(all.sn))
+		)
+		# loop over matching methods and plot each as a series
+		for(m in 1:length(methods))
+			lines(x=1:nrow(all.sn), y=all.sn[,m], col=colors[m], lwd=2)
+		# add legend
+		legend(
+			x="topleft",
+			legend=methods,
+			fill=colors
+		)
 		# close plot
 		dev.off()
 	}
 }
 
 # TODO
-# - common_raw_noseed is missing
-# - plots for temporal seeds are all messed up
-# - update report with new results
-# - try to integrate vertex attributes
-###
 # - descriptive instead: compute vertex sim distrib
