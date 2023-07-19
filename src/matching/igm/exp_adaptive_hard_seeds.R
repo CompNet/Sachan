@@ -19,13 +19,14 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200
+ATTR <- "sex"		# attribute used: none sex affiliation both
 
 
 
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching")
+out.folder <- file.path("out","matching",paste0("attr_",ATTR))
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 mode.folder <- "common_raw_adaptive_hard"
 
@@ -104,6 +105,19 @@ for(i in 1:(length(gs)-1))
 		idx2 <- which(!(V(g2)$name %in% names))
 		g2 <- delete_vertices(g2,idx2)
 		
+		# build the vertex similarity matrix
+		sim.mat <- NULL
+		if(ATTR!="none")
+		{	sex.mat <- outer(X=V(g1)$sex, Y=V(g2)$sex, FUN=function(x,y) as.integer(x==y))
+			aff.mat <- outer(X=V(g1)$affiliation, Y=V(g2)$affiliation, FUN=function(x,y) as.integer(x==y))
+			if(ATTR=="sex")
+				sim.mat <- sex.mat
+			else if(ATTR=="affiliation")
+				sim.mat <- aff.mat
+			else if(ATTR=="both")
+				sim.mat <- (sex.mat + aff.mat)/2
+		}
+		
 		# loop over matching methods
 		for(m in 1:length(methods))
 		{	method <- methods[m]
@@ -129,7 +143,7 @@ for(i in 1:(length(gs)-1))
 				{	res <- gm(
 						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
-						#similarity,			# vertex-vertex similarity matrix
+						similarity=sim.mat,		# vertex-vertex similarity matrix
 						
 						method="indefinite",	# matching method: indefinite relaxation of the objective function
 						start="bari", 			# initialization method for the matrix
@@ -141,7 +155,7 @@ for(i in 1:(length(gs)-1))
 				{	res <- gm(
 						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
-						#similarity,			# vertex-vertex similarity matrix
+						similarity=sim.mat,		# vertex-vertex similarity matrix
 						
 						method="convex",		# matching method: convex relaxation of the objective function
 						start="bari", 			# initialization method for the matrix
@@ -154,7 +168,7 @@ for(i in 1:(length(gs)-1))
 				{	res <- gm(
 						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
-						#similarity,			# vertex-vertex similarity matrix
+						similarity=sim.mat,		# vertex-vertex similarity matrix
 						
 						method="PATH",			# matching method: ?
 						#lap_method=NULL,		# method used to solve LAP
@@ -169,7 +183,7 @@ for(i in 1:(length(gs)-1))
 					res <- gm(
 						A=g1, B=g2,				# graphs to compare 
 						seeds=seed,				# known vertex matches
-						#similarity,			# vertex-vertex similarity matrix
+						similarity=sim.mat,		# vertex-vertex similarity matrix
 						
 						method="percolation",	# matching method: percolation
 						#r="2",					# threshold of neighboring pair scores
@@ -191,7 +205,7 @@ for(i in 1:(length(gs)-1))
 				{	res <- gm(
 						A=g1, B=g2,				# graphs to compare 
 						seeds=seeds,			# known vertex matches
-						#similarity,			# vertex-vertex similarity matrix
+						similarity=sim.mat,		# vertex-vertex similarity matrix
 						
 						method="Umeyama"		# matching method: Umeyama algorithm (spectral)
 					)

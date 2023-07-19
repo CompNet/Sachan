@@ -20,15 +20,16 @@ library("iGraphMatch")
 MAX_ITER <- 200
 COMMON_CHARS_ONLY <- TRUE
 CENTER_GRAPHS <- FALSE
-USE_SEEDS <- TRUE
-USE_SEEDS_NBR <- 15
+USE_SEEDS <- FALSE
+USE_SEEDS_NBR <- 5
+ATTR <- "none"		# attribute used: none sex affiliation both
 
 
 
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching")
+out.folder <- file.path("out","matching",paste0("attr_",ATTR))
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)
@@ -85,6 +86,32 @@ E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
 
 
 ###############################################################################
+# retrieve the characters' affiliations
+char.file <- "in/characters.csv"
+char.tab <- read.csv2(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+# clean up a bit
+aff.map <- char.tab[,"AllegianceBoth"]
+names(aff.map) <- char.tab[,"Name"]
+aff.map[aff.map==""] <- "Unknown"
+aff.map <- sapply(strsplit(x=aff.map, split=",", fixed=TRUE), function(v) v[1])
+
+# add to novel network
+aff <- aff.map[V(g.nv)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.nv)$affiliation <- aff
+# add to comics network
+aff <- aff.map[V(g.cx)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.cx)$affiliation <- aff
+# add to TV show network
+aff <- aff.map[V(g.tv)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.tv)$affiliation <- aff
+
+
+
+
+###############################################################################
 # identify most important characters (according to novels)
 top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
 char.seeds <- top.chars[1:USE_SEEDS_NBR]
@@ -93,6 +120,7 @@ char.seeds <- top.chars[1:USE_SEEDS_NBR]
 
 
 ###############################################################################
+# start matching
 gs <- list(g.nv, g.cx, g.tv)
 g.names <- c("novels","comics","tvshow")
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
@@ -123,6 +151,19 @@ for(i in 1:(length(gs)-1))
 			g2 <- delete_vertices(g2,idx2)
 		}
 		
+		# build the vertex similarity matrix
+		sim.mat <- NULL
+		if(ATTR!="none")
+		{	sex.mat <- outer(X=V(g1)$sex, Y=V(g2)$sex, FUN=function(x,y) as.integer(x==y))
+			aff.mat <- outer(X=V(g1)$affiliation, Y=V(g2)$affiliation, FUN=function(x,y) as.integer(x==y))
+			if(ATTR=="sex")
+				sim.mat <- sex.mat
+			else if(ATTR=="affiliation")
+				sim.mat <- aff.mat
+			else if(ATTR=="both")
+				sim.mat <- (sex.mat + aff.mat)/2
+		}
+		
 		# possibly center the graphs
 		dg1 <- g1
 		dg2 <- g2
@@ -146,7 +187,7 @@ for(i in 1:(length(gs)-1))
 			{	res <- gm(
 					A=dg1, B=dg2,			# graphs to compare 
 					seeds=seeds,			# known vertex matches
-					#similarity,			# vertex-vertex similarity matrix
+					similarity=sim.mat,		# vertex-vertex similarity matrix
 					
 					method="indefinite",	# matching method: indefinite relaxation of the objective function
 					start="bari", 			# initialization method for the matrix
@@ -158,7 +199,7 @@ for(i in 1:(length(gs)-1))
 			{	res <- gm(
 					A=dg1, B=dg2,			# graphs to compare 
 					seeds=seeds,			# known vertex matches
-					#similarity,			# vertex-vertex similarity matrix
+					similarity=sim.mat,		# vertex-vertex similarity matrix
 					
 					method="convex",		# matching method: convex relaxation of the objective function
 					start="bari", 			# initialization method for the matrix
@@ -171,7 +212,7 @@ for(i in 1:(length(gs)-1))
 			{	res <- gm(
 					A=dg1, B=dg2,			# graphs to compare 
 					seeds=seeds,			# known vertex matches
-					#similarity,			# vertex-vertex similarity matrix
+					similarity=sim.mat,		# vertex-vertex similarity matrix
 					
 					method="PATH",			# matching method: ?
 					#lap_method=NULL,		# method used to solve LAP
@@ -186,7 +227,7 @@ for(i in 1:(length(gs)-1))
 				res <- gm(
 					A=dg1, B=dg2,			# graphs to compare 
 					seeds=seed,				# known vertex matches
-					#similarity,			# vertex-vertex similarity matrix
+					similarity=sim.mat,		# vertex-vertex similarity matrix
 					
 					method="percolation",	# matching method: percolation
 					#r="2",					# threshold of neighboring pair scores
@@ -208,7 +249,7 @@ for(i in 1:(length(gs)-1))
 			{	res <- gm(
 					A=dg1, B=dg2,			# graphs to compare 
 					seeds=seeds,			# known vertex matches
-					#similarity,			# vertex-vertex similarity matrix
+					similarity=sim.mat,		# vertex-vertex similarity matrix
 					
 					method="Umeyama"		# matching method: Umeyama algorithm (spectral)
 				)
