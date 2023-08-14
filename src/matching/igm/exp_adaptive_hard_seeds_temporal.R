@@ -375,6 +375,3 @@ for(i in 1:(length(gs)-1))
 		dev.off()
 	}
 }
-
-# TODO
-# - descriptive instead: compute vertex sim distrib

@@ -15,7 +15,7 @@ import networkx as nx
 # of link it is (i.e. friendly or hostile).
 #
 # As it reads the document it looks for chapters (or books or scenes) and if two characters
-# are linked in two different chatpers it will increase the weight of that edge. 
+# are linked in two different chapters it will increase the weight of that edge. 
 #
 # Chapter information is also added to the edge.
 # If the argument "chapter_list=True" is added when the function is called
