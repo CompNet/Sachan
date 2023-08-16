@@ -16,7 +16,7 @@ library("plot.matrix")
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- FALSE
+COMMON_CHARS_ONLY <- TRUE
 MEAS <- "jaccard"	# no alternative for now
 
 
@@ -227,7 +227,7 @@ for(i in 1:(length(gs)-1))
 			rownames(sim.mat) <- names
 			colnames(sim.mat) <- names
 			for(v1 in 1:nrow(a1))
-			{	print(v1)
+			{	#print(v1)
 				for(v2 in 1:nrow(a2)) 
 				{	w.min <- pmin(a1[v1,], a2[v2,])
 					w.max <- pmax(a1[v1,], a2[v2,])
@@ -257,13 +257,29 @@ for(i in 1:(length(gs)-1))
 			plot(sim.mat[idx[1:top.nbr],idx[1:top.nbr]], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.5)
 		dev.off()
 		
-		# plot self vs. best alter
+		# compute some form of performance by considering the most similar alters vs. self
 		sim.self <- diag(sim.mat)
 		tmp <- sim.mat; diag(tmp) <- 0
 		sim.alter1 <- apply(tmp, 1, max)
 		sim.alter2 <- apply(tmp, 2, max)
 		sim.alter <- pmax(sim.alter1, sim.alter2)
-		# compute quartiles
+		d1 <- degree(g1,mode="all")
+		d2 <- degree(g1,mode="all")
+		acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
+		acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
+		acc <- length(which(sim.self>sim.alter))/length(sim.self)
+		perf.tab <- c(acc1,acc2,acc)
+		# only top characters
+		acc1 <- length(which(sim.self[idx[1:top.nbr]]>sim.alter2[idx[1:top.nbr]]))/length(d1[idx[1:top.nbr]]>0)
+		acc2 <- length(which(sim.self[idx[1:top.nbr]]>sim.alter1[idx[1:top.nbr]]))/length(d2[idx[1:top.nbr]]>0)
+		acc <- length(which(sim.self[idx[1:top.nbr]]>sim.alter[idx[1:top.nbr]]))/length(sim.self[idx[1:top.nbr]])
+		perf.tab <- rbind(perf.tab, c(acc1,acc2,acc))
+		rownames(perf.tab) <- c("All","Top-20")
+		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]),"overall")
+		write.csv(x=perf.tab, file=file.path(local.folder,"sim_perf.csv"), row.names=FALSE, fileEncoding="UTF-8")
+		cat("Performance when matching to the most similar character:\n",sep="");print(perf.tab)
+		
+		# plot self vs. best alter
 		imp.vals <- imp.moy[ranked.names]
 		probs <- c(0.5,0.75,0.9,1.0)
 		fprobs <- sprintf("%1.2f",probs*100)
@@ -274,11 +290,11 @@ for(i in 1:(length(gs)-1))
 		for(s in c(NA,1,2,3,4))
 		{	if(is.na(s))
 			{	idx <- TRUE
-				plot.file <- file.path(local.folder,paste0("sim_self_cs_bestalter_all"))
+				plot.file <- file.path(local.folder,paste0("sim_self_vs_bestalter_all"))
 			}
 			else
 			{	idx <- cols==pal[s]
-				plot.file <- file.path(local.folder,paste0("sim_self_cs_bestalter_s",fprobs[s]))
+				plot.file <- file.path(local.folder,paste0("sim_self_vs_bestalter_s",fprobs[s]))
 			}
 			pdf(paste0(plot.file,".pdf"), bg="white")
 				plot(
