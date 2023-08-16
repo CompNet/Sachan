@@ -37,50 +37,8 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
-# load the static graphs
-
-# notes:
-# - comics:
-#   - last chapter: #143 (file cum/inst_143.graphml)
-#   - last scene: #1438 (file cum/inst_1437.graphml)
-# - tv show:
-#   - last S02 episode: #20 (file cumulative/instant_019.graphml)
-#   - last S02 scene: #754 (file cumulative/instant_0753.graphml)
-#   - very last episode: #73 (file cumulative/instant_072.graphml)
-#   - very last scene: #4165 (file cumulative/instant_4164.graphml)
-# - novels:
-#   - last book 2 chapter: 2.ACoK_69_cumul.graphml / 2.ACoK_69_instant.graphml
-#   - last chapter: 5.ADwD_72_cumul.graphml / 5.ADwD_72_instant.graphml
-
-# read the chapter-based novel static graph
-g.nv <- read.graph("in/novels/cumul/2.ACoK_69_cumul.graphml", format="graphml")
-g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)			# keep only named characters
-E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)			# normalize weights
-
-# read the scene-based comics static graph
-g.cx <- read.graph("in/comics/cumul/scene/cum_1437.graphml", format="graphml")
-g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
-E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weights
-
-# read the episode-based tvshow static graph
-g.tv <- read.graph("in/tvshow/cumul/scene/cumulative_0753.graphml", format="graphml")
-g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
-E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
-
-
-
-
-###############################################################################
-# rank characters using degree in each network
-names <- sort(union(V(g.nv)$name,union(V(g.cx)$name,V(g.tv)$name)))
-imp.mat <- matrix(NA, nrow=length(names), ncol=3)
-rownames(imp.mat) <- names
-colnames(imp.mat) <- c("novels","comics","tvshow")
-imp.mat[match(V(g.nv)$name, names),"novels"] <- degree(g.nv)/gorder(g.nv)
-imp.mat[match(V(g.cx)$name, names),"comics"] <- degree(g.cx)/gorder(g.cx)
-imp.mat[match(V(g.tv)$name, names),"tvshow"] <- degree(g.tv)/gorder(g.tv)
-imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
-ranked.chars <- names[order(imp.moy,decreasing=TRUE)]
+# load the static graphs and rank the characters by importance
+source("src/matching/igm/_load_static_nets.R")
 
 
 
@@ -99,6 +57,7 @@ for(i in 1:(length(gs)-1))
 		g1 <- gs[[i]]
 		g2 <- gs[[j]]
 		
+		# init local folder
 		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
 		local.folder <- file.path(out.folder, mode.folder, comp.name)
 		dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
@@ -201,8 +160,6 @@ for(i in 1:(length(gs)-1))
 #			}
 #		}
 		
-		# possibly complete the graphs
-		
 		# compute and normalize adjacency matrices
 		a1 <- as_adjacency_matrix(graph=g1, type="both", attr="weight", sparse=FALSE)
 		a1 <- t(apply(a1, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
@@ -241,16 +198,16 @@ for(i in 1:(length(gs)-1))
 			}
 		}
 		
-		# plot matrix
 		ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
 		idx <- match(ranked.names, names)
-		# plot everyting
+		top.nbr <- 20
+		
+		# plot matrix
 		plot.file <- file.path(local.folder,"sim_matrix_all")
 		pdf(paste0(plot.file,".pdf"), bg="white", width=30, height=30)
 			plot(sim.mat[idx,idx], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.2)
 		dev.off()
 		# plot only top characters
-		top.nbr <- 20
 		plot.file <- file.path(local.folder,paste0("sim_matrix_top",top.nbr))
 		pdf(paste0(plot.file,".pdf"), bg="white")
 			#par(mar=c(4,4,0,0)+0.1)	# remove the title space Bottom Left Top Right
@@ -270,9 +227,10 @@ for(i in 1:(length(gs)-1))
 		acc <- length(which(sim.self>sim.alter))/length(sim.self)
 		perf.tab <- c(acc1,acc2,acc)
 		# only top characters
-		acc1 <- length(which(sim.self[idx[1:top.nbr]]>sim.alter2[idx[1:top.nbr]]))/length(d1[idx[1:top.nbr]]>0)
-		acc2 <- length(which(sim.self[idx[1:top.nbr]]>sim.alter1[idx[1:top.nbr]]))/length(d2[idx[1:top.nbr]]>0)
-		acc <- length(which(sim.self[idx[1:top.nbr]]>sim.alter[idx[1:top.nbr]]))/length(sim.self[idx[1:top.nbr]])
+		idx <- idx[1:top.nbr]
+		acc1 <- length(which(sim.self[idx]>sim.alter2[idx]))/length(d1[idx]>0)
+		acc2 <- length(which(sim.self[idx]>sim.alter1[idx]))/length(d2[idx]>0)
+		acc <- length(which(sim.self[idx]>sim.alter[idx]))/length(sim.self[idx])
 		perf.tab <- rbind(perf.tab, c(acc1,acc2,acc))
 		rownames(perf.tab) <- c("All","Top-20")
 		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]),"overall")
@@ -317,18 +275,3 @@ for(i in 1:(length(gs)-1))
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-# même chose pour chaque instant
-# évolution de la sim entre perso et lui même + autres (lui même en couleur)
-# plotter tous à la fois (persos vs eux mêmes)
-
-# TODO
-# - radar plots of characters?

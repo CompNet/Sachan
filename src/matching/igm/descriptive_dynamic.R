@@ -1,0 +1,234 @@
+# Computes the similarity between a character and its counterpart in a different
+# network, considering the evolution through time.
+# 
+# Author: Vincent Labatut
+# 08/2023
+# 
+# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# source("src/matching/igm/descriptive_dynamic.R")
+###############################################################################
+library("igraph")
+library("viridis")
+library("plot.matrix")
+library("scales")
+
+
+
+
+###############################################################################
+# processing parameters
+COMMON_CHARS_ONLY <- TRUE
+MEAS <- "jaccard"	# no alternative for now
+
+
+
+
+###############################################################################
+# output folder
+out.folder <- file.path("out","matching",MEAS)
+dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
+
+{	if(COMMON_CHARS_ONLY)
+		mode.folder <- "common"
+	else
+		mode.folder <- "named"
+}
+
+
+
+
+###############################################################################
+# load the static graphs and rank the characters by importance
+source("src/matching/igm/_load_static_nets.R")
+# load the dynamic graphs
+source("src/matching/igm/_load_dynamic_nets.R")
+
+
+
+
+###############################################################################
+# start matching
+gs <- list(gs.nv, gs.cx)			# gs.tv
+g.names <- c("novels","comics")		# "tvshow"
+
+# loop over pairs of networks
+for(i in 1:(length(gs)-1))
+{	cat("..Processing first network ",g.names[i],"\n",sep="")
+	
+	for(j in (i+1):length(gs))
+	{	cat("....Processing second network ",g.names[j],"\n",sep="")
+		
+		# init local folder
+		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+		local.folder <- file.path(out.folder, mode.folder, comp.name)
+		dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
+		
+		# init perf tables
+		cnames <- c(comp.name, paste0(g.names[j],"_vs_",g.names[i]), "overall")
+		perf.tab.all <- matrix(NA, nrow=max(length(gs[[i]]),length(gs[[j]])), ncol=length(cnames))
+		colnames(perf.tab.all) <- cnames
+		perf.tab.top <- matrix(NA, nrow=max(length(gs[[i]]),length(gs[[j]])), ncol=length(cnames))
+		colnames(perf.tab.top) <- cnames
+		# init sim diff table
+		sim.diff <- matrix(NA, nrow=length(ranked.chars), ncol=max(length(gs[[i]]),length(gs[[j]])))
+		rownames(sim.diff) <- ranked.chars
+		
+		k <- 1
+		while(k<=length(gs[[i]]) && k<=length(gs[[j]]))
+		{	cat("........Processing iteration ",k,"\n",sep="")
+			g1 <- gs[[i]][[k]]
+			g2 <- gs[[j]][[k]]
+			
+			# focus on characters common to both networks
+			if(COMMON_CHARS_ONLY)
+			{	# remove chars that are not common
+				names <- intersect(V(g1)$name,V(g2)$name)
+				idx1 <- which(!(V(g1)$name %in% names))
+				g1 <- delete_vertices(g1,idx1)
+				idx2 <- which(!(V(g2)$name %in% names))
+				g2 <- delete_vertices(g2,idx2)
+				# set the same character order in both graphs
+				idx1 <- match(V(g1)$name, names)
+				idx2 <- match(V(g2)$name, names)
+				g1 <- permute(graph=g1, permutation=idx1)
+				g2 <- permute(graph=g2, permutation=idx2)
+			}
+			# or keep all chars, but complete the graphs to have the same characters in both
+			else 
+			{	# get the name lists
+				names0 <- intersect(V(g1)$name,V(g2)$name)
+				names1 <- setdiff(V(g1)$name,V(g2)$name)
+				names2 <- setdiff(V(g2)$name,V(g1)$name)
+				names <- c(names0, names1, names2)
+				# complete first graph
+				attrs2 <- list()
+				for(att in vertex_attr_names(graph=g2))
+					attrs2[[att]] <- vertex_attr(graph=g2, name=att, index=match(names2, V(g2)$name))
+				g1 <- add_vertices(g1, nv=length(names2), attr=attrs2)
+				idx1 <- match(V(g1)$name, names)
+				g1 <- permute(graph=g1, permutation=idx1)
+				# complete second graph
+				attrs1 <- list()
+				for(att in vertex_attr_names(graph=g1))
+					attrs1[[att]] <- vertex_attr(graph=g1, name=att, index=match(names1, V(g1)$name))
+				g2 <- add_vertices(g2, nv=length(names1), attr=attrs1)
+				idx2 <- match(V(g2)$name, names)
+				g2 <- permute(graph=g2, permutation=idx2)
+			}
+			
+			# compute and normalize adjacency matrices
+			a1 <- as_adjacency_matrix(graph=g1, type="both", attr="weight", sparse=FALSE)
+			a1 <- t(apply(a1, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
+			a2 <- as_adjacency_matrix(graph=g2, type="both", attr="weight", sparse=FALSE)
+			a2 <- t(apply(a2, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
+			names <- V(g1)$name
+			
+			if(MEAS=="jaccard")
+			{	# compute jaccard (weighted) similarity
+				sim.mat <- matrix(NA, nrow=nrow(a1), ncol=nrow(a2))
+				rownames(sim.mat) <- names
+				colnames(sim.mat) <- names
+				for(v1 in 1:nrow(a1))
+				{	#print(v1)
+					for(v2 in 1:nrow(a2)) 
+					{	w.min <- pmin(a1[v1,], a2[v2,])
+						w.max <- pmax(a1[v1,], a2[v2,])
+						if(sum(w.max)==0)
+							sim <- 0
+						else
+							sim <- sum(w.min)/sum(w.max)
+						#print(sim)
+						sim.mat[v1,v2] <- sim
+					}
+				}
+			}
+			
+			ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
+			idx <- match(ranked.names, names)
+			top.nbr <- 20
+			
+			# compute some matching performance
+			sim.self <- diag(sim.mat)
+			tmp <- sim.mat; diag(tmp) <- 0
+			sim.alter1 <- apply(tmp, 1, max)
+			sim.alter2 <- apply(tmp, 2, max)
+			sim.alter <- pmax(sim.alter1, sim.alter2)
+			diff <- sim.self - sim.alter
+			sim.diff[ranked.names,k] <- diff[idx]
+			write.csv(x=sim.diff, file=file.path(local.folder,"sim_dyn_simdiff.csv"), row.names=FALSE, fileEncoding="UTF-8")
+			d1 <- degree(g1,mode="all")
+			d2 <- degree(g1,mode="all")
+			acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
+			acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
+			acc <- length(which(sim.self>sim.alter))/length(sim.self)
+			perf.tab.all[k,] <- c(acc1, acc2, acc)
+			write.csv(x=perf.tab.all, file=file.path(local.folder,"sim_dyn_perf_all.csv"), row.names=FALSE, fileEncoding="UTF-8")
+			# only top characters
+			idx <- idx[1:min(length(idx),top.nbr)]
+			acc1 <- length(which(sim.self[idx]>sim.alter2[idx]))/length(d1[idx]>0)
+			acc2 <- length(which(sim.self[idx]>sim.alter1[idx]))/length(d2[idx]>0)
+			acc <- length(which(sim.self[idx]>sim.alter[idx]))/length(sim.self[idx])
+			perf.tab.top[k,] <- c(acc1, acc2, acc)
+			write.csv(x=perf.tab.top, file=file.path(local.folder,"sim_dyn_perf_top20.csv"), row.names=FALSE, fileEncoding="UTF-8")
+			#cat("Performance when matching to the most similar character:\n",sep="");print(perf.tab.all[k,]);print(perf.tab.top)
+
+			k <- k + 1
+		}
+	
+		# create the plots
+		colors <- brewer_pal(type="qual", palette=2)(ncol(perf.tab.all))
+		xs <- 1:nrow(perf.tab.all)
+		plot.file <- file.path(local.folder,"sim_dyn_perf_all")
+		pdf(paste0(plot.file,".pdf"), bg="white")
+		plot(
+			NULL,
+			xlim=range(xs), ylim=c(0,1),
+			xlab="Time", ylab="Proportion of correct matches"
+		)
+		for(k in 1:ncol(perf.tab.all))
+			lines(x=xs, y=perf.tab.all[,k], col=colors[k])
+		legend(
+			x="bottomleft",
+			legend=colnames(perf.tab.all),
+			fill=colors
+		)
+		dev.off()
+		# top 20
+		plot.file <- file.path(local.folder,"sim_dyn_perf_top20")
+		pdf(paste0(plot.file,".pdf"), bg="white")
+		plot(
+			NULL,
+			xlim=range(xs), ylim=c(0,1),
+			xlab="Time", ylab="Proportion of correct matches"
+		)
+		for(k in 1:ncol(perf.tab.top))
+			lines(x=xs, y=perf.tab.top[,k], col=colors[k])
+		legend(
+				x="bottomleft",
+				legend=colnames(perf.tab.top),
+				fill=colors
+		)
+		dev.off()
+		
+		# similarity difference
+		selected.chars <- 1:5
+		colors <- brewer_pal(type="qual", palette=2)(length(selected.chars))
+		plot.file <- file.path(local.folder,"sim_dyn_simdiff")
+		pdf(paste0(plot.file,".pdf"), bg="white")
+		plot(
+			NULL,
+			xlim=range(xs), ylim=c(-1,1),
+			xlab="Time", ylab="Similarity difference between self and best alter"
+		)
+		abline(h=0, col="BLACK", lty=3)
+		for(k in setdiff(1:nrow(sim.diff),selected.chars))
+			lines(x=xs, y=sim.diff[k,], col=adjustcolor("GRAY",alpha.f=0.3), lwd=2)
+		for(k in 1:length(selected.chars))
+			lines(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], lwd=2)
+		legend(x="bottomleft", legend=ranked.names[selected.chars], fill=colors)
+		dev.off()
+	}
+}
+
+# TODO
+# - radar plots of characters?
