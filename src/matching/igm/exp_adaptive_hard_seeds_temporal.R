@@ -19,6 +19,7 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200
+CUMULATIVE <- TRUE
 
 
 

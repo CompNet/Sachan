@@ -17,7 +17,8 @@ library("scales")
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- TRUE
+COMMON_CHARS_ONLY <- FALSE
+CUMULATIVE <- FALSE
 MEAS <- "jaccard"	# no alternative for now
 
 
@@ -32,6 +33,11 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 		mode.folder <- "common"
 	else
 		mode.folder <- "named"
+	
+	if(CUMULATIVE)
+		file.pref <- "sim_dyn-cum_"
+	else
+		file.pref <- "sim_dyn-inst_"
 }
 
 
@@ -51,6 +57,15 @@ source("src/matching/igm/_load_dynamic_nets.R")
 gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
 
+# function to compute statistical mode
+mode <- function(x, na.rm=FALSE)
+{	if(na.rm)
+		x = x[!is.na(x)]	
+	vals <- unique(x)
+	res <- vals[which.max(tabulate(match(x,vals)))]
+	return(res)
+}
+
 # loop over pairs of networks
 for(i in 1:(length(gs)-1))
 {	cat("..Processing first network ",g.names[i],"\n",sep="")
@@ -69,9 +84,16 @@ for(i in 1:(length(gs)-1))
 		colnames(perf.tab.all) <- cnames
 		perf.tab.top <- matrix(NA, nrow=max(length(gs[[i]]),length(gs[[j]])), ncol=length(cnames))
 		colnames(perf.tab.top) <- cnames
+#		perf.test.all <- matrix(NA, nrow=max(length(gs[[i]]),length(gs[[j]])), ncol=length(cnames))		# test
+#		colnames(perf.test.all) <- cnames																# test
 		# init sim diff table
 		sim.diff <- matrix(NA, nrow=length(ranked.chars), ncol=max(length(gs[[i]]),length(gs[[j]])))
 		rownames(sim.diff) <- ranked.chars
+		# init best match tables
+		best.matches1 <- matrix(NA, nrow=length(ranked.chars), ncol=max(length(gs[[i]]),length(gs[[j]])))
+		rownames(best.matches1) <- ranked.chars
+		best.matches2 <- matrix(NA, nrow=length(ranked.chars), ncol=max(length(gs[[i]]),length(gs[[j]])))
+		rownames(best.matches2) <- ranked.chars
 		
 		k <- 1
 		while(k<=length(gs[[i]]) && k<=length(gs[[j]]))
@@ -116,69 +138,109 @@ for(i in 1:(length(gs)-1))
 				g2 <- permute(graph=g2, permutation=idx2)
 			}
 			
-			# compute and normalize adjacency matrices
-			a1 <- as_adjacency_matrix(graph=g1, type="both", attr="weight", sparse=FALSE)
-			a1 <- t(apply(a1, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
-			a2 <- as_adjacency_matrix(graph=g2, type="both", attr="weight", sparse=FALSE)
-			a2 <- t(apply(a2, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
-			names <- V(g1)$name
-			
-			if(MEAS=="jaccard")
-			{	# compute jaccard (weighted) similarity
-				sim.mat <- matrix(NA, nrow=nrow(a1), ncol=nrow(a2))
-				rownames(sim.mat) <- names
-				colnames(sim.mat) <- names
-				for(v1 in 1:nrow(a1))
-				{	#print(v1)
-					for(v2 in 1:nrow(a2)) 
-					{	w.min <- pmin(a1[v1,], a2[v2,])
-						w.max <- pmax(a1[v1,], a2[v2,])
-						if(sum(w.max)==0)
-							sim <- 0
-						else
-							sim <- sum(w.min)/sum(w.max)
-						#print(sim)
-						sim.mat[v1,v2] <- sim
+			if(gsize(g1)>0 && gsize(g2)>0)
+			{	# compute and normalize adjacency matrices
+				a1 <- as_adjacency_matrix(graph=g1, type="both", attr="weight", sparse=FALSE)
+				a1 <- t(apply(a1, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
+				a2 <- as_adjacency_matrix(graph=g2, type="both", attr="weight", sparse=FALSE)
+				a2 <- t(apply(a2, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
+				names <- V(g1)$name
+				
+				if(MEAS=="jaccard")
+				{	# compute jaccard (weighted) similarity
+					sim.mat <- matrix(NA, nrow=nrow(a1), ncol=nrow(a2))
+					rownames(sim.mat) <- names
+					colnames(sim.mat) <- names
+					for(v1 in 1:nrow(a1))
+					{	#print(v1)
+						for(v2 in 1:nrow(a2)) 
+						{	w.min <- pmin(a1[v1,], a2[v2,])
+							w.max <- pmax(a1[v1,], a2[v2,])
+							if(sum(w.max)==0)
+								sim <- 0
+							else
+								sim <- sum(w.min)/sum(w.max)
+							#print(sim)
+							sim.mat[v1,v2] <- sim
+						}
 					}
 				}
+				
+				ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
+				idx <- match(ranked.names, names)
+				top.nbr <- 20
+				
+				# identify best matches at each time step
+#				best.match0[ranked.names,k] <- sapply(1:nrow(sim.mat), function(k) 
+#				{	mx1 <- max(sim.mat[k,])
+#					mx2 <- max(sim.mat[,k])
+#					if(mx1==0 && mx2==0)
+#						res <- NA
+#					else if(mx1>mx2)
+#						res <- sample(colnames(sim.mat)[sim.mat[k,]==mx1], size=1)
+#					else if(mx1<mx2)
+#						res <- sample(rownames(sim.mat)[sim.mat[,k]==mx2], size=1)
+#					else
+#						res <- sample(union(colnames(sim.mat)[sim.mat[k,]==mx1], rownames(sim.mat)[sim.mat[,k]==mx2]), size=1)
+#					return(res)
+#				})
+				best.matches1[ranked.names,k] <- apply(sim.mat[idx,idx], 2, function(col)
+				{	mx <- max(col)
+					if(mx==0)
+						res <- NA
+					else 
+						res <- sample(names(col)[col==mx], size=1)
+					return(res)
+				})
+				perf.test1 <- length(which(best.matches1[,k]==rownames(best.matches1)))/length(ranked.names)
+				best.matches2[ranked.names,k] <- apply(sim.mat[idx,idx], 1, function(row) 
+				{	mx <- max(row)
+					if(mx==0)
+						res <- NA
+					else 
+						res <- sample(names(row)[row==mx], size=1)
+					return(res)
+				})
+				perf.test2 <- length(which(best.matches2[,k]==rownames(best.matches2)))/length(ranked.names)
+				#print(perf.test1);print(perf.test2)
+				#perf.test.all[k,] <- c(perf.test1, perf.test2, NA)	# test
+				
+				# compute some matching performance
+				sim.self <- diag(sim.mat)
+				tmp <- sim.mat; diag(tmp) <- 0
+				sim.alter1 <- apply(tmp, 1, max)
+				sim.alter2 <- apply(tmp, 2, max)
+				sim.alter <- pmax(sim.alter1, sim.alter2)
+				diff <- sim.self - sim.alter
+				sim.diff[ranked.names,k] <- diff[idx]
+				write.csv(x=sim.diff, file=file.path(local.folder,paste0(file.pref,"simdiff.csv")), row.names=FALSE, fileEncoding="UTF-8")
+				d1 <- degree(g1,mode="all")
+				d2 <- degree(g1,mode="all")
+				
+				# perf for all characters
+				acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
+				acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
+				acc <- length(which(sim.self>sim.alter))/length(sim.self)
+				perf.tab.all[k,] <- c(acc1, acc2, acc)
+				write.csv(x=perf.tab.all, file=file.path(local.folder,paste0(file.pref,"perf_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
+				
+				# perf for only top characters
+				idx.top <- idx[1:min(length(idx),top.nbr)]
+				acc1 <- length(which(sim.self[idx.top]>sim.alter2[idx.top]))/length(d1[idx.top]>0)
+				acc2 <- length(which(sim.self[idx.top]>sim.alter1[idx.top]))/length(d2[idx.top]>0)
+				acc <- length(which(sim.self[idx.top]>sim.alter[idx.top]))/length(sim.self[idx.top])
+				perf.tab.top[k,] <- c(acc1, acc2, acc)
+				write.csv(x=perf.tab.top, file=file.path(local.folder,paste0(file.pref,"perf_top20.csv")), row.names=FALSE, fileEncoding="UTF-8")
+				#cat("Performance when matching to the most similar character:\n",sep="");print(perf.tab.all[k,]);print(perf.tab.top)
 			}
 			
-			ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
-			idx <- match(ranked.names, names)
-			top.nbr <- 20
-			
-			# compute some matching performance
-			sim.self <- diag(sim.mat)
-			tmp <- sim.mat; diag(tmp) <- 0
-			sim.alter1 <- apply(tmp, 1, max)
-			sim.alter2 <- apply(tmp, 2, max)
-			sim.alter <- pmax(sim.alter1, sim.alter2)
-			diff <- sim.self - sim.alter
-			sim.diff[ranked.names,k] <- diff[idx]
-			write.csv(x=sim.diff, file=file.path(local.folder,"sim_dyn_simdiff.csv"), row.names=FALSE, fileEncoding="UTF-8")
-			d1 <- degree(g1,mode="all")
-			d2 <- degree(g1,mode="all")
-			acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
-			acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
-			acc <- length(which(sim.self>sim.alter))/length(sim.self)
-			perf.tab.all[k,] <- c(acc1, acc2, acc)
-			write.csv(x=perf.tab.all, file=file.path(local.folder,"sim_dyn_perf_all.csv"), row.names=FALSE, fileEncoding="UTF-8")
-			# only top characters
-			idx <- idx[1:min(length(idx),top.nbr)]
-			acc1 <- length(which(sim.self[idx]>sim.alter2[idx]))/length(d1[idx]>0)
-			acc2 <- length(which(sim.self[idx]>sim.alter1[idx]))/length(d2[idx]>0)
-			acc <- length(which(sim.self[idx]>sim.alter[idx]))/length(sim.self[idx])
-			perf.tab.top[k,] <- c(acc1, acc2, acc)
-			write.csv(x=perf.tab.top, file=file.path(local.folder,"sim_dyn_perf_top20.csv"), row.names=FALSE, fileEncoding="UTF-8")
-			#cat("Performance when matching to the most similar character:\n",sep="");print(perf.tab.all[k,]);print(perf.tab.top)
-
 			k <- k + 1
 		}
 	
-		# create the plots
+		# plot proportions of correct matches
 		colors <- brewer_pal(type="qual", palette=2)(ncol(perf.tab.all))
 		xs <- 1:nrow(perf.tab.all)
-		plot.file <- file.path(local.folder,"sim_dyn_perf_all")
+		plot.file <- file.path(local.folder,paste0(file.pref,"perf_all"))
 		pdf(paste0(plot.file,".pdf"), bg="white")
 		plot(
 			NULL,
@@ -187,14 +249,16 @@ for(i in 1:(length(gs)-1))
 		)
 		for(k in 1:ncol(perf.tab.all))
 			lines(x=xs, y=perf.tab.all[,k], col=colors[k])
+			#lines(x=xs, y=perf.test.all[,1], col="BLACK", lty=3)	# test		
+			#lines(x=xs, y=perf.test.all[,2], col="GRAY", lty=3)	# test
 		legend(
 			x="bottomleft",
 			legend=colnames(perf.tab.all),
 			fill=colors
 		)
 		dev.off()
-		# top 20
-		plot.file <- file.path(local.folder,"sim_dyn_perf_top20")
+		# focus on top 20 characters
+		plot.file <- file.path(local.folder,paste0(file.pref,"perf_top20"))
 		pdf(paste0(plot.file,".pdf"), bg="white")
 		plot(
 			NULL,
@@ -213,7 +277,7 @@ for(i in 1:(length(gs)-1))
 		# similarity difference
 		selected.chars <- 1:5
 		colors <- brewer_pal(type="qual", palette=2)(length(selected.chars))
-		plot.file <- file.path(local.folder,"sim_dyn_simdiff")
+		plot.file <- file.path(local.folder,paste0(file.pref,"simdiff"))
 		pdf(paste0(plot.file,".pdf"), bg="white")
 		plot(
 			NULL,
@@ -227,6 +291,30 @@ for(i in 1:(length(gs)-1))
 			lines(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], lwd=2)
 		legend(x="bottomleft", legend=ranked.names[selected.chars], fill=colors)
 		dev.off()
+		
+		# compute performance over whole time series (g1 vs g2)
+		best.matches1 <- best.matches1[apply(best.matches1,1,function(row) !all(is.na(row))),]
+		dyn.matches1 <- apply(best.matches1, 1, function(row) mode(row,na.rm=TRUE))
+		tab1 <- data.frame(rownames(best.matches1),dyn.matches1)
+		colnames(tab1) <- c("Character","Match")
+		write.csv(x=tab1, file=file.path(local.folder,paste0(file.pref,"series_",comp.name,"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
+		perf.all1 <- length(which(tab1[,1]==tab1[,2]))/nrow(tab1)
+		perf.top1 <- length(which(tab1[1:top.nbr,1]==tab1[1:top.nbr,2]))/top.nbr
+		perf.tab <- c(perf.all1,perf.top1)
+		# same, in the other direction (g2 vs g1)
+		best.matches2 <- best.matches2[apply(best.matches2,1,function(row) !all(is.na(row))),]
+		dyn.matches2 <- apply(best.matches2, 1, function(row) mode(row,na.rm=TRUE))
+		tab2 <- data.frame(rownames(best.matches2),dyn.matches2)
+		colnames(tab2) <- c("Character","Match")
+		write.csv(x=tab2, file=file.path(local.folder,paste0(file.pref,"series_",g.names[j],"_vs_",g.names[i],"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
+		perf.all2 <- length(which(tab2[,1]==tab2[,2]))/nrow(tab2)
+		perf.top2 <- length(which(tab2[1:top.nbr,1]==tab2[1:top.nbr,2]))/top.nbr
+		perf.tab <- cbind(perf.tab, c(perf.all2,perf.top2))
+		rownames(perf.tab) <- c("All","Top-20")
+		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]))
+		# record perfs
+		write.csv(x=perf.tab, file=file.path(local.folder,paste0(file.pref,"series_perf.csv")), row.names=FALSE, fileEncoding="UTF-8")
+		cat("Performance when matching to the most similar character over the whole series:\n",sep="");print(perf.tab)
 	}
 }
 
