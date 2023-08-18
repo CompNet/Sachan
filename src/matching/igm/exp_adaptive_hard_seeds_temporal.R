@@ -18,8 +18,8 @@ library("scales")
 
 ###############################################################################
 # processing parameters
-MAX_ITER <- 200
-CUMULATIVE <- TRUE
+MAX_ITER <- 200				# limit on the number of iterations during matching
+CUMULATIVE <- FALSE			# use the instant or cumulative networks
 
 
 
@@ -35,7 +35,7 @@ mode.folder <- "common_raw_adaptive_hard_temporal"
 
 ###############################################################################
 # load the dynamic graphs
-source("src/matching/igm/_load_dynamic_nets.R")
+source("src/common/load_dynamic_nets.R")
 
 
 

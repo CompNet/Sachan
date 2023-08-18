@@ -5,7 +5,7 @@
 # 08/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/igm/descriptive_static.R")
+# source("src/matching/jaccard/descriptive_static.R")
 ###############################################################################
 library("igraph")
 library("viridis")
@@ -16,8 +16,9 @@ library("plot.matrix")
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- TRUE
-MEAS <- "jaccard"	# no alternative for now
+COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
+MEAS <- "jaccard"			# no alternative for now
+WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
 
 
 
@@ -38,7 +39,7 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 ###############################################################################
 # load the static graphs and rank the characters by importance
-source("src/matching/igm/_load_static_nets.R")
+source("src/common/load_static_nets.R")
 
 
 

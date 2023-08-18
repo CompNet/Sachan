@@ -5,7 +5,7 @@
 # 08/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/igm/descriptive_dynamic.R")
+# source("src/matching/jaccard/descriptive_dynamic.R")
 ###############################################################################
 library("igraph")
 library("viridis")
@@ -17,9 +17,9 @@ library("scales")
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- FALSE
-CUMULATIVE <- FALSE
-MEAS <- "jaccard"	# no alternative for now
+COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
+CUMULATIVE <- FALSE			# use the instant or cumulative networks
+MEAS <- "jaccard"			# no alternative for now
 
 
 
@@ -45,9 +45,9 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 ###############################################################################
 # load the static graphs and rank the characters by importance
-source("src/matching/igm/_load_static_nets.R")
+source("src/common/load_static_nets.R")
 # load the dynamic graphs
-source("src/matching/igm/_load_dynamic_nets.R")
+source("src/common/load_dynamic_nets.R")
 
 
 
@@ -317,6 +317,3 @@ for(i in 1:(length(gs)-1))
 		cat("Performance when matching to the most similar character over the whole series:\n",sep="");print(perf.tab)
 	}
 }
-
-# TODO
-# - radar plots of characters?
