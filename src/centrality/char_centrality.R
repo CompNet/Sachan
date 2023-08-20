@@ -23,9 +23,9 @@ library("cluster")
 # parameters
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="wClo.", "betweenness"="Betw.", "w_betweenness"="wBetw.", "eigenvector"="Eig.", "w_eigenvector"="wEig")
-STANDARDIZE <- TRUE
-COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
-WHOLE_NARRATIVE <- TRUE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
+STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
+COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
+WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
 
 
 
@@ -164,6 +164,7 @@ for(i in 1:length(gs))
 	dd <- dist(centr.tab)
 	dendro <- hclust(d=dd, method="ward.D2") # complete single average ward.D ward.D2
 	pp <- matrix(data=c(1,1,1,2,1,3,2,2,2,3,2,3,3,3,3,3,3,3),ncol=2,byrow=TRUE)
+	pps <- matrix(data=c(7,7,7/2,7,7/3,7,7,7,7*2/3,7,7*2/3,7,7,7,7,7,7,7),ncol=2,byrow=TRUE)
 	sil.scores <- c()
 	ks <- 2:9
 	for(k in ks)
@@ -177,7 +178,7 @@ for(i in 1:length(gs))
 		sil.scores <- c(sil.scores, score) 
 		
 		plot.file <- file.path(local.folder,paste0("radar_k",k))
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"), bg="white", width=pps[k,2], height=pps[k,1])
 			parameter <- par(mfrow=pp[k,]) #set up the plotting space
 			for(j in 1:k)
 			{	ii <- which(clusters[idx]==j)
@@ -194,5 +195,4 @@ for(i in 1:length(gs))
 	# record silhouette scores
 	tab.scores <- data.frame("k"=ks, "Silhouette"=sil.scores)
 	write.csv(x=tab.scores, file=file.path(local.folder,"silhouette_scores.csv"), row.names=FALSE, fileEncoding="UTF-8")
-
 }

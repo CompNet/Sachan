@@ -25,7 +25,7 @@ WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two 
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching")
+out.folder <- file.path("out","matching","attr_none")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 mode.folder <- "common_raw_adaptive_soft"
 

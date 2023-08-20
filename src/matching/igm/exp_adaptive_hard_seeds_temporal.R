@@ -19,14 +19,14 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
-CUMULATIVE <- FALSE			# use the instant or cumulative networks
+CUMULATIVE <- TRUE			# no choice here, we need to use the cumulative networks
 
 
 
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching")
+out.folder <- file.path("out","matching","attr_none")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 mode.folder <- "common_raw_adaptive_hard_temporal"
 
@@ -86,6 +86,11 @@ for(i in 1:(length(gs)-1))
 				idx2 <- which(!(V(g2)$name %in% names))
 				g2 <- delete_vertices(g2,idx2)
 				
+				# indentify top characters
+				top.chars1 <- V(g1)$name[order(degree(g1),decreasing=TRUE)]
+				top.chars2 <- V(g2)$name[order(degree(g2),decreasing=TRUE)]
+				top.chars <- intersect(top.chars1,top.chars2)
+				
 				if(method=="indefinite")
 				{	res <- gm(
 						A=g1, B=g2,				# graphs to compare 
@@ -124,10 +129,7 @@ for(i in 1:(length(gs)-1))
 					)
 				}
 				else if(method=="percolation")
-				{	top.chars1 <- V(g1)$name[order(degree(g1),decreasing=TRUE)]
-					top.chars2 <- V(g2)$name[order(degree(g2),decreasing=TRUE)]
-					top.inter <- intersect(top.chars1,top.chars2)
-					seed <- matrix(c(which(V(g1)$name==top.inter[1]),which(V(g2)$name==top.inter[1])), ncol=2)	# this method needs at least one seed
+				{	seed <- matrix(c(which(V(g1)$name==top.chars[1]),which(V(g2)$name==top.chars[1])), ncol=2)	# this method needs at least one seed
 					# TODO what if the inter is empty ?
 					if(!is.null(seeds) && nrow(seeds)>0)
 						seed <- seeds
@@ -204,8 +206,8 @@ for(i in 1:(length(gs)-1))
 				colnames(tab) <- c("Corr_A","Corr_B")
 				#print(tab)
 				write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%03d",k),"_list_full.csv")), row.names=FALSE, fileEncoding="UTF-8")
-				# same thing for the 20 top characters
-				tab <- cbind(V(g1)$name[res$corr_A], V(g2)$name[res$corr_B])[V(g1)$name[res$corr_A] %in% top.chars | V(g2)$name[res$corr_B] %in% top.chars,]
+				# same thing for the top 20 characters
+				tab <- cbind(V(g1)$name[res$corr_A], V(g2)$name[res$corr_B])[V(g1)$name[res$corr_A] %in% top.chars | V(g2)$name[res$corr_B] %in% top.chars,,drop=FALSE]
 				colnames(tab) <- c("Top_Corr_A","Top_Corr_B")
 				print(tab)
 				write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%03d",k),"_list_top.csv")), row.names=FALSE, fileEncoding="UTF-8")

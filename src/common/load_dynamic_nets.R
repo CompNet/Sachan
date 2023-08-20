@@ -42,7 +42,7 @@
 #   - last book 2 chapter: 2.ACoK_69_cumul.graphml / 2.ACoK_69_instant.graphml
 #   - last chapter: 5.ADwD_72_cumul.graphml / 5.ADwD_72_instant.graphml
 
-# read all chapter-based novel cumulative graphs
+# read the chapter-based novel cumulative graphs
 gs.nv <- list()
 files <- sort(list.files(path=file.path("in/novels",folder), pattern=".+\\.graphml", full.names=TRUE))
 i <- 1
@@ -56,7 +56,7 @@ while(files[i]!=file.path("in/novels",folder,paste0("3.ASoS_00_",pref.nv,".graph
 }
 cat("Loaded a total of ",length(gs.nv)," novel networks\n",sep="")
 
-# read all chapter-based comics cumulative graphs
+# read the chapter-based comics cumulative graphs
 gs.cx <- list()
 files <- sort(list.files(path=file.path("in/comics",folder,"chapter"), pattern=".+\\.graphml", full.names=TRUE))
 for(i in 1:length(files))
@@ -68,7 +68,7 @@ for(i in 1:length(files))
 }
 cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 
-# read all episode-based tvshow cumulative graphs # TODO pb: not the same number of time slice as novels and comics
+# read the episode-based tvshow cumulative graphs # TODO pb: not the same number of time slice as novels and comics
 #gs.tv <- list
 #files <- sort(list.files(path=file.path("in/tvshow",folder,"episode"), pattern=".+\\.graphml", full.names=TRUE))
 #i <- 1
