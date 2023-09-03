@@ -21,6 +21,7 @@ library("scales")
 MAX_ITER <- 200				# limit on the number of iterations during matching
 ATTR <- "none"				# attribute used: none sex affiliation both
 WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
+TOP_CHAR_NBR <- 20			# number of important characters
 
 
 
@@ -42,34 +43,8 @@ source("src/common/load_static_nets.R")
 
 
 ###############################################################################
-# retrieve the characters' affiliations
-char.file <- "in/characters.csv"
-char.tab <- read.csv2(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
-# clean up a bit
-aff.map <- char.tab[,"AllegianceBoth"]
-names(aff.map) <- char.tab[,"Name"]
-aff.map[aff.map==""] <- "Unknown"
-aff.map <- sapply(strsplit(x=aff.map, split=",", fixed=TRUE), function(v) v[1])
-
-# add to novel network
-aff <- aff.map[V(g.nv)$name]
-aff[is.na(aff)] <- "Unknown"
-V(g.nv)$affiliation <- aff
-# add to comics network
-aff <- aff.map[V(g.cx)$name]
-aff[is.na(aff)] <- "Unknown"
-V(g.cx)$affiliation <- aff
-# add to TV show network
-aff <- aff.map[V(g.tv)$name]
-aff[is.na(aff)] <- "Unknown"
-V(g.tv)$affiliation <- aff
-
-
-
-
-###############################################################################
 # identify most important characters (according to novels)
-top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:20]
+top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:TOP_CHAR_NBR]
 
 
 
@@ -240,7 +215,7 @@ for(i in 1:(length(gs)-1))
 				colnames(tab) <- c("Corr_A","Corr_B")
 				#print(tab)
 				write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%02d",s),"_list_full.csv")), row.names=FALSE, fileEncoding="UTF-8")
-				# same thing for the 20 top characters
+				# same thing for the most important characters
 				tab <- cbind(V(g1)$name[res$corr_A], V(g2)$name[res$corr_B])[V(g1)$name[res$corr_A] %in% top.chars | V(g2)$name[res$corr_B] %in% top.chars,]
 				colnames(tab) <- c("Top_Corr_A","Top_Corr_B")
 				print(tab)
@@ -252,7 +227,7 @@ for(i in 1:(length(gs)-1))
 					bm <- best_matches(A=g1, B=g2, match=res, measure=meas)			# "row_cor", "row_diff", or "row_perm_stat"
 					tab <- cbind(bm,V(g1)$name[bm$A_best], V(g2)$name[bm$B_best])
 					colnames(tab)[(ncol(bm)+1):(ncol(bm)+2)] <- c("Character_A","Character_B")
-					print(tab[1:20,])
+					print(tab[1:TOP_CHAR_NBR,])
 					write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%02d",s),"_best_matches_",meas,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 				}
 			}

@@ -20,6 +20,7 @@ library("scales")
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
 CUMULATIVE <- TRUE			# no choice here, we need to use the cumulative networks
+TOP_CHAR_NBR <- 20			# number of important characters
 
 
 
@@ -206,7 +207,7 @@ for(i in 1:(length(gs)-1))
 				colnames(tab) <- c("Corr_A","Corr_B")
 				#print(tab)
 				write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%03d",k),"_list_full.csv")), row.names=FALSE, fileEncoding="UTF-8")
-				# same thing for the top 20 characters
+				# same thing for the most important characters
 				tab <- cbind(V(g1)$name[res$corr_A], V(g2)$name[res$corr_B])[V(g1)$name[res$corr_A] %in% top.chars | V(g2)$name[res$corr_B] %in% top.chars,,drop=FALSE]
 				colnames(tab) <- c("Top_Corr_A","Top_Corr_B")
 				print(tab)
@@ -219,7 +220,7 @@ for(i in 1:(length(gs)-1))
 					{	bm <- best_matches(A=g1, B=g2, match=res, measure=meas)			# "row_cor", "row_diff", or "row_perm_stat"
 						tab <- cbind(bm,V(g1)$name[bm$A_best], V(g2)$name[bm$B_best])
 						colnames(tab)[(ncol(bm)+1):(ncol(bm)+2)] <- c("Character_A","Character_B")
-						print(tab[1:20,])
+						print(tab[1:TOP_CHAR_NBR,])
 					}, error=function(e) NA)
 					write.csv(x=tab, file=file.path(local.folder,paste0("seeds",sprintf("%03d",k),"_best_matches_",meas,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 				}

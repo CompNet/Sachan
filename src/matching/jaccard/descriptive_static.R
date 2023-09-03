@@ -19,6 +19,7 @@ library("plot.matrix")
 COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
 MEAS <- "jaccard"			# no alternative for now
 WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
+TOP_CHAR_NBR <- 20			# number of important characters
 
 
 
@@ -201,7 +202,6 @@ for(i in 1:(length(gs)-1))
 		
 		ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
 		idx <- match(ranked.names, names)
-		top.nbr <- 20
 		
 		# plot matrix
 		plot.file <- file.path(local.folder,"sim_matrix_all")
@@ -209,10 +209,10 @@ for(i in 1:(length(gs)-1))
 			plot(sim.mat[idx,idx], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.2)
 		dev.off()
 		# plot only top characters
-		plot.file <- file.path(local.folder,paste0("sim_matrix_top",top.nbr))
+		plot.file <- file.path(local.folder,paste0("sim_matrix_top",TOP_CHAR_NBR))
 		pdf(paste0(plot.file,".pdf"), bg="white")
 			#par(mar=c(4,4,0,0)+0.1)	# remove the title space Bottom Left Top Right
-			plot(sim.mat[idx[1:top.nbr],idx[1:top.nbr]], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.5)
+			plot(sim.mat[idx[1:TOP_CHAR_NBR],idx[1:TOP_CHAR_NBR]], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.5)
 		dev.off()
 		
 		# compute some form of performance by considering the most similar alters vs. self
@@ -228,7 +228,7 @@ for(i in 1:(length(gs)-1))
 		acc <- length(which(sim.self>sim.alter))/length(sim.self)
 		perf.tab <- c(acc1,acc2,acc)
 		# only top characters
-		idx <- idx[1:top.nbr]
+		idx <- idx[1:TOP_CHAR_NBR]
 		acc1 <- length(which(sim.self[idx]>sim.alter2[idx]))/length(d1[idx]>0)
 		acc2 <- length(which(sim.self[idx]>sim.alter1[idx]))/length(d2[idx]>0)
 		acc <- length(which(sim.self[idx]>sim.alter[idx]))/length(sim.self[idx])

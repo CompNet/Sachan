@@ -20,6 +20,7 @@ library("scales")
 COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
 CUMULATIVE <- FALSE			# use the instant or cumulative networks
 MEAS <- "jaccard"			# no alternative for now
+TOP_CHAR_NBR <- 20			# number of important characters
 
 
 
@@ -168,7 +169,6 @@ for(i in 1:(length(gs)-1))
 				
 				ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
 				idx <- match(ranked.names, names)
-				top.nbr <- 20
 				
 				# identify best matches at each time step
 #				best.match0[ranked.names,k] <- sapply(1:nrow(sim.mat), function(k) 
@@ -225,7 +225,7 @@ for(i in 1:(length(gs)-1))
 				write.csv(x=perf.tab.all, file=file.path(local.folder,paste0(file.pref,"perf_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
 				
 				# perf for only top characters
-				idx.top <- idx[1:min(length(idx),top.nbr)]
+				idx.top <- idx[1:min(length(idx),TOP_CHAR_NBR)]
 				acc1 <- length(which(sim.self[idx.top]>sim.alter2[idx.top]))/length(d1[idx.top]>0)
 				acc2 <- length(which(sim.self[idx.top]>sim.alter1[idx.top]))/length(d2[idx.top]>0)
 				acc <- length(which(sim.self[idx.top]>sim.alter[idx.top]))/length(sim.self[idx.top])
@@ -299,7 +299,7 @@ for(i in 1:(length(gs)-1))
 		colnames(tab1) <- c("Character","Match")
 		write.csv(x=tab1, file=file.path(local.folder,paste0(file.pref,"series_",comp.name,"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
 		perf.all1 <- length(which(tab1[,1]==tab1[,2]))/nrow(tab1)
-		perf.top1 <- length(which(tab1[1:top.nbr,1]==tab1[1:top.nbr,2]))/top.nbr
+		perf.top1 <- length(which(tab1[1:TOP_CHAR_NBR,1]==tab1[1:TOP_CHAR_NBR,2]))/TOP_CHAR_NBR
 		perf.tab <- c(perf.all1,perf.top1)
 		# same, in the other direction (g2 vs g1)
 		best.matches2 <- best.matches2[apply(best.matches2,1,function(row) !all(is.na(row))),]
@@ -308,7 +308,7 @@ for(i in 1:(length(gs)-1))
 		colnames(tab2) <- c("Character","Match")
 		write.csv(x=tab2, file=file.path(local.folder,paste0(file.pref,"series_",g.names[j],"_vs_",g.names[i],"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
 		perf.all2 <- length(which(tab2[,1]==tab2[,2]))/nrow(tab2)
-		perf.top2 <- length(which(tab2[1:top.nbr,1]==tab2[1:top.nbr,2]))/top.nbr
+		perf.top2 <- length(which(tab2[1:TOP_CHAR_NBR,1]==tab2[1:TOP_CHAR_NBR,2]))/TOP_CHAR_NBR
 		perf.tab <- cbind(perf.tab, c(perf.all2,perf.top2))
 		rownames(perf.tab) <- c("All","Top-20")
 		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]))
