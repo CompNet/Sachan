@@ -16,6 +16,8 @@ library("plot.matrix")
 library("fmsb")
 library("cluster")
 
+source("src/common/colors.R")
+
 
 
 
@@ -23,9 +25,11 @@ library("cluster")
 # parameters
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="wClo.", "betweenness"="Betw.", "w_betweenness"="wBetw.", "eigenvector"="Eig.", "w_eigenvector"="wEig")
-STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
+STANDARDIZE <- FALSE			# whether to standardize (z-score) the centrality scores
 COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
 WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
+TOP_CHAR_NBR <- 20			# number of important characters
+ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex Affiliation
 
 
 
@@ -122,22 +126,31 @@ for(i in 1:length(gs))
 	write.csv(x=centr.tab, file=file.path(local.folder,"centrality_values.csv"), row.names=TRUE, fileEncoding="UTF-8")
 	centr.tabs[[i]] <- centr.tab
 	
+	# order the characters by importance (better looking plots)
+	chars <- setdiff(ranked.chars, setdiff(ranked.chars,V(g)$name))
+	idx <- match(chars, V(g)$name)
+	mm <- rbind(apply(centr.tab,2,max),apply(centr.tab,2,min))
+	
 	# plot correlation matrix
 	for(cm in c("pearson","spearman"))
-	{	cor.mat <- cor(x=centr.tab, method=cm)
-		plot.file <- file.path(local.folder,paste0("corrmat_",cm))
+	{	# all characters
+		cor.mat <- cor(x=centr.tab, method=cm)
+		plot.file <- file.path(local.folder,paste0("corrmat_all_",cm))
+		pdf(paste0(plot.file,".pdf"), bg="white")
+			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7)
+			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
+		dev.off()
+		
+		# only most important characters
+		cor.mat <- cor(x=centr.tab[idx[1:TOP_CHAR_NBR],], method=cm)
+		plot.file <- file.path(local.folder,paste0("corrmat_top",TOP_CHAR_NBR,"_",cm))
 		pdf(paste0(plot.file,".pdf"), bg="white")
 			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7)
 			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
 		dev.off()
 	}
 	
-	# order the characters by importance (better looking plots)
-	chars <- setdiff(ranked.chars, setdiff(ranked.chars,V(g)$name))
-	idx <- match(chars, V(g)$name)
-	mm <- rbind(apply(centr.tab,2,max),apply(centr.tab,2,min))
-	
-	# radar plots
+	# radar plots with main characters
 	selected.chars <- 1:5
 	sel.cols <- brewer_pal(type="qual", palette=2)(length(selected.chars))
 	cols <- rep(adjustcolor("BLACK",alpha.f=0.3), nrow(centr.tab))
@@ -160,6 +173,36 @@ for(i in 1:length(gs))
 		legend(x="bottomleft", legend=chars[selected.chars], fill=sel.cols, inset=-0.10, xpd=TRUE)
 	dev.off()
 	
+	# radar plots with attributes
+	for(att in ATTR_LIST)
+	{	vals <- vertex_attr(graph=g, name=tolower(att))
+		if(att=="Sex")
+			sel.cols <- ATT_COLORS_SEX
+		else
+		{	sel.cols <- brewer_pal(type="qual", palette=2)(length(unique(vals)))
+			names(sel.cols) <- sort(unique(vals))
+		}
+		sel.cols.alpa <- sapply(sel.cols, function(col) adjustcolor(col,alpha.f=0.3))
+		cols <- rep(adjustcolor("BLACK",alpha.f=0.4), nrow(centr.tab))
+		cols[!is.na(vals)] <- sel.cols.alpa[vals[!is.na(vals)]]
+		plot.file <- file.path(local.folder,paste0("radar_all_att=",att))
+		pdf(paste0(plot.file,".pdf"), bg="white")
+			radarchart(
+				as.data.frame(rbind(mm,centr.tab[rev(idx),])),	# values to plot 
+				#maxmin=FALSE,									# prevents the lib from expecting the first row to contain certain parameters
+				title=g.names[i],								# main title
+				#axistype=3, axislabcol="BLACK",				# display axis values
+				pty=32,											# don't plot points
+				pcol=rev(cols),									# line colors
+				plty=1,											# only solid lines
+				plwd=2,											# line width
+				cglty=3, cglwd=1, cglcol="BLACK",				# axis lines
+				vlabels=anames									# clean axis names
+			)
+			legend(x="bottomleft", legend=names(sel.cols), fill=sel.cols, inset=-0.10, xpd=TRUE, title=att)
+		dev.off()
+	}
+	
 	# perform clustering
 	dd <- dist(centr.tab)
 	dendro <- hclust(d=dd, method="ward.D2") # complete single average ward.D ward.D2
@@ -177,6 +220,11 @@ for(i in 1:length(gs))
 		cat("........Average silhouette:",score,"\n")
 		sil.scores <- c(sil.scores, score) 
 		
+		# radar plots with main characters
+		selected.chars <- 1:5
+		sel.cols <- brewer_pal(type="qual", palette=2)(length(selected.chars))
+		cols <- rep(adjustcolor("BLACK",alpha.f=0.3), nrow(centr.tab))
+		cols[selected.chars] <- sel.cols
 		plot.file <- file.path(local.folder,paste0("radar_k",k))
 		pdf(paste0(plot.file,".pdf"), bg="white", width=pps[k,2], height=pps[k,1])
 			parameter <- par(mfrow=pp[k,]) #set up the plotting space
@@ -190,6 +238,34 @@ for(i in 1:length(gs))
 					cglwd=1, cglcol="BLACK", vlabels=anames, title=tt)
 			}
 		dev.off()
+		
+		# radar plots with attributes
+		for(att in ATTR_LIST)
+		{	vals <- vertex_attr(graph=g, name=tolower(att))
+			if(att=="Sex")
+				sel.cols <- ATT_COLORS_SEX
+			else
+			{	sel.cols <- brewer_pal(type="qual", palette=2)(length(unique(vals)))
+				names(sel.cols) <- sort(unique(vals))
+			}
+			sel.cols.alpa <- sapply(sel.cols, function(col) adjustcolor(col,alpha.f=0.3))
+			cols <- rep(adjustcolor("BLACK",alpha.f=0.4), nrow(centr.tab))
+			cols[!is.na(vals)] <- sel.cols.alpa[vals[!is.na(vals)]]
+			anames <- short.names[colnames(centr.tab)]
+			plot.file <- file.path(local.folder,paste0("radar_k",k,"_att=",att))
+			pdf(paste0(plot.file,".pdf"), bg="white")
+				parameter <- par(mfrow=pp[k,]) #set up the plotting space
+				for(j in 1:k)
+				{	ii <- which(clusters[idx]==j)
+					tt <- paste0("C",j,": ",length(ii)," (%",round(100*length(ii)/length(clusters)),")")
+					par(mar=c(0, 0, 1, 0)+0.2)	# margins Bottom Left Top Right
+					parameter <- radarchart(
+						as.data.frame(rbind(mm,centr.tab[rev(idx[ii]),])), 
+						pty=32, pcol=rev(cols[ii]), plty=1, plwd=2, cglty=3, 
+						cglwd=1, cglcol="BLACK", vlabels=anames, title=tt)
+				}
+			dev.off()
+		}
 	}
 	
 	# record silhouette scores
