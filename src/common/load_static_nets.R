@@ -60,6 +60,32 @@ E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
 
 
 ###############################################################################
+# retrieve the characters' affiliations
+char.file <- "in/characters.csv"
+char.tab <- read.csv2(char.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+# clean up a bit
+aff.map <- char.tab[,"AllegianceBoth"]
+names(aff.map) <- char.tab[,"Name"]
+aff.map[aff.map==""] <- "Unknown"
+aff.map <- sapply(strsplit(x=aff.map, split=",", fixed=TRUE), function(v) v[1])
+
+# add to novel network
+aff <- aff.map[V(g.nv)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.nv)$affiliation <- aff
+# add to comics network
+aff <- aff.map[V(g.cx)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.cx)$affiliation <- aff
+# add to TV show network
+aff <- aff.map[V(g.tv)$name]
+aff[is.na(aff)] <- "Unknown"
+V(g.tv)$affiliation <- aff
+
+
+
+
+###############################################################################
 # compute a list of characters ranked by importance, using their degree in each network
 names <- sort(union(V(g.nv)$name,union(V(g.cx)$name,V(g.tv)$name)))
 imp.mat <- matrix(NA, nrow=length(names), ncol=3)
