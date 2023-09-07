@@ -25,7 +25,7 @@ source("src/common/colors.R")
 # parameters
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="wClo.", "betweenness"="Betw.", "w_betweenness"="wBetw.", "eigenvector"="Eig.", "w_eigenvector"="wEig")
-STANDARDIZE <- FALSE			# whether to standardize (z-score) the centrality scores
+STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
 COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
 WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
 TOP_CHAR_NBR <- 20			# number of important characters
@@ -176,6 +176,9 @@ for(i in 1:length(gs))
 	# radar plots with attributes
 	for(att in ATTR_LIST)
 	{	vals <- vertex_attr(graph=g, name=tolower(att))
+		tab <- t(table(vals))
+		print(tab)
+		write.csv(x=tab, file=file.path(local.folder,paste0("distrib_att=",att,"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
 		if(att=="Sex")
 			sel.cols <- ATT_COLORS_SEX
 		else
@@ -242,21 +245,26 @@ for(i in 1:length(gs))
 		# radar plots with attributes
 		for(att in ATTR_LIST)
 		{	vals <- vertex_attr(graph=g, name=tolower(att))
+			tab <- matrix(0,nrow=k,ncol=length(unique(vals)))
+			rownames(tab) <- 1:k
+			colnames(tab) <- sort(unique(vals))
 			if(att=="Sex")
 				sel.cols <- ATT_COLORS_SEX
 			else
 			{	sel.cols <- brewer_pal(type="qual", palette=2)(length(unique(vals)))
 				names(sel.cols) <- sort(unique(vals))
 			}
-			sel.cols.alpa <- sapply(sel.cols, function(col) adjustcolor(col,alpha.f=0.3))
+			sel.cols.alpha <- sapply(sel.cols, function(col) adjustcolor(col,alpha.f=0.3))
 			cols <- rep(adjustcolor("BLACK",alpha.f=0.4), nrow(centr.tab))
-			cols[!is.na(vals)] <- sel.cols.alpa[vals[!is.na(vals)]]
+			cols[!is.na(vals)] <- sel.cols.alpha[vals[!is.na(vals)]]
 			anames <- short.names[colnames(centr.tab)]
 			plot.file <- file.path(local.folder,paste0("radar_k",k,"_att=",att))
-			pdf(paste0(plot.file,".pdf"), bg="white")
+			pdf(paste0(plot.file,".pdf"), bg="white", width=pps[k,2], height=pps[k,1])
 				parameter <- par(mfrow=pp[k,]) #set up the plotting space
 				for(j in 1:k)
 				{	ii <- which(clusters[idx]==j)
+					tt <- table(vals[ii])
+					tab[j,names(tt)] <- tt
 					tt <- paste0("C",j,": ",length(ii)," (%",round(100*length(ii)/length(clusters)),")")
 					par(mar=c(0, 0, 1, 0)+0.2)	# margins Bottom Left Top Right
 					parameter <- radarchart(
@@ -265,6 +273,13 @@ for(i in 1:length(gs))
 						cglwd=1, cglcol="BLACK", vlabels=anames, title=tt)
 				}
 			dev.off()
+
+			tab <- rbind(tab, colSums(tab))
+			rownames(tab)[nrow(tab)] <- "Total"
+			tab <- cbind(tab, rowSums(tab))
+			colnames(tab)[ncol(tab)] <- "Total"
+			print(tab)
+			write.csv(x=tab, file=file.path(local.folder,paste0("distrib_att=",att,"_k",k,".csv")), row.names=TRUE, fileEncoding="UTF-8")
 		}
 	}
 	
