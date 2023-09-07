@@ -290,12 +290,20 @@ for(i in 1:(length(gs)-1))
 			)
 			abline(h=0, col="BLACK", lty=3)
 			for(k in setdiff(1:nrow(sim.diff),selected.chars))
-				lines(x=xs, y=sim.diff[k,], col=adjustcolor("GRAY",alpha.f=0.3), lwd=2)
+			{	if(CUMULATIVE)
+					lines(x=xs, y=sim.diff[k,], col=adjustcolor("GRAY",alpha.f=0.3), lwd=2)
+				else
+					points(x=xs, y=sim.diff[k,], col=adjustcolor("GRAY",alpha.f=0.3), pch=16)
+			}
 			for(k in 1:length(selected.chars))
-				lines(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], lwd=2)
+			{	if(CUMULATIVE)
+					lines(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], lwd=2)
+				else
+					points(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], pch=16)
+			}
 			legend(x="bottomleft", legend=ranked.chars[selected.chars], fill=colors, bg="WHITE")
 		dev.off()
-		
+			
 		# compute performance over whole time series (g1 vs g2)
 		best.matches1 <- best.matches1[apply(best.matches1,1,function(row) !all(is.na(row))),]
 		dyn.matches1 <- apply(best.matches1, 1, function(row) mode(row,na.rm=TRUE))
