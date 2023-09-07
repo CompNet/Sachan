@@ -1,5 +1,8 @@
 # Computes the similarity between a character and its counterpart in a different
 # network, considering the evolution through time.
+#
+# Note about the sim evolution plot for the instant graphs: there are very few
+# characters that appear in two consecutive chapters, hence the discontinuities.
 # 
 # Author: Vincent Labatut
 # 08/2023
@@ -46,6 +49,7 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 ###############################################################################
 # load the static graphs and rank the characters by importance
+WHOLE_NARRATIVE <- FALSE
 source("src/common/load_static_nets.R")
 # load the dynamic graphs
 source("src/common/load_dynamic_nets.R")
@@ -242,36 +246,36 @@ for(i in 1:(length(gs)-1))
 		xs <- 1:nrow(perf.tab.all)
 		plot.file <- file.path(local.folder,paste0(file.pref,"perf_all"))
 		pdf(paste0(plot.file,".pdf"), bg="white")
-		plot(
-			NULL,
-			xlim=range(xs), ylim=c(0,1),
-			xlab="Time", ylab="Proportion of correct matches"
-		)
-		for(k in 1:ncol(perf.tab.all))
-			lines(x=xs, y=perf.tab.all[,k], col=colors[k])
-			#lines(x=xs, y=perf.test.all[,1], col="BLACK", lty=3)	# test		
-			#lines(x=xs, y=perf.test.all[,2], col="GRAY", lty=3)	# test
-		legend(
-			x="bottomleft",
-			legend=colnames(perf.tab.all),
-			fill=colors
-		)
+			plot(
+				NULL,
+				xlim=range(xs), ylim=c(0,1),
+				xlab="Time", ylab="Proportion of correct matches"
+			)
+			for(k in 1:ncol(perf.tab.all))
+				lines(x=xs, y=perf.tab.all[,k], col=colors[k])
+				#lines(x=xs, y=perf.test.all[,1], col="BLACK", lty=3)	# test		
+				#lines(x=xs, y=perf.test.all[,2], col="GRAY", lty=3)	# test
+			legend(
+				x="bottomleft",
+				legend=colnames(perf.tab.all),
+				fill=colors
+			)
 		dev.off()
 		# focus on top 20 characters
 		plot.file <- file.path(local.folder,paste0(file.pref,"perf_top20"))
 		pdf(paste0(plot.file,".pdf"), bg="white")
-		plot(
-			NULL,
-			xlim=range(xs), ylim=c(0,1),
-			xlab="Time", ylab="Proportion of correct matches"
-		)
-		for(k in 1:ncol(perf.tab.top))
-			lines(x=xs, y=perf.tab.top[,k], col=colors[k])
-		legend(
-				x="bottomleft",
-				legend=colnames(perf.tab.top),
-				fill=colors
-		)
+			plot(
+				NULL,
+				xlim=range(xs), ylim=c(0,1),
+				xlab="Time", ylab="Proportion of correct matches"
+			)
+			for(k in 1:ncol(perf.tab.top))
+				lines(x=xs, y=perf.tab.top[,k], col=colors[k])
+			legend(
+					x="bottomleft",
+					legend=colnames(perf.tab.top),
+					fill=colors
+			)
 		dev.off()
 		
 		# similarity difference
@@ -279,17 +283,17 @@ for(i in 1:(length(gs)-1))
 		colors <- brewer_pal(type="qual", palette=2)(length(selected.chars))
 		plot.file <- file.path(local.folder,paste0(file.pref,"simdiff"))
 		pdf(paste0(plot.file,".pdf"), bg="white")
-		plot(
-			NULL,
-			xlim=range(xs), ylim=c(-1,1),
-			xlab="Time", ylab="Similarity difference between self and best alter"
-		)
-		abline(h=0, col="BLACK", lty=3)
-		for(k in setdiff(1:nrow(sim.diff),selected.chars))
-			lines(x=xs, y=sim.diff[k,], col=adjustcolor("GRAY",alpha.f=0.3), lwd=2)
-		for(k in 1:length(selected.chars))
-			lines(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], lwd=2)
-		legend(x="bottomleft", legend=ranked.names[selected.chars], fill=colors)
+			plot(
+				NULL,
+				xlim=range(xs), ylim=c(-1,1),
+				xlab="Time", ylab="Similarity difference between self and best alter"
+			)
+			abline(h=0, col="BLACK", lty=3)
+			for(k in setdiff(1:nrow(sim.diff),selected.chars))
+				lines(x=xs, y=sim.diff[k,], col=adjustcolor("GRAY",alpha.f=0.3), lwd=2)
+			for(k in 1:length(selected.chars))
+				lines(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], lwd=2)
+			legend(x="bottomleft", legend=ranked.chars[selected.chars], fill=colors, bg="WHITE")
 		dev.off()
 		
 		# compute performance over whole time series (g1 vs g2)
