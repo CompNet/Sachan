@@ -18,7 +18,6 @@ library("plot.matrix")
 # processing parameters
 COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
 MEAS <- "jaccard"			# no alternative for now
-WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
 TOP_CHAR_NBR <- 20			# number of important characters
 
 
@@ -39,6 +38,8 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
+# only take the first two narrative units (whole narrative not supported here)
+NARRATIVE_PART <- 2
 # load the static graphs and rank the characters by importance
 source("src/common/load_static_nets.R")
 

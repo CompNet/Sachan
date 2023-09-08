@@ -11,17 +11,23 @@
 
 ###############################################################################
 # parameters
-{	if(WHOLE_NARRATIVE)
+{	if(NARRATIVE_PART==0)
 	{	file.nv <- "in/novels/cumul/5.ADwD_72_cumul.graphml"
 		file.cx <- "in/comics/cumul/scene/cum_1437.graphml"
 		file.tv <- "in/tvshow/cumul/scene/cumulative_4164.graphml"
 	}
-	else
+	else if(NARRATIVE_PART==2)
 	{	file.nv <- "in/novels/cumul/2.ACoK_69_cumul.graphml"
 		file.cx <- "in/comics/cumul/scene/cum_1437.graphml"
 		file.tv <- "in/tvshow/cumul/scene/cumulative_0753.graphml"
 	}
+	else if(NARRATIVE_PART==5)
+	{	file.nv <- "in/novels/cumul/5.ADwD_72_cumul.graphml"
+		file.cx <- NA
+		file.tv <- "in/tvshow/cumul/scene/cumulative_2248.graphml"
+	}
 }
+
 
 
 
@@ -43,18 +49,26 @@
 
 # read the chapter-based novel static graph
 g.nv <- read.graph(file.nv, format="graphml")
-g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)			# keep only named characters
-E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)			# normalize weights
+g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)				# keep only named characters
+E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)				# normalize weights
 
 # read the scene-based comics static graph
-g.cx <- read.graph(file.cx, format="graphml")
-g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
-E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weights
+if(!is.na(file.cx))
+{	g.cx <- read.graph(file.cx, format="graphml")
+	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
+	E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weights
+}
 
 # read the episode-based tvshow static graph
 g.tv <- read.graph(file.tv, format="graphml")
-g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
-E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
+g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)				# keep only named characters
+E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)				# normalize weights
+# list of graphs
+{	if(!is.na(file.cx))
+		gs <- list("novels"=g.nv, "comics"=g.cx, "tvshow"=g.tv)
+	else
+		gs <- list("novels"=g.nv, "tvshow"=g.tv)
+}
 
 
 
@@ -74,9 +88,11 @@ aff <- aff.map[V(g.nv)$name]
 aff[is.na(aff)] <- "Unknown"
 V(g.nv)$affiliation <- aff
 # add to comics network
-aff <- aff.map[V(g.cx)$name]
-aff[is.na(aff)] <- "Unknown"
-V(g.cx)$affiliation <- aff
+if(!is.na(file.cx))
+{	aff <- aff.map[V(g.cx)$name]
+	aff[is.na(aff)] <- "Unknown"
+	V(g.cx)$affiliation <- aff
+}
 # add to TV show network
 aff <- aff.map[V(g.tv)$name]
 aff[is.na(aff)] <- "Unknown"
@@ -87,12 +103,15 @@ V(g.tv)$affiliation <- aff
 
 ###############################################################################
 # compute a list of characters ranked by importance, using their degree in each network
-names <- sort(union(V(g.nv)$name,union(V(g.cx)$name,V(g.tv)$name)))
-imp.mat <- matrix(NA, nrow=length(names), ncol=3)
+names <- sort(unique(unlist(sapply(gs, function(g) V(g)$name))))
+imp.mat <- matrix(NA, nrow=length(names), ncol=length(gs))
 rownames(imp.mat) <- names
-colnames(imp.mat) <- c("novels","comics","tvshow")
-imp.mat[match(V(g.nv)$name, names),"novels"] <- degree(g.nv)/gorder(g.nv)
-imp.mat[match(V(g.cx)$name, names),"comics"] <- degree(g.cx)/gorder(g.cx)
-imp.mat[match(V(g.tv)$name, names),"tvshow"] <- degree(g.tv)/gorder(g.tv)
+colnames(imp.mat) <- names(gs)
+for(i in 1:length(gs))
+	imp.mat[match(V(gs[[i]])$name, names),names(gs)[i]] <- degree(gs[[i]])/gorder(gs[[i]])
 imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
 ranked.chars <- names[order(imp.moy,decreasing=TRUE)]
+
+# 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
+# 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
+# 5: "Tyrion Lannister" "Jon Snow"      "Arya Stark"    "Jaime Lannister" "Catelyn Stark" "Sansa Stark"

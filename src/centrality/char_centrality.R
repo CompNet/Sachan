@@ -27,7 +27,7 @@ CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness",
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="wClo.", "betweenness"="Betw.", "w_betweenness"="wBetw.", "eigenvector"="Eig.", "w_eigenvector"="wEig")
 STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
 COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
-WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
+NARRATIVE_PART <- 2			# take the whole narrative (0) or only the first two units (2)
 TOP_CHAR_NBR <- 20			# number of important characters
 ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex Affiliation
 
@@ -40,9 +40,9 @@ ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex 
 		comm.folder <- "common"
 	else
 		comm.folder <- "named"
-	if(WHOLE_NARRATIVE)
+	if(NARRATIVE_PART==0)
 		narr.folder <- "everything"
-	else
+	else if(NARRATIVE_PART==2)
 		narr.folder <- "first-two"
 	if(STANDARDIZE)
 		std.folder <- "standardized"

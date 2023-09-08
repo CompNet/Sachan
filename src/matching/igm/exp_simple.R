@@ -23,7 +23,6 @@ CENTER_GRAPHS <- FALSE		# whether to perform the centering preprocessing step
 USE_SEEDS <- FALSE			# whether to use seeds to bootstrap the matching process
 USE_SEEDS_NBR <- 15			# number of seeds used (if any)
 ATTR <- "both"				# attribute used during matching: none sex affiliation both
-WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
 TOP_CHAR_NBR <- 20			# number of important characters
 
 
@@ -54,6 +53,8 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
+# only take the first two narrative units (whole narrative not supported here)
+NARRATIVE_PART <- 2
 # load the static graphs
 source("src/common/load_static_nets.R")
 

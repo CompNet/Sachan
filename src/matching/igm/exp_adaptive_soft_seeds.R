@@ -18,7 +18,6 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
-WHOLE_NARRATIVE <- FALSE	# only take the first two books, all comics, first two seasons (whole narrative not supported here)
 TOP_CHAR_NBR <- 20			# number of important characters
 
 
@@ -34,6 +33,8 @@ mode.folder <- "common_raw_adaptive_soft"
 
 
 ###############################################################################
+# only take the first two narrative units (whole narrative not supported here)
+NARRATIVE_PART <- 2
 # load the static graphs
 source("src/common/load_static_nets.R")
 

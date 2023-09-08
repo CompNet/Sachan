@@ -48,8 +48,9 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
+# only take the first two narrative units (whole narrative not supported here)
+NARRATIVE_PART <- 2
 # load the static graphs and rank the characters by importance
-WHOLE_NARRATIVE <- FALSE
 source("src/common/load_static_nets.R")
 # load the dynamic graphs
 source("src/common/load_dynamic_nets.R")
