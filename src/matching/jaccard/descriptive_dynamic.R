@@ -15,6 +15,8 @@ library("viridis")
 library("plot.matrix")
 library("scales")
 
+source("src/common/stats.R")
+
 
 
 
@@ -62,15 +64,6 @@ source("src/common/load_dynamic_nets.R")
 # start matching
 gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
-
-# function to compute statistical mode
-mode <- function(x, na.rm=FALSE)
-{	if(na.rm)
-		x = x[!is.na(x)]	
-	vals <- unique(x)
-	res <- vals[which.max(tabulate(match(x,vals)))]
-	return(res)
-}
 
 # loop over pairs of networks
 for(i in 1:(length(gs)-1))

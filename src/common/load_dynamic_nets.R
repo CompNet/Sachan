@@ -57,6 +57,7 @@ aff.map <- sapply(strsplit(x=aff.map, split=",", fixed=TRUE), function(v) v[1])
 
 # read the chapter-based novel cumulative graphs
 gs.nv <- list()
+names.nv <- c()
 files <- sort(list.files(path=file.path("in/novels",folder), pattern=".+\\.graphml", full.names=TRUE))
 i <- 1
 while(files[i]!=file.path("in/novels",folder,paste0("3.ASoS_00_",pref.nv,".graphml")))
@@ -72,6 +73,9 @@ while(files[i]!=file.path("in/novels",folder,paste0("3.ASoS_00_",pref.nv,".graph
 	aff[is.na(aff)] <- "Unknown"
 	V(g.nv)$affiliation <- aff
 	
+	# retrieve character names
+	names.nv <- sort(union(names.nv, V(g.nv)$name))
+	
 	gs.nv <- c(gs.nv, list(g.nv))
 	i <- i + 1
 }
@@ -79,6 +83,7 @@ cat("Loaded a total of ",length(gs.nv)," novel networks\n",sep="")
 
 # read the chapter-based comics cumulative graphs
 gs.cx <- list()
+names.cx <- c()
 files <- sort(list.files(path=file.path("in/comics",folder,"chapter"), pattern=".+\\.graphml", full.names=TRUE))
 for(i in 1:length(files))
 {	cat("..Loading file \"",files[i],"\"\n",sep="")
@@ -93,12 +98,17 @@ for(i in 1:length(files))
 	aff[is.na(aff)] <- "Unknown"
 	V(g.cx)$affiliation <- aff
 	
+	# retrieve character names
+	names.cx <- sort(union(names.cx, V(g.cx)$name))
+	
 	gs.cx <- c(gs.cx, list(g.cx))
 }
 cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 
-# read the episode-based tvshow cumulative graphs # TODO pb: not the same number of time slice as novels and comics
+# read the episode-based TV Show cumulative graphs 
+# TODO pb: not the same number of time slice as novels and comics
 #gs.tv <- list
+#names.tv <- c()
 #files <- sort(list.files(path=file.path("in/tvshow",folder,"episode"), pattern=".+\\.graphml", full.names=TRUE))
 #i <- 1
 #while(files[i]!=file.path("in/tvshow/",folder,"episode",paste0(pref.tv,"_019.graphml")))
@@ -113,6 +123,9 @@ cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 #	aff <- aff.map[V(g.tv)$name]
 #	aff[is.na(aff)] <- "Unknown"
 #	V(g.tv)$affiliation <- aff
+#	
+#	# retrieve character names
+#	names.tv <- sort(union(names.tv, V(g.tv)$name))
 #	
 #	gs.tv <- c(gs.tv, list(g.tv))
 #	i <- i + 1

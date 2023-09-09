@@ -13,13 +13,14 @@ library("igraph")
 library("iGraphMatch")
 library("scales")
 
+source("src/common/stats.R")
+
 
 
 
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
-CUMULATIVE <- TRUE			# no choice here, we need to use the cumulative networks
 TOP_CHAR_NBR <- 20			# number of important characters
 
 
@@ -35,6 +36,8 @@ mode.folder <- "common_raw_adaptive_hard_temporal"
 
 
 ###############################################################################
+# no choice here, we need to use the cumulative networks
+CUMULATIVE <- TRUE
 # load the dynamic graphs
 source("src/common/load_dynamic_nets.R")
 
@@ -50,6 +53,9 @@ methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRan
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
 colnames(tab.exact.matches) <- methods
 rownames(tab.exact.matches) <- rep(NA,nrow(tab.exact.matches))
+tab.evol.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1),ncol=length(methods))
+colnames(tab.evol.matches) <- methods
+rownames(tab.evol.matches) <- rep(NA,nrow(tab.evol.matches))
 r <- 1
 
 # loop over pairs of networks
@@ -60,7 +66,10 @@ for(i in 1:(length(gs)-1))
 	{	cat("....Processing second narrative ",g.names[j],"\n",sep="")
 		
 		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+		comp.name.rev <- paste0(g.names[j], "_vs_", g.names[i])
 		rownames(tab.exact.matches)[r] <- comp.name
+		rownames(tab.evol.matches)[2*r-1] <- comp.name
+		rownames(tab.evol.matches)[2*r] <- comp.name.rev
 		
 		# loop over matching methods
 		for(m in 1:length(methods))
@@ -176,6 +185,29 @@ for(i in 1:(length(gs)-1))
 					sn <- c(sn, nrow(seeds))
 				}
 				
+				# update match matrices
+				if(k==1)
+				{	match.evol.mtrx1 <- matrix(V(g2)$name[res$corr_B],nrow=1)
+					colnames(match.evol.mtrx1) <- V(g1)$name[res$corr_A]
+					match.evol.mtrx2 <- matrix(V(g1)$name[res$corr_A], nrow=1)
+					colnames(match.evol.mtrx2) <- V(g2)$name[res$corr_B]
+				}
+				else
+				{	new.names <- setdiff(V(g1)$name[res$corr_A], colnames(match.evol.mtrx1))
+					old.names <- colnames(match.evol.mtrx1)
+					match.evol.mtrx1 <- cbind(match.evol.mtrx1, matrix(NA,nrow=nrow(match.evol.mtrx1),ncol=length(new.names)))
+					colnames(match.evol.mtrx1) <- c(old.names, new.names)
+					match.evol.mtrx1 <- rbind(match.evol.mtrx1, rep(NA,ncol(match.evol.mtrx1)))
+					match.evol.mtrx1[nrow(match.evol.mtrx1),V(g1)$name[res$corr_A]] <- V(g2)$name[res$corr_B]
+					#
+					new.names <- setdiff(V(g2)$name[res$corr_B], colnames(match.evol.mtrx2))
+					old.names <- colnames(match.evol.mtrx2)
+					match.evol.mtrx2 <- cbind(match.evol.mtrx2, matrix(NA,nrow=nrow(match.evol.mtrx2),ncol=length(new.names)))
+					colnames(match.evol.mtrx2) <- c(old.names, new.names)
+					match.evol.mtrx2 <- rbind(match.evol.mtrx2, rep(NA,ncol(match.evol.mtrx2)))
+					match.evol.mtrx2[nrow(match.evol.mtrx2),V(g2)$name[res$corr_B]] <- V(g1)$name[res$corr_A]
+				}
+				
 				sink(file.path(local.folder,paste0("seeds",sprintf("%03d",k),"_summary.txt")))
 				# ground truth (not useful due to the NAs resulting from different characters in the nets)
 				gt <- match(V(g1)$name, V(g2)$name)
@@ -232,14 +264,24 @@ for(i in 1:(length(gs)-1))
 			tab.evol <- data.frame(sn, tab.evol)
 			colnames(tab.evol) <- c("AdaptiveSeeds","ExactMatches")
 			write.csv(x=tab.evol, file=file.path(local.folder,"_exact_matches_evolution.csv"), row.names=FALSE, fileEncoding="UTF-8")
+			
+			# take the modal match for each character
+			dyn.matches1 <- apply(match.evol.mtrx1, 2, function(col) mode(col, na.rm=TRUE))
+			perf.evol1 <- length(which(dyn.matches1==names(dyn.matches1)))/length(dyn.matches1)
+			dyn.matches2 <- apply(match.evol.mtrx2, 2, function(col) mode(col, na.rm=TRUE))
+			perf.evol2 <- length(which(dyn.matches2==names(dyn.matches2)))/length(dyn.matches2)
+			tab.evol.matches[2*r-1,method] <- perf.evol1
+			tab.evol.matches[2*r,method] <- perf.evol2
 		}
 		r <- r + 1
 	}
 }
 
-# record overall table
+# record overall tables
 print(tab.exact.matches)
 write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
+print(tab.evol.matches)
+write.csv(x=tab.evol.matches, file=file.path(out.folder,mode.folder,"exact_matches_modal.csv"), row.names=TRUE, fileEncoding="UTF-8")
 
 
 
