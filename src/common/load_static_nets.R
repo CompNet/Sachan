@@ -68,6 +68,7 @@ E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)				# normalize weights
 		gs <- list("novels"=g.nv, "comics"=g.cx, "tvshow"=g.tv)
 	else
 		gs <- list("novels"=g.nv, "tvshow"=g.tv)
+	g.names <- names(gs)
 }
 
 
@@ -103,14 +104,14 @@ V(g.tv)$affiliation <- aff
 
 ###############################################################################
 # compute a list of characters ranked by importance, using their degree in each network
-names <- sort(unique(unlist(sapply(gs, function(g) V(g)$name))))
-imp.mat <- matrix(NA, nrow=length(names), ncol=length(gs))
-rownames(imp.mat) <- names
-colnames(imp.mat) <- names(gs)
+all.char.names <- sort(unique(unlist(sapply(gs, function(g) V(g)$name))))
+imp.mat <- matrix(NA, nrow=length(all.char.names), ncol=length(gs))
+rownames(imp.mat) <- all.char.names
+colnames(imp.mat) <- g.names
 for(i in 1:length(gs))
-	imp.mat[match(V(gs[[i]])$name, names),names(gs)[i]] <- degree(gs[[i]])/gorder(gs[[i]])
+	imp.mat[match(V(gs[[i]])$name, all.char.names),g.names[i]] <- degree(gs[[i]])/gorder(gs[[i]])
 imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
-ranked.chars <- names[order(imp.moy,decreasing=TRUE)]
+ranked.chars <- all.char.names[order(imp.moy,decreasing=TRUE)]
 
 # 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"

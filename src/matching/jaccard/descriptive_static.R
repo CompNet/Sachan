@@ -47,11 +47,7 @@ source("src/common/load_static_nets.R")
 
 
 ###############################################################################
-# start matching
-gs <- list(g.nv, g.cx, g.tv)
-g.names <- c("novels","comics","tvshow")
-
-# loop over pairs of networks
+# start matching, looping over pairs of networks
 for(i in 1:(length(gs)-1))
 {	cat("..Processing first network ",g.names[i],"\n",sep="")
 	

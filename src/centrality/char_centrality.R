@@ -26,8 +26,8 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="wClo.", "betweenness"="Betw.", "w_betweenness"="wBetw.", "eigenvector"="Eig.", "w_eigenvector"="wEig")
 STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
-COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
-NARRATIVE_PART <- 2			# take the whole narrative (0) or only the first two units (2)
+COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
+NARRATIVE_PART <- 5			# take the whole narrative (0) or only the first two (2) or five (5) narrative units
 TOP_CHAR_NBR <- 20			# number of important characters
 ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex Affiliation
 
@@ -41,9 +41,11 @@ ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex 
 	else
 		comm.folder <- "named"
 	if(NARRATIVE_PART==0)
-		narr.folder <- "everything"
+		narr.folder <- "whole_narr"
 	else if(NARRATIVE_PART==2)
-		narr.folder <- "first-two"
+		narr.folder <- "first_2"
+	else if(NARRATIVE_PART==5)
+		narr.folder <- "first_5"
 	if(STANDARDIZE)
 		std.folder <- "standardized"
 	else
@@ -61,13 +63,19 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 source("src/common/load_static_nets.R")
 # possibly keep only common characters
 if(COMMON_CHARS_ONLY)
-{	nm.nv <- V(g.nv)$name
-	nm.cx <- V(g.cx)$name
-	nm.tv <- V(g.tv)$name
-	names <- intersect(nm.nv, intersect(nm.cx, nm.tv))
-	g.nv <- delete_vertices(graph=g.nv, v=which(!(nm.nv %in% names)))
-	g.cx <- delete_vertices(graph=g.cx, v=which(!(nm.cx %in% names)))
-	g.tv <- delete_vertices(graph=g.tv, v=which(!(nm.tv %in% names)))
+{	for(i in 1:length(gs))
+	{	nm <- V(gs[[i]])$name
+		if(i==1)
+			common.names <- nm
+		else
+			common.names <- intersect(common.names, nm)
+	}
+	for(i in 1:length(gs))
+	{	g <- gs[[i]]
+		nm <- V(g)$name
+		g <- delete_vertices(graph=g, v=which(!(nm %in% common.names)))
+		gs[[i]] <- g
+	}
 }
 
 
@@ -75,9 +83,6 @@ if(COMMON_CHARS_ONLY)
 
 ###############################################################################
 # compute centralities
-gs <- list(g.nv, g.cx, g.tv)
-g.names <- c("novels","comics","tvshow")
-
 centr.tabs <- list()
 
 # loop over networks
@@ -114,6 +119,9 @@ for(i in 1:length(gs))
 			vals <- eigen_centrality(graph=g, directed=FALSE, scale=FALSE, weights=rep(1,gsize(g)))$vector
 		else if(meas=="w_eigenvector")
 			vals <- eigen_centrality(graph=g, directed=FALSE, scale=FALSE, weights=E(g)$weight)$vector
+		
+		# remove NaNs
+		vals[is.nan(vals)] <- 0
 		
 		# standardize the values to make them comparable
 		if(STANDARDIZE)

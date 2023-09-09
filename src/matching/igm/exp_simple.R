@@ -71,8 +71,6 @@ char.seeds <- top.chars[1:USE_SEEDS_NBR]
 
 ###############################################################################
 # start matching
-gs <- list(g.nv, g.cx, g.tv)
-g.names <- c("novels","comics","tvshow")
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
 
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
