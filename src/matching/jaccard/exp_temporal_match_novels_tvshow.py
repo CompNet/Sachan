@@ -86,8 +86,8 @@ if __name__ == "__main__":
         ):
             tvshow_graphs.append(nx.read_graphml(path))
 
-        # ignore season 6, 7 and 8
-        tvshow_graphs = [G for G in tvshow_graphs if G.graph["season"] < 6]
+        # ignore season 7 and 8
+        tvshow_graphs = [G for G in tvshow_graphs if G.graph["season"] < 7]
 
         # relabeling
         tvshow_graphs = [

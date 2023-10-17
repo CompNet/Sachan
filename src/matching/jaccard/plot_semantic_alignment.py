@@ -28,7 +28,7 @@ if __name__ == "__main__":
     COLUMN_WIDTH_IN = 3.0315
 
     CHAPTERS_NB = 344
-    EPISODES_NB = 50
+    EPISODES_NB = 60
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
