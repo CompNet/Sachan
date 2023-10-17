@@ -15,9 +15,11 @@
 #
 #
 # Author: Arthur Amalvy
-import argparse, os
+import argparse, pickle
 import numpy as np
+from numpy.lib.function_base import average
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
 from sentence_transformers import SentenceTransformer
 import matplotlib.pyplot as plt
@@ -31,7 +33,7 @@ if __name__ == "__main__":
     COLUMN_WIDTH_IN = 3.0315
 
     CHAPTERS_NB = 344
-    EPISODES_NB = 60
+    EPISODES_NB = 50
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -48,6 +50,19 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-s", "--similarity-function", type=str, help="Either 'tfidf' or 'sbert'."
+    )
+    parser.add_argument(
+        "-t",
+        "--best-threshold",
+        action="store_true",
+        help="If specified, plot the similarity matrix with the best threshold given the gold matchin. If specified, --gold-alignment must be specified as well.",
+    )
+    parser.add_argument(
+        "-g",
+        "--gold-alignment",
+        type=str,
+        default=None,
+        help="Path to the gold chapters/episodes alignment. Must be specified if --best-treshold is specified.",
     )
     parser.add_argument("-o", "--output", type=str, default=None)
     args = parser.parse_args()
@@ -83,7 +98,7 @@ if __name__ == "__main__":
 
     elif args.similarity_function == "sbert":
 
-        print("loading SentenceBERT model...")
+        print("Loading SentenceBERT model...")
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 
         print("Embedding chapter summaries...")
@@ -99,14 +114,41 @@ if __name__ == "__main__":
 
     else:
         raise ValueError(
-            f"unknown similarity function: {args.similarity_function}. Use 'tfidf' or 'sbert'."
+            f"Unknown similarity function: {args.similarity_function}. Use 'tfidf' or 'sbert'."
         )
+
+    # Compute best threshold if necessary
+    if args.best_threshold:
+
+        with open(args.gold_alignment, "rb") as f:
+            G = pickle.load(f)
+        G = G[:EPISODES_NB, :CHAPTERS_NB]
+        assert G.shape == (EPISODES_NB, CHAPTERS_NB)
+
+        best_t = 0.0
+        best_f1 = 0.0
+        best_S_align = S > 0.0
+        for t in np.arange(0.0, 1.0, 0.01):
+            S_align = S > t
+            _, _, f1, _ = precision_recall_fscore_support(
+                G.flatten(), S_align.flatten(), average="binary", zero_division=0.0
+            )
+            if f1 > best_f1:
+                best_t = t
+                best_f1 = f1
+                best_S_align = S_align
+        print(f"{best_f1=}")
+        print(f"{best_t=}")
 
     # Plot
     # ----
     fig, ax = plt.subplots()
     fig.set_size_inches(COLUMN_WIDTH_IN * 2, COLUMN_WIDTH_IN * 2 * 0.6)
-    ax.imshow(S)
+    if args.best_threshold:
+        ax.set_title(f"t = {best_t}, F1 = {best_f1}", fontsize=FONTSIZE)
+        ax.imshow(best_S_align, interpolation="none")
+    else:
+        ax.imshow(S, interpolation="none")
     ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
     ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
 
