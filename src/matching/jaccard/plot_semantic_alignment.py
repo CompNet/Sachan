@@ -17,14 +17,9 @@
 # Author: Arthur Amalvy
 import argparse, pickle
 import numpy as np
-from numpy.lib.function_base import average
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import precision_recall_fscore_support
-from sklearn.metrics.pairwise import cosine_similarity
-from sentence_transformers import SentenceTransformer
 import matplotlib.pyplot as plt
-from tqdm import tqdm
-from nltk import sent_tokenize
+from temporal_match_commons import semantic_similarity
 
 
 if __name__ == "__main__":
@@ -80,42 +75,9 @@ if __name__ == "__main__":
 
     # Compute similarity
     # ------------------
-    S = np.zeros((EPISODES_NB, CHAPTERS_NB))
-
-    if args.similarity_function == "tfidf":
-
-        vectorizer = TfidfVectorizer()
-        v = vectorizer.fit(chapter_summaries + episode_summaries)
-
-        chapters_v = vectorizer.transform(chapter_summaries)
-
-        for i, e_summary in enumerate(tqdm(episode_summaries)):
-            sents = sent_tokenize(e_summary)
-            e_summary_v = vectorizer.transform(sents)
-            chapter_sims = np.max(cosine_similarity(e_summary_v, chapters_v), axis=0)
-            assert chapter_sims.shape == (CHAPTERS_NB,)
-            S[i] = chapter_sims
-
-    elif args.similarity_function == "sbert":
-
-        print("Loading SentenceBERT model...")
-        stransformer = SentenceTransformer("all-mpnet-base-v2")
-
-        print("Embedding chapter summaries...")
-        chapters_v = stransformer.encode(chapter_summaries)
-
-        print("Embedding episode summaries and computing similarity...")
-        for i, e_summary in enumerate(tqdm(episode_summaries)):
-            sents = sent_tokenize(e_summary)
-            e_summary_v = stransformer.encode(sents)
-            chapters_sims = np.max(cosine_similarity(e_summary_v, chapters_v), axis=0)
-            assert chapters_sims.shape == (CHAPTERS_NB,)
-            S[i] = chapters_sims
-
-    else:
-        raise ValueError(
-            f"Unknown similarity function: {args.similarity_function}. Use 'tfidf' or 'sbert'."
-        )
+    S = semantic_similarity(
+        episode_summaries, chapter_summaries, args.similarity_function
+    )
 
     # Compute best threshold if necessary
     if args.best_threshold:

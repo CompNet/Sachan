@@ -8,7 +8,7 @@ import networkx as nx
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
-from temporal_match import graph_similarity_matrix, get_episode_i
+from temporal_match_commons import graph_similarity_matrix, get_episode_i
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))

@@ -7,6 +7,10 @@ import numpy as np
 import networkx as nx
 from more_itertools import flatten
 from tqdm import tqdm
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer
+from nltk import sent_tokenize
 
 
 def filtered_graph(G: nx.Graph, nodes: list) -> nx.Graph:
@@ -109,3 +113,55 @@ def graph_similarity_matrix(
             M[G_i][H_i] = jaccard_graph_sim(G, H, weights, mode=mode)
 
     return M
+
+
+def semantic_similarity(
+    episode_summaries: List[str],
+    chapter_summaries: List[str],
+    sim_fn: Literal["tfidf", "sbert"],
+) -> np.ndarray:
+    """Compute a semantic similarity matrix between episode and chapter summaries
+
+    :return: a numpy array of shape (episodes_nb, chapters_nb)
+    """
+    episodes_nb = len(episode_summaries)
+    chapters_nb = len(chapter_summaries)
+
+    S = np.zeros((episodes_nb, chapters_nb))
+
+    if sim_fn == "tfidf":
+
+        vectorizer = TfidfVectorizer()
+        v = vectorizer.fit(chapter_summaries + episode_summaries)
+
+        chapters_v = vectorizer.transform(chapter_summaries)
+
+        for i, e_summary in enumerate(tqdm(episode_summaries)):
+            sents = sent_tokenize(e_summary)
+            e_summary_v = vectorizer.transform(sents)
+            chapter_sims = np.max(cosine_similarity(e_summary_v, chapters_v), axis=0)
+            assert chapter_sims.shape == (chapters_nb,)
+            S[i] = chapter_sims
+
+    elif sim_fn == "sbert":
+
+        print("Loading SentenceBERT model...")
+        stransformer = SentenceTransformer("all-mpnet-base-v2")
+
+        print("Embedding chapter summaries...")
+        chapters_v = stransformer.encode(chapter_summaries)
+
+        print("Embedding episode summaries and computing similarity...")
+        for i, e_summary in enumerate(tqdm(episode_summaries)):
+            sents = sent_tokenize(e_summary)
+            e_summary_v = stransformer.encode(sents)
+            chapters_sims = np.max(cosine_similarity(e_summary_v, chapters_v), axis=0)
+            assert chapters_sims.shape == (chapters_nb,)
+            S[i] = chapters_sims
+
+    else:
+        raise ValueError(
+            f"Unknown similarity function: {sim_fn}. Use 'tfidf' or 'sbert'."
+        )
+
+    return S
