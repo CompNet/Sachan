@@ -25,7 +25,7 @@ from temporal_match_commons import semantic_similarity
 if __name__ == "__main__":
 
     FONTSIZE = 10
-    COLUMN_WIDTH_IN = 3.0315
+    COLUMN_WIDTH_IN = 5.166
 
     CHAPTERS_NB = 344
     EPISODES_NB = 60
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     # Plot
     # ----
     fig, ax = plt.subplots()
-    fig.set_size_inches(COLUMN_WIDTH_IN * 2, COLUMN_WIDTH_IN * 2 * 0.6)
+    fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
     if args.best_threshold:
         ax.set_title(f"t = {best_t}, F1 = {best_f1}", fontsize=FONTSIZE)
         ax.imshow(best_S_align, interpolation="none")
