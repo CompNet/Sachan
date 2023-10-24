@@ -1,16 +1,75 @@
 # Common functions for temporal matching
 #
 # Author: Arthur Amalvy
-from typing import Optional, Literal, List
-import copy
+from typing import Optional, Literal, List, Tuple
+import copy, os, sys, glob
 import numpy as np
 import networkx as nx
 from more_itertools import flatten
 from tqdm import tqdm
+from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sentence_transformers import SentenceTransformer
 from nltk import sent_tokenize
+
+
+# the end of each novel, in number of chapters
+NOVEL_LIMITS = [73, 143, 225, 271, 344]
+
+# the end of each season, in number of episodes
+TVSHOW_SEASON_LIMITS = [10, 20, 30, 40, 50, 60, 67, 73]
+
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+root_dir = f"{script_dir}/../../.."
+sys.path.append(f"{root_dir}/src")
+
+
+def load_tvshow_graphs(min_season: int = 1, max_season: int = 8) -> List[nx.Graph]:
+    """
+    Load a graph for each episode of the TV show, from season
+    ``min_season`` to ``max_season`` (inclusive)
+    """
+    tvshow_graphs = []
+    for path in sorted(glob.glob(f"{root_dir}/in/tvshow/instant/episode/*.graphml")):
+        tvshow_graphs.append(nx.read_graphml(path))
+
+    # only keep graphs between min_season and max_season
+    tvshow_graphs = [G for G in tvshow_graphs if G.graph["season"] >= min_season]
+    tvshow_graphs = [G for G in tvshow_graphs if G.graph["season"] <= max_season]
+
+    # relabeling
+    tvshow_graphs = [
+        nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
+        for G in tvshow_graphs
+    ]
+
+    return tvshow_graphs
+
+
+def load_novels_graphs(min_novel: int = 1, max_novel: int = 5) -> List[nx.Graph]:
+    """
+    Load graphs for each chapter of the novels.
+
+    :param min_novel: starting at 1, inclusive
+    :param max_novel: up to 5, inclusive
+    """
+    ch_start = ([0] + NOVEL_LIMITS)[max(0, min_novel - 1)]
+    ch_end = NOVEL_LIMITS[max_novel - 1]
+
+    novel_graphs = []
+    for path in sorted(glob.glob(f"{root_dir}/in/novels/instant/*.graphml"))[
+        ch_start:ch_end
+    ]:
+        novel_graphs.append(nx.read_graphml(path))
+
+    novel_graphs = [
+        nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
+        for G in novel_graphs
+    ]
+
+    return novel_graphs
 
 
 def filtered_graph(G: nx.Graph, nodes: list) -> nx.Graph:
@@ -60,6 +119,7 @@ def graph_similarity_matrix(
     H_lst: List[nx.Graph],
     mode: Literal["nodes", "edges"],
     use_weights: bool,
+    character_filtering: Literal["none", "common", "named", "common+named"] = "common",
 ) -> np.ndarray:
     """Compute a similarity matrixs between two lists of graph, using
     a tweaked Jaccard index.
@@ -77,18 +137,34 @@ def graph_similarity_matrix(
 
     :return: a similarity matrix of shape ``(n, m)``
     """
-    # Keep only common characters
+    # Character filtering
     G_chars = set(flatten([G.nodes for G in G_lst]))
     H_chars = set(flatten([H.nodes for H in H_lst]))
-    G_xor_H_chars = G_chars ^ H_chars
-    G_lst = [filtered_graph(G, list(G_xor_H_chars)) for G in G_lst]
-    H_lst = [filtered_graph(H, list(G_xor_H_chars)) for H in H_lst]
+
+    if "named" in character_filtering:
+
+        def is_named(char: str, graphs: List[nx.Graph]) -> bool:
+            for J in graphs:
+                attrs = J.nodes.get(char)
+                if not attrs is None:
+                    return attrs["named"]
+            return False
+
+        G_unnamed_chars = [c for c in G_chars if not is_named(c, G_lst)]
+        H_unnamed_chars = [c for c in H_chars if not is_named(c, H_lst)]
+        G_lst = [filtered_graph(G, G_unnamed_chars) for G in G_lst]
+        H_lst = [filtered_graph(H, H_unnamed_chars) for H in H_lst]
+
+    if "common" in character_filtering:
+        G_xor_H_chars = G_chars ^ H_chars
+        G_lst = [filtered_graph(G, list(G_xor_H_chars)) for G in G_lst]
+        H_lst = [filtered_graph(H, list(G_xor_H_chars)) for H in H_lst]
 
     # Nodes mode
-    char_appearances = {char: 0 for char in G_chars & H_chars}
+    char_appearances = {}
     for G in G_lst + H_lst:
         for node in G.nodes:
-            char_appearances[node] += 1
+            char_appearances[node] = char_appearances.get(node, 0) + 1
 
     # Edges mode
     rel_appearances = {}
@@ -165,3 +241,29 @@ def semantic_similarity(
         )
 
     return S
+
+
+def find_best_alignment(
+    G: np.ndarray, S: np.ndarray
+) -> Tuple[float, float, np.ndarray]:
+    """Find the best possible alignment matrix by brute-force
+    searching the best possible threshold.
+
+    :param G: gold alignment matrix
+    :param S: similarity matrix
+    :return: ``(best threshold, best f1, best alignment matrix)``
+    """
+    best_t = 0.0
+    best_f1 = 0.0
+    best_M = S > 0.0
+    for t in np.arange(0.0, 1.0, 0.01):
+        M = S > t
+        _, _, f1, _ = precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )
+        if f1 > best_f1:
+            best_t = t
+            best_f1 = f1
+            best_M = M
+
+    return (best_t, best_f1, best_M)

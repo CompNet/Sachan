@@ -22,7 +22,7 @@ import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from temporal_match_commons import semantic_similarity, graph_similarity_matrix
+from plot_alignment_commons import semantic_similarity, graph_similarity_matrix
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."

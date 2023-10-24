@@ -19,7 +19,7 @@ import argparse, pickle
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
-from temporal_match_commons import semantic_similarity
+from plot_alignment_commons import find_best_alignment, semantic_similarity
 
 
 if __name__ == "__main__":
@@ -87,18 +87,8 @@ if __name__ == "__main__":
         G = G[:EPISODES_NB, :CHAPTERS_NB]
         assert G.shape == (EPISODES_NB, CHAPTERS_NB)
 
-        best_t = 0.0
-        best_f1 = 0.0
-        best_S_align = S > 0.0
-        for t in np.arange(0.0, 1.0, 0.01):
-            S_align = S > t
-            _, _, f1, _ = precision_recall_fscore_support(
-                G.flatten(), S_align.flatten(), average="binary", zero_division=0.0
-            )
-            if f1 > best_f1:
-                best_t = t
-                best_f1 = f1
-                best_S_align = S_align
+        best_t, best_f1, best_S_align = find_best_alignment(G, S)
+
         print(f"{best_f1=}")
         print(f"{best_t=}")
 
