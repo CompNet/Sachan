@@ -29,8 +29,8 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
     ax.imshow(G, interpolation="none")
-    ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
-    ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+    ax.set_xlabel("Chapters", fontsize=FONTSIZE)
+    ax.set_ylabel("Episodes", fontsize=FONTSIZE)
 
     plt.tight_layout()
     if args.output:

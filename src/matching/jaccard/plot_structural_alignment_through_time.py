@@ -79,7 +79,7 @@ if __name__ == "__main__":
         args.character_filtering,
     )
 
-    _, _, M = find_best_alignment(G, S)
+    _, f1, M = find_best_alignment(G, S)
 
     season_f1s = []
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     plt.style.use("science")
     fig, ax = plt.subplots()
     fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3)
-    ax.plot(season_f1s)
+    ax.plot(list(range(1, 7)), season_f1s)
     ax.set_xlabel("Seasons", fontsize=FONTSIZE)
     ax.set_ylabel("F1-score", fontsize=FONTSIZE)
     ax.grid()
