@@ -1,12 +1,13 @@
-# Plot the semantic alignment performance between the novels and the TV show
+# Compute the semantic alignment performance between the novels and
+# the TV show, and format it as a LaTeX table
 #
 #
 # Example usage:
 #
 # python compute_semantic_alignment_performance.py\
-# --chapter-summaries './chapter_summaries.txt'\
-# --episode-summaries './episodes_summaries.txt'\
-# --similarity-function sbert
+# --chapter-summaries ./chapter_summaries.txt\
+# --episode-summaries ./episodes_summaries.txt\
+# --gold-alignment ./tvshow_episodes_summaries.txt
 #
 #
 # For more details, see:
