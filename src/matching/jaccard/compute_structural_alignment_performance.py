@@ -13,7 +13,7 @@
 #
 #
 # Author: Arthur Amalvy
-import argparse, pickle, sys, os
+import argparse, pickle
 import pandas as pd
 import numpy as np
 from plot_alignment_commons import (
@@ -25,10 +25,6 @@ from plot_alignment_commons import (
     graph_similarity_matrix,
 )
 
-
-script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
-sys.path.append(f"{root_dir}/src")
 
 if __name__ == "__main__":
 
@@ -92,9 +88,9 @@ if __name__ == "__main__":
                 S = graph_similarity_matrix(
                     tvshow_graphs,
                     novels_graphs,
-                    sim_mode,
+                    sim_mode,  # type: ignore
                     use_weights,
-                    character_filtering,
+                    character_filtering,  # type: ignore
                 )
 
                 _, f1, _ = find_best_alignment(G, S)
