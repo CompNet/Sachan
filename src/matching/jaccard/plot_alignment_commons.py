@@ -26,13 +26,23 @@ root_dir = f"{script_dir}/../../.."
 sys.path.append(f"{root_dir}/src")
 
 
-def load_tvshow_graphs(min_season: int = 1, max_season: int = 8) -> List[nx.Graph]:
+def load_tvshow_graphs(
+    min_season: int = 1,
+    max_season: int = 8,
+    blocks: Optional[Literal["similarity", "locations"]] = None,
+) -> List[nx.Graph]:
     """
     Load a graph for each episode of the TV show, from season
     ``min_season`` to ``max_season`` (inclusive)
     """
     tvshow_graphs = []
-    for path in sorted(glob.glob(f"{root_dir}/in/tvshow/instant/episode/*.graphml")):
+    if not blocks is None:
+        paths = sorted(
+            glob.glob(f"{root_dir}/in/tvshow/instant/block_{blocks}/*.graphml")
+        )
+    else:
+        paths = sorted(glob.glob(f"{root_dir}/in/tvshow/instant/episode/*.graphml"))
+    for path in paths:
         tvshow_graphs.append(nx.read_graphml(path))
 
     # only keep graphs between min_season and max_season
@@ -258,6 +268,51 @@ def find_best_alignment(
     best_M = S > 0.0
     for t in np.arange(0.0, 1.0, 0.01):
         M = S > t
+        _, _, f1, _ = precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )
+        if f1 > best_f1:
+            best_t = t
+            best_f1 = f1
+            best_M = M
+
+    return (best_t, best_f1, best_M)
+
+
+def find_best_blocks_alignment(
+    G: np.ndarray, S: np.ndarray, block_to_episode: np.ndarray
+) -> Tuple[float, float, np.ndarray]:
+    """Given similarity between blocks and chapters, return the best
+    mapping between chapters and episodes.
+
+    :param G: gold alignment matrix ``(episodes_nb, chapters_nb)``
+    :param S: ``(chapters_nb, blocks_nb)`` ``(blocks_nb, chapters_nb)``
+    :param block_to_episode: ``(blocks_nb)``
+
+    :return: ``(best threshold, best f1, best alignment matrix)``
+    """
+    best_t = 0.0
+    best_f1 = 0.0
+    best_M = S > 0.0
+
+    for t in np.arange(0.0, 1.0, 0.01):
+
+        M_align_blocks = S >= t
+
+        _, uniq_start_i = np.unique(block_to_episode, return_index=True)
+        splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
+
+        M = []
+        for split in splits:
+            M.append(np.any(split, axis=0))
+
+        breakpoint()
+
+        M = np.stack(M)
+
+        if t > 0.1:
+            breakpoint()
+
         _, _, f1, _ = precision_recall_fscore_support(
             G.flatten(), M.flatten(), average="binary", zero_division=0.0
         )

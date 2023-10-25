@@ -20,9 +20,11 @@ from plot_alignment_commons import (
     NOVEL_LIMITS,
     TVSHOW_SEASON_LIMITS,
     find_best_alignment,
+    find_best_blocks_alignment,
     load_tvshow_graphs,
     load_novels_graphs,
     graph_similarity_matrix,
+    get_episode_i,
 )
 
 
@@ -34,7 +36,7 @@ if __name__ == "__main__":
         "--gold-alignment",
         type=str,
         default=None,
-        help="Path to the gold chapters/episodes alignment. Must be specified if --best-treshold is specified.",
+        help="Path to the gold chapters/episodes alignment.",
     )
     parser.add_argument(
         "-f",
@@ -47,6 +49,7 @@ if __name__ == "__main__":
     parser.add_argument("-xs", "--max-season", type=int, default=6)
     parser.add_argument("-mn", "--min-novel", type=int, default=1)
     parser.add_argument("-xn", "--max-novel", type=int, default=5)
+    parser.add_argument("-b", "--blocks", action="store_true")
     args = parser.parse_args()
 
     max_novel_chapters = NOVEL_LIMITS[args.max_novel - 1]
@@ -57,9 +60,6 @@ if __name__ == "__main__":
     min_tvshow_episode = ([0] + TVSHOW_SEASON_LIMITS)[max(0, args.min_season - 1)]
     EPISODES_NB = max_tvshow_episode - min_tvshow_episode
 
-    print(CHAPTERS_NB)
-    print(EPISODES_NB)
-
     # Load gold alignment matrix
     with open(args.gold_alignment, "rb") as f:
         G = pickle.load(f)
@@ -69,12 +69,18 @@ if __name__ == "__main__":
     novels_graphs = load_novels_graphs(args.min_novel, args.max_novel)
     assert len(novels_graphs) == CHAPTERS_NB
 
-    tvshow_graphs = load_tvshow_graphs(args.min_season, args.max_season)
-    assert len(tvshow_graphs) == EPISODES_NB
+    tvshow_graphs = load_tvshow_graphs(
+        args.min_season, args.max_season, blocks="locations" if args.blocks else None
+    )
+    assert len(tvshow_graphs) >= EPISODES_NB
 
-    sim_modes = ("nodes", "edges")
-    use_weights_modes = (False, True)
-    character_filtering_modes = ("none", "common", "named", "common+named")
+    # sim_modes = ("nodes", "edges")
+    # use_weights_modes = (False, True)
+    # character_filtering_modes = ("none", "common", "named", "common+named")
+    sim_modes = ("nodes",)
+    use_weights_modes = (False,)
+    character_filtering_modes = ("none",)
+    # TODO: debug
     f1s = []
 
     for sim_mode in sim_modes:
@@ -85,15 +91,29 @@ if __name__ == "__main__":
 
             for character_filtering in character_filtering_modes:
 
-                S = graph_similarity_matrix(
-                    tvshow_graphs,
-                    novels_graphs,
-                    sim_mode,  # type: ignore
-                    use_weights,
-                    character_filtering,  # type: ignore
-                )
+                if args.blocks:
+                    S = graph_similarity_matrix(
+                        tvshow_graphs,
+                        novels_graphs,
+                        sim_mode,  # type: ignore
+                        use_weights,
+                        character_filtering,  # type: ignore
+                    )
+                    block_to_episode = np.array(
+                        [get_episode_i(G) for G in tvshow_graphs]
+                    )
+                    _, f1, _ = find_best_blocks_alignment(G, S, block_to_episode)
 
-                _, f1, _ = find_best_alignment(G, S)
+                else:
+                    S = graph_similarity_matrix(
+                        tvshow_graphs,
+                        novels_graphs,
+                        sim_mode,  # type: ignore
+                        use_weights,
+                        character_filtering,  # type: ignore
+                    )
+                    _, f1, _ = find_best_alignment(G, S)
+
                 cf_f1s.append(f1)
 
             f1s.append(cf_f1s)
