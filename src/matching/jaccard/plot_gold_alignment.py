@@ -1,5 +1,6 @@
 # Plot gold alignment (tvshow / novels)
 import argparse, pickle
+import scienceplots
 import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
@@ -26,6 +27,7 @@ if __name__ == "__main__":
     G = G[:EPISODES_NB, :CHAPTERS_NB]
     assert G.shape == (EPISODES_NB, CHAPTERS_NB)
 
+    plt.style.use("science")
     fig, ax = plt.subplots()
     fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
     ax.imshow(G, interpolation="none")
