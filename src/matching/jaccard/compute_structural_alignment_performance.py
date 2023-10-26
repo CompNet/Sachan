@@ -74,13 +74,9 @@ if __name__ == "__main__":
     )
     assert len(tvshow_graphs) >= EPISODES_NB
 
-    # sim_modes = ("nodes", "edges")
-    # use_weights_modes = (False, True)
-    # character_filtering_modes = ("none", "common", "named", "common+named")
-    sim_modes = ("nodes",)
-    use_weights_modes = (False,)
-    character_filtering_modes = ("none",)
-    # TODO: debug
+    sim_modes = ("nodes", "edges")
+    use_weights_modes = (False, True)
+    character_filtering_modes = ("none", "common", "named", "common+named")
     f1s = []
 
     for sim_mode in sim_modes:
