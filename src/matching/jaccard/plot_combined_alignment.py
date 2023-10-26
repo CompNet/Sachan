@@ -20,6 +20,7 @@ import argparse, pickle, glob, os, sys
 import networkx as nx
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
+import scienceplots
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 from plot_alignment_commons import semantic_similarity, graph_similarity_matrix
@@ -131,6 +132,7 @@ if __name__ == "__main__":
 
     # Plot
     # ----
+    plt.style.use("science")
     fig, ax = plt.subplots()
     fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
     ax.set_title(f"α = {best_alpha}, t = {best_t}, F1 = {best_f1}", fontsize=FONTSIZE)
