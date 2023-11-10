@@ -306,12 +306,7 @@ def find_best_blocks_alignment(
         for split in splits:
             M.append(np.any(split, axis=0))
 
-        breakpoint()
-
         M = np.stack(M)
-
-        if t > 0.1:
-            breakpoint()
 
         _, _, f1, _ = precision_recall_fscore_support(
             G.flatten(), M.flatten(), average="binary", zero_division=0.0
