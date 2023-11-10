@@ -16,12 +16,15 @@
 import argparse, pickle
 import scienceplots
 import matplotlib.pyplot as plt
+import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from plot_alignment_commons import (
     find_best_alignment,
+    find_best_blocks_alignment,
     graph_similarity_matrix,
     load_novels_graphs,
     load_tvshow_graphs,
+    get_episode_i,
     NOVEL_LIMITS,
     TVSHOW_SEASON_LIMITS,
 )
@@ -60,6 +63,7 @@ if __name__ == "__main__":
         default="common",
         help="How to filter character. One of 'none', 'common', 'named' or 'common+named'.",
     )
+    parser.add_argument("-b", "--blocks", action="store_true")
     parser.add_argument("-o", "--output", type=str, help="Output file.")
     args = parser.parse_args()
 
@@ -69,7 +73,9 @@ if __name__ == "__main__":
     assert G.shape == (TVSHOW_SEASON_LIMITS[5], NOVEL_LIMITS[-1])
 
     novels_graphs = load_novels_graphs()
-    tvshow_graphs = load_tvshow_graphs(max_season=6)
+    tvshow_graphs = load_tvshow_graphs(
+        max_season=6, blocks="locations" if args.blocks else None
+    )
 
     S = graph_similarity_matrix(
         tvshow_graphs,
@@ -79,7 +85,11 @@ if __name__ == "__main__":
         args.character_filtering,
     )
 
-    _, f1, M = find_best_alignment(G, S)
+    if args.blocks:
+        block_to_episode = np.array([get_episode_i(G) for G in tvshow_graphs])
+        _, f1, M = find_best_blocks_alignment(G, S, block_to_episode)
+    else:
+        _, f1, M = find_best_alignment(G, S)
 
     season_f1s = []
 

@@ -87,27 +87,21 @@ if __name__ == "__main__":
 
             for character_filtering in character_filtering_modes:
 
+                S = graph_similarity_matrix(
+                    tvshow_graphs,
+                    novels_graphs,
+                    sim_mode,  # type: ignore
+                    use_weights,
+                    character_filtering,  # type: ignore
+                )
+
                 if args.blocks:
-                    S = graph_similarity_matrix(
-                        tvshow_graphs,
-                        novels_graphs,
-                        sim_mode,  # type: ignore
-                        use_weights,
-                        character_filtering,  # type: ignore
-                    )
                     block_to_episode = np.array(
                         [get_episode_i(G) for G in tvshow_graphs]
                     )
                     _, f1, _ = find_best_blocks_alignment(G, S, block_to_episode)
 
                 else:
-                    S = graph_similarity_matrix(
-                        tvshow_graphs,
-                        novels_graphs,
-                        sim_mode,  # type: ignore
-                        use_weights,
-                        character_filtering,  # type: ignore
-                    )
                     _, f1, _ = find_best_alignment(G, S)
 
                 cf_f1s.append(f1)
