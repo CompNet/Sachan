@@ -36,7 +36,7 @@ if __name__ == "__main__":
         "-t",
         "--best-threshold",
         action="store_true",
-        help="If specified, plot the similarity matrix with the best threshold given the gold matchin. If specified, --gold-alignment must be specified as well.",
+        help="If specified, plot the similarity matrix with the best threshold given the gold matchin.",
     )
     parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
     parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)

@@ -72,10 +72,14 @@ if __name__ == "__main__":
         args.max_delimiter_second_media,
     )
 
-    novels_graphs = load_novels_graphs(args.min_novel, args.max_novel)
-
     tvshow_graphs = load_tvshow_graphs(
-        args.min_season, args.max_season, blocks="locations" if args.blocks else None
+        args.min_delimiter_first_media,
+        args.max_delimiter_first_media,
+        blocks="locations" if args.blocks else None,
+    )
+
+    novels_graphs = load_novels_graphs(
+        args.min_delimiter_second_media, args.max_delimiter_second_media
     )
 
     episode_summaries = load_tvshow_episode_summaries(

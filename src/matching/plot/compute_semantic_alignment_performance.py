@@ -31,6 +31,13 @@ if __name__ == "__main__":
     COLUMN_WIDTH_IN = 5.166
 
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-f",
+        "--format",
+        type=str,
+        default="latex",
+        help="Dataframe print format. Either 'latex' or 'plain' (default: 'latex')",
+    )
     parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=1)
     parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=6)
     parser.add_argument("-m2", "--min-delimiter-second-media", type=int, default=1)
@@ -64,9 +71,12 @@ if __name__ == "__main__":
 
     performance_df = pd.DataFrame(f1s, columns=["F1"], index=sim_fns)
 
-    LaTeX_export = (
-        performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
-        .highlight_max(props="bfseries: ;", axis=None)
-        .to_latex(hrules=True)
-    )
-    print(LaTeX_export)
+    if args.format == "latex":
+        LaTeX_export = (
+            performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
+            .highlight_max(props="bfseries: ;", axis=None)
+            .to_latex(hrules=True)
+        )
+        print(LaTeX_export)
+    else:
+        print(performance_df)

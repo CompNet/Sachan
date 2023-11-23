@@ -352,13 +352,15 @@ def semantic_similarity(
 
     elif sim_fn == "sbert":
 
-        print("Loading SentenceBERT model...")
+        print("Loading SentenceBERT model...", file=sys.stderr)
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 
-        print("Embedding chapter summaries...")
+        print("Embedding chapter summaries...", file=sys.stderr)
         chapters_v = stransformer.encode(chapter_summaries)
 
-        print("Embedding episode summaries and computing similarity...")
+        print(
+            "Embedding episode summaries and computing similarity...", file=sys.stderr
+        )
         for i, e_summary in enumerate(tqdm(episode_summaries)):
             sents = sent_tokenize(e_summary)
             e_summary_v = stransformer.encode(sents)

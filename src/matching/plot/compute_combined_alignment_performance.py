@@ -41,6 +41,13 @@ if __name__ == "__main__":
         default="tfidf",
         help="one of: 'tfidf', 'sbert'",
     )
+    parser.add_argument(
+        "-f",
+        "--format",
+        type=str,
+        default="latex",
+        help="Dataframe print format. Either 'latex' or 'plain' (default: 'latex')",
+    )
     parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=1)
     parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=6)
     parser.add_argument("-m2", "--min-delimiter-second-media", type=int, default=1)

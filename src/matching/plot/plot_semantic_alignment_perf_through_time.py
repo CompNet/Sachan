@@ -91,7 +91,9 @@ if __name__ == "__main__":
 
         ax.plot(
             list(
-                range(args.min_delimiter_first_media, args.min_delimiter_second_media)
+                range(
+                    args.min_delimiter_first_media, args.max_delimiter_first_media + 1
+                )
             ),
             season_f1s,
             label=similarity_function,
