@@ -4,10 +4,7 @@
 #
 # Example usage:
 #
-# python plot_combined_alignment.py\
-# --chapter-summaries './chapter_summaries.txt'\
-# --episode-summaries './episodes_summaries.txt'\
-# --similarity-function sbert
+# python plot_combined_alignment.py
 #
 #
 # For more details, see:
@@ -16,14 +13,20 @@
 #
 #
 # Author: Arthur Amalvy
-import argparse, pickle, glob, os, sys
-import networkx as nx
+import argparse, os, sys
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 import scienceplots
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-from plot_alignment_commons import semantic_similarity, graph_similarity_matrix
+from alignment_commons import (
+    load_medias_graphs,
+    semantic_similarity,
+    graph_similarity_matrix,
+    load_medias_gold_alignment,
+    load_novels_chapter_summaries,
+    load_tvshow_episode_summaries,
+)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
@@ -39,66 +42,46 @@ if __name__ == "__main__":
     EPISODES_NB = 60
 
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-c",
-        "--chapter-summaries",
-        type=str,
-        help="Path to a file with chapter summaries",
-    )
-    parser.add_argument(
-        "-e",
-        "--episode-summaries",
-        type=str,
-        help="Path to a file with episode summaries",
-    )
-    parser.add_argument(
-        "-g",
-        "--gold-alignment",
-        type=str,
-        default=None,
-        help="Path to the gold chapters/episodes alignment.",
-    )
+    parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=1)
+    parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=6)
+    parser.add_argument("-m2", "--min-delimiter-second-media", type=int, default=None)
+    parser.add_argument("-x2", "--max-delimiter-second-media", type=int, default=None)
     parser.add_argument("-o", "--output", type=str, default=None)
     args = parser.parse_args()
 
     # Load summaries
     # --------------
-    with open(args.chapter_summaries) as f:
-        chapter_summaries = f.read().split("\n\n")[:-1]
-    assert len(chapter_summaries) == CHAPTERS_NB
-
-    with open(args.episode_summaries) as f:
-        episode_summaries = f.read().split("\n\n")
-    episode_summaries = episode_summaries[:EPISODES_NB]
-    assert len(episode_summaries) == EPISODES_NB
+    episode_summaries = load_tvshow_episode_summaries(
+        args.min_delimiter_first_media, args.max_delimiter_first_media
+    )
+    chapter_summaries = load_novels_chapter_summaries(
+        args.min_delimiter_second_media, args.max_delimiter_second_media
+    )
 
     # Load networks
     # -------------
-    chapter_graphs = []
-    for path in sorted(glob.glob(f"{root_dir}/in/novels/instant/*.graphml")):
-        chapter_graphs.append(nx.read_graphml(path))
-    chapter_graphs = chapter_graphs[:CHAPTERS_NB]
-    assert len(chapter_graphs) == CHAPTERS_NB
-
-    episode_graphs = []
-    for path in sorted(
-        glob.glob(f"{root_dir}/in/tvshow/instant/block_locations/*.graphml")
-    ):
-        episode_graphs.append(nx.read_graphml(path))
-    episode_graphs = episode_graphs[:EPISODES_NB]
-    assert len(episode_graphs) == EPISODES_NB
+    tvshow_graphs, novels_graphs = load_medias_graphs(
+        "tvshow-novels",
+        args.min_delimiter_first_media,
+        args.max_delimiter_first_media,
+        args.min_delimiter_second_media,
+        args.max_delimiter_second_media,
+    )
 
     # Compute similarity
     # ------------------
     S_semantic = semantic_similarity(episode_summaries, chapter_summaries, "sbert")
-    S_structural = graph_similarity_matrix(
-        episode_graphs, chapter_graphs, "edges", True
-    )
+    S_structural = graph_similarity_matrix(tvshow_graphs, novels_graphs, "edges", True)
 
-    with open(args.gold_alignment, "rb") as f:
-        G = pickle.load(f)
-    G = G[:EPISODES_NB, :CHAPTERS_NB]
-    assert G.shape == (EPISODES_NB, CHAPTERS_NB)
+    # Load gold alignment
+    # -------------------
+    G = load_medias_gold_alignment(
+        args.medias,
+        args.min_delimiter_first_media,
+        args.max_delimiter_first_media,
+        args.min_delimiter_second_media,
+        args.max_delimiter_second_media,
+    )
 
     # Combination
     # -----------

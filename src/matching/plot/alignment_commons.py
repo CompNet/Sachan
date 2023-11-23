@@ -1,6 +1,7 @@
 # Common functions for temporal matching
 #
 # Author: Arthur Amalvy
+import pickle
 from typing import Optional, Literal, List, Tuple
 import copy, os, sys, glob
 import numpy as np
@@ -82,6 +83,126 @@ def load_novels_graphs(min_novel: int = 1, max_novel: int = 5) -> List[nx.Graph]
     return novel_graphs
 
 
+def load_comics_graphs() -> List[nx.Graph]:
+    """Load graphs for each chapter of the comics."""
+    comics_graphs = []
+    for path in sorted(glob.glob(f"{root_dir}/in/comics/instant/chapter/*.graphml")):
+        comics_graphs.append(nx.read_graphml(path))
+
+    comics_graphs = [
+        nx.relabel_nodes(G, {node: data["name"] for node, data in G.nodes(data=True)})
+        for G in comics_graphs
+    ]
+
+    return comics_graphs
+
+
+def load_medias_gold_alignment(
+    medias: Literal["novels-comics", "tvshow-comics", "tvshow-novels"],
+    min_delimiter_first_media: Optional[int] = None,
+    max_delimiter_first_media: Optional[int] = None,
+    min_delimiter_second_media: Optional[int] = None,
+    max_delimiter_second_media: Optional[int] = None,
+) -> np.ndarray:
+    MEDIAS_TO_PATH = {
+        "novels-comics": f"{root_dir}/in/plot_alignment/novels_comics_gold_alignment.pickle",
+        "tvshow-comics": f"{root_dir}/in/plot_alignment/tvshow_comics_gold_alignment.pickle",
+        "tvshow-novels": f"{root_dir}/in/plot_alignment/tvshow_novels_gold_alignment.pickle",
+    }
+    matrix_path = MEDIAS_TO_PATH.get(medias)
+    if matrix_path is None:
+        raise ValueError(f"wrong medias specification: {medias}")
+
+    with open(matrix_path, "rb") as f:
+        gold_matrix = pickle.load(f)
+
+    if (
+        medias == "tvshow-comics"
+        and min_delimiter_first_media
+        and max_delimiter_first_media
+    ):
+        ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_delimiter_first_media - 1)]
+        ep_end = TVSHOW_SEASON_LIMITS[max_delimiter_first_media - 1]
+        gold_matrix = gold_matrix[ep_start:ep_end, :]
+
+    elif medias == "tvshow-novels":
+
+        if min_delimiter_first_media is None:
+            min_delimiter_first_media = 0
+        if max_delimiter_first_media is None:
+            max_delimiter_first_media = 8
+        ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_delimiter_first_media - 1)]
+        ep_end = TVSHOW_SEASON_LIMITS[max_delimiter_first_media - 1]
+
+        if min_delimiter_second_media is None:
+            min_delimiter_second_media = 0
+        if max_delimiter_second_media is None:
+            max_delimiter_second_media = 5
+        ch_start = ([0] + NOVEL_LIMITS)[max(0, min_delimiter_second_media - 1)]
+        ch_end = NOVEL_LIMITS[max_delimiter_second_media - 1]
+
+        gold_matrix = gold_matrix[ep_start:ep_end, ch_start:ch_end]
+
+    return gold_matrix
+
+
+def load_medias_graphs(
+    medias: Literal["novels-comics", "tvshow-comics", "tvshow-novels"],
+    min_delimiter_first_media: Optional[int],
+    max_delimiter_first_media: Optional[int],
+    min_delimiter_second_media: Optional[int],
+    max_delimiter_second_media: Optional[int],
+) -> Tuple[nx.Graph, nx.Graph]:
+    """Load the instant graphs for two medias to compare them.
+
+    :return: (graph for first media, graph for second media)
+    """
+    splitted = medias.split("-")
+
+    def load_graphs(
+        media: str, min_delimiter: Optional[int], max_delimiter: Optional[int]
+    ) -> List[nx.Graph]:
+        if media == "novels":
+            assert not min_delimiter is None
+            assert not max_delimiter is None
+            return load_novels_graphs(min_novel=min_delimiter, max_novel=max_delimiter)
+        elif media == "comics":
+            return load_comics_graphs()
+        elif media == "tvshow":
+            assert not min_delimiter is None
+            assert not max_delimiter is None
+            return load_tvshow_graphs(
+                min_season=min_delimiter, max_season=max_delimiter
+            )
+        else:
+            raise ValueError(f"wrong medias specification: {medias}")
+
+    return (
+        load_graphs(splitted[0], min_delimiter_first_media, max_delimiter_first_media),
+        load_graphs(
+            splitted[1], min_delimiter_second_media, max_delimiter_second_media
+        ),
+    )
+
+
+def load_tvshow_episode_summaries(
+    min_season: int = 1, max_season: int = 8
+) -> List[str]:
+    with open(f"{root_dir}/in/plot_alignment/tvshow_episode_summaries.txt") as f:
+        episode_summaries = f.read().split("\n\n")
+    ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_season - 1)]
+    ep_end = TVSHOW_SEASON_LIMITS[max_season - 1]
+    return episode_summaries[ep_start:ep_end]
+
+
+def load_novels_chapter_summaries(min_novel: int = 1, max_novel: int = 5) -> List[str]:
+    with open(f"{root_dir}/in/plot_alignment/novels_chapter_summaries.txt") as f:
+        chapter_summaries = f.read().split("\n\n")[:-1]
+    ch_start = ([0] + NOVEL_LIMITS)[max(0, min_novel - 1)]
+    ch_end = NOVEL_LIMITS[max_novel - 1]
+    return chapter_summaries[ch_start:ch_end]
+
+
 def filtered_graph(G: nx.Graph, nodes: list) -> nx.Graph:
     """Return a graph where ``nodes`` are removed from ``G``"""
     H = copy.deepcopy(G)
@@ -157,7 +278,7 @@ def graph_similarity_matrix(
             for J in graphs:
                 attrs = J.nodes.get(char)
                 if not attrs is None:
-                    return attrs["named"]
+                    return attrs.get("named", attrs.get("Named"))
             return False
 
         G_unnamed_chars = [c for c in G_chars if not is_named(c, G_lst)]

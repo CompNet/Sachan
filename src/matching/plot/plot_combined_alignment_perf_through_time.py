@@ -4,30 +4,29 @@
 #
 # Example usage:
 #
-# python compute_combined_alignment_performance.py\
-# --gold-alignment ./tvshow_novels_gold_alignment.pickle\
-# --chapter-summaries ./chapter_summaries.txt\
-# --episode-summaries ./episodes_summaries.txt\
-# --semantic-similarity-function sbert
+# python plot_combined_alignment_perf_through_time.py --semantic-similarity-function sbert
 #
 #
 # For more details, see:
 #
-# python plot_combined_alignment.py --help
+# python plot_combined_alignment_perf_through_time.py --help
 #
 #
 # Author: Arthur Amalvy
-import argparse, pickle, os, sys
+import argparse, os, sys
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
-from plot_alignment_commons import (
+from alignment_commons import (
+    load_medias_gold_alignment,
     semantic_similarity,
     graph_similarity_matrix,
     load_novels_graphs,
     load_tvshow_graphs,
-    NOVEL_LIMITS,
+    load_medias_graphs,
+    load_novels_chapter_summaries,
+    load_tvshow_episode_summaries,
     TVSHOW_SEASON_LIMITS,
 )
 
@@ -43,69 +42,51 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-c",
-        "--chapter-summaries",
-        type=str,
-        help="Path to a file with chapter summaries",
-    )
-    parser.add_argument(
-        "-e",
-        "--episode-summaries",
-        type=str,
-        help="Path to a file with episode summaries",
-    )
-    parser.add_argument(
-        "-g",
-        "--gold-alignment",
-        type=str,
-        default=None,
-        help="Path to the gold chapters/episodes alignment.",
-    )
-    parser.add_argument(
         "-s",
         "--semantic-similarity-function",
         type=str,
         default="tfidf",
         help="one of: 'tfidf', 'sbert'",
     )
+    parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
+    parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)
+    parser.add_argument("-m2", "--min-delimiter-second-media", type=int, default=None)
+    parser.add_argument("-x2", "--max-delimiter-second-media", type=int, default=None)
     parser.add_argument("-b", "--blocks", action="store_true")
-    parser.add_argument("-ms", "--min-season", type=int, default=1)
-    parser.add_argument("-xs", "--max-season", type=int, default=6)
-    parser.add_argument("-mn", "--min-novel", type=int, default=1)
-    parser.add_argument("-xn", "--max-novel", type=int, default=5)
     parser.add_argument("-o", "--output", type=str, help="Output file.")
     args = parser.parse_args()
 
-    max_novel_chapters = NOVEL_LIMITS[args.max_novel - 1]
-    min_novel_chapters = ([0] + NOVEL_LIMITS)[max(0, args.min_novel - 1)]
-    CHAPTERS_NB = max_novel_chapters - min_novel_chapters
+    G = load_medias_gold_alignment(
+        "tvshow-novels",
+        args.min_delimiter_first_media,
+        args.max_delimiter_first_media,
+        args.min_delimiter_second_media,
+        args.max_delimiter_second_media,
+    )
 
-    max_tvshow_episode = TVSHOW_SEASON_LIMITS[args.max_season - 1]
-    min_tvshow_episode = ([0] + TVSHOW_SEASON_LIMITS)[max(0, args.min_season - 1)]
-    EPISODES_NB = max_tvshow_episode - min_tvshow_episode
-
-    with open(args.gold_alignment, "rb") as f:
-        G = pickle.load(f)
-    G = G[:EPISODES_NB, :CHAPTERS_NB]
-    assert G.shape == (EPISODES_NB, CHAPTERS_NB)
+    tvshow_graphs, novels_graphs = load_medias_graphs(
+        "tvshow-novels",
+        args.min_delimiter_first_media,
+        args.max_delimiter_first_media,
+        args.min_delimiter_second_media,
+        args.max_delimiter_second_media,
+    )
 
     novels_graphs = load_novels_graphs(args.min_novel, args.max_novel)
-    assert len(novels_graphs) == CHAPTERS_NB
 
     tvshow_graphs = load_tvshow_graphs(
         args.min_season, args.max_season, blocks="locations" if args.blocks else None
     )
-    assert len(tvshow_graphs) >= EPISODES_NB
 
-    with open(args.chapter_summaries) as f:
-        chapter_summaries = f.read().split("\n\n")[:-1]
-    assert len(chapter_summaries) == CHAPTERS_NB
+    episode_summaries = load_tvshow_episode_summaries(
+        args.min_delimiter_first_media, args.max_delimiter_first_media
+    )
+    chapter_summaries = load_novels_chapter_summaries(
+        args.min_delimiter_second_media, args.max_delimiter_second_media
+    )
 
-    with open(args.episode_summaries) as f:
-        episode_summaries = f.read().split("\n\n")
-    episode_summaries = episode_summaries[:EPISODES_NB]
-    assert len(episode_summaries) == EPISODES_NB
-
+    # Compute both similarities
+    # -------------------------
     S_semantic = semantic_similarity(
         episode_summaries, chapter_summaries, args.semantic_similarity_function
     )
@@ -147,7 +128,7 @@ if __name__ == "__main__":
 
     season_f1s = []
 
-    for season in range(1, 7):
+    for season in range(args.min_first_media_delimiter, args.max_first_media_delimiter):
 
         limits = [0] + TVSHOW_SEASON_LIMITS
         start = limits[season - 1]
@@ -163,7 +144,10 @@ if __name__ == "__main__":
     plt.style.use("science")
     fig, ax = plt.subplots()
     fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3)
-    ax.plot(list(range(1, 7)), season_f1s)
+    ax.plot(
+        list(range(args.min_first_media_delimiter, args.max_first_media_delimiter)),
+        season_f1s,
+    )
     ax.set_xlabel("Seasons", fontsize=FONTSIZE)
     ax.set_ylabel("F1-score", fontsize=FONTSIZE)
     ax.grid()

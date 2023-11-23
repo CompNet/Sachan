@@ -3,10 +3,7 @@
 #
 # Example usage:
 #
-# python plot_semantic_alignment.py\
-# --chapter-summaries './chapter_summaries.txt'\
-# --episode-summaries './episodes_summaries.txt'\
-# --similarity-function sbert
+# python plot_semantic_alignment.py --similarity-function sbert
 #
 #
 # For more details, see:
@@ -15,11 +12,15 @@
 #
 #
 # Author: Arthur Amalvy
-import argparse, pickle
-import numpy as np
-from sklearn.metrics import precision_recall_fscore_support
+import argparse
 import matplotlib.pyplot as plt
-from plot_alignment_commons import find_best_alignment, semantic_similarity
+from alignment_commons import (
+    find_best_alignment,
+    semantic_similarity,
+    load_medias_gold_alignment,
+    load_novels_chapter_summaries,
+    load_tvshow_episode_summaries,
+)
 
 
 if __name__ == "__main__":
@@ -27,22 +28,7 @@ if __name__ == "__main__":
     FONTSIZE = 10
     COLUMN_WIDTH_IN = 5.166
 
-    CHAPTERS_NB = 344
-    EPISODES_NB = 60
-
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-c",
-        "--chapter-summaries",
-        type=str,
-        help="Path to a file with chapter summaries",
-    )
-    parser.add_argument(
-        "-e",
-        "--episode-summaries",
-        type=str,
-        help="Path to a file with episode summaries",
-    )
     parser.add_argument(
         "-s", "--similarity-function", type=str, help="Either 'tfidf' or 'sbert'."
     )
@@ -52,26 +38,21 @@ if __name__ == "__main__":
         action="store_true",
         help="If specified, plot the similarity matrix with the best threshold given the gold matchin. If specified, --gold-alignment must be specified as well.",
     )
-    parser.add_argument(
-        "-g",
-        "--gold-alignment",
-        type=str,
-        default=None,
-        help="Path to the gold chapters/episodes alignment. Must be specified if --best-treshold is specified.",
-    )
+    parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
+    parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)
+    parser.add_argument("-m2", "--min-delimiter-second-media", type=int, default=None)
+    parser.add_argument("-x2", "--max-delimiter-second-media", type=int, default=None)
     parser.add_argument("-o", "--output", type=str, default=None)
     args = parser.parse_args()
 
     # Load summaries
     # --------------
-    with open(args.chapter_summaries) as f:
-        chapter_summaries = f.read().split("\n\n")[:-1]
-    assert len(chapter_summaries) == CHAPTERS_NB
-
-    with open(args.episode_summaries) as f:
-        episode_summaries = f.read().split("\n\n")
-    episode_summaries = episode_summaries[:EPISODES_NB]
-    assert len(episode_summaries) == EPISODES_NB
+    episode_summaries = load_tvshow_episode_summaries(
+        args.min_delimiter_first_media, args.max_delimiter_first_media
+    )
+    chapter_summaries = load_novels_chapter_summaries(
+        args.min_delimiter_second_media, args.max_delimiter_second_media
+    )
 
     # Compute similarity
     # ------------------
@@ -82,10 +63,13 @@ if __name__ == "__main__":
     # Compute best threshold if necessary
     if args.best_threshold:
 
-        with open(args.gold_alignment, "rb") as f:
-            G = pickle.load(f)
-        G = G[:EPISODES_NB, :CHAPTERS_NB]
-        assert G.shape == (EPISODES_NB, CHAPTERS_NB)
+        G = load_medias_gold_alignment(
+            "tvshow-novels",
+            args.min_delimiter_first_media,
+            args.max_delimiter_first_media,
+            args.min_delimiter_second_media,
+            args.max_delimiter_second_media,
+        )
 
         best_t, best_f1, best_S_align = find_best_alignment(G, S)
 
