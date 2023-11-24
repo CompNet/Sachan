@@ -13,8 +13,7 @@ root_dir = f"{script_dir}/../../../out/matching/plot"
 
 
 configurations = {
-    # "tvshow-novels": {"media_bounds": [(1, 6, 1, 5), (1, 2, 1, 2)]},
-    "tvshow-novels": {"media_bounds": [(1, 2, 1, 2)]},
+    "tvshow-novels": {"media_bounds": [(1, 6, 1, 5), (1, 2, 1, 2)]},
     "tvshow-comics": {"media_bounds": [(1, 2, 1, 2)]},
     "novels-comics": {"media_bounds": [(1, 2, 1, 2)]},
 }
