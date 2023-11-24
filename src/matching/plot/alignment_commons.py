@@ -440,3 +440,43 @@ def find_best_blocks_alignment(
             best_M = M
 
     return (best_t, best_f1, best_M)
+
+
+def find_best_combined_alignment(
+    G: np.ndarray, S_semantic: np.ndarray, S_structural: np.ndarray
+) -> Tuple[float, float, float, np.ndarray]:
+    """Find the best possible alignment matrix by brute-force
+    searching the best possible threshold.
+
+    :param G: gold alignment matrix
+    :param S_semantic: semantic similarity matrix
+    :param S_structural: structural similarity matrix
+    :return: ``(best threshold, best alpha, best f1, best alignment matrix)``
+    """
+    alphas = np.arange(0.0, 1.0, 0.01)
+    ts = np.arange(0.0, 1.0, 0.01)
+    f1s = np.zeros((alphas.shape[0], ts.shape[0]))
+
+    # Compute the best combination of both matrices
+    # S_combined = α × S_semantic + (1 - α) × S_structural
+    print("searching for α and t...", file=sys.stderr)
+    for alpha_i, alpha in tqdm(enumerate(alphas), total=alphas.shape[0]):
+        S = alpha * S_semantic + (1 - alpha) * S_structural
+        for t_i, t in enumerate(ts):
+            M = S > t
+            _, _, f1, _ = precision_recall_fscore_support(
+                G.flatten(),
+                M.flatten(),
+                average="binary",
+                zero_division=0.0,
+            )
+            f1s[alpha_i][t_i] = f1
+
+    best_f1_loc = np.argwhere(f1s == np.max(f1s))[0]
+    best_f1 = float(np.max(f1s))
+    best_alpha = float(best_f1_loc[0] / 100.0)
+    best_t = float(best_f1_loc[1] / 100.0)
+    best_S = best_alpha * S_semantic + (1 - best_alpha) * S_structural
+    best_M = best_S > best_t
+
+    return (best_t, best_alpha, best_f1, best_M)
