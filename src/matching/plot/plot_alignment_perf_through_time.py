@@ -41,7 +41,6 @@ sys.path.append(f"{root_dir}/src")
 
 
 if __name__ == "__main__":
-
     FONTSIZE = 10
     COLUMN_WIDTH_IN = 5.166
 
@@ -51,13 +50,6 @@ if __name__ == "__main__":
         "--medias",
         type=str,
         help="Medias on which to compute alignment. Either 'tvshow-comics' or 'tvshow-novels'",
-    )
-    parser.add_argument(
-        "-s",
-        "--semantic-similarity-function",
-        type=str,
-        default="tfidf",
-        help="one of: 'tfidf', 'sbert'",
     )
     parser.add_argument(
         "-a",
@@ -103,7 +95,6 @@ if __name__ == "__main__":
     )
 
     if args.alignment == "structural":
-
         assert args.medias in ("tvshow-comics", "tvshow-novels")
 
         first_media_graphs, second_media_graphs = load_medias_graphs(
@@ -134,7 +125,6 @@ if __name__ == "__main__":
         for season in range(
             args.min_delimiter_first_media, args.max_delimiter_first_media + 1
         ):
-
             limits = [0] + TVSHOW_SEASON_LIMITS
             start = limits[season - 1]
             end = limits[season]
@@ -172,7 +162,6 @@ if __name__ == "__main__":
             plt.show()
 
     elif args.alignment == "semantic":
-
         assert args.medias == "tvshow-novels"
 
         episode_summaries = load_tvshow_episode_summaries(
@@ -190,7 +179,6 @@ if __name__ == "__main__":
         ax.grid()
 
         for similarity_function in ("tfidf", "sbert"):
-
             S = semantic_similarity(
                 episode_summaries, chapter_summaries, similarity_function  # type: ignore
             )
@@ -201,7 +189,6 @@ if __name__ == "__main__":
             for season in range(
                 args.min_delimiter_first_media, args.max_delimiter_first_media + 1
             ):
-
                 limits = [0] + TVSHOW_SEASON_LIMITS
                 start = limits[season - 1]
                 end = limits[season]
@@ -235,7 +222,6 @@ if __name__ == "__main__":
             plt.show()
 
     elif args.alignment == "combined":
-
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -264,59 +250,63 @@ if __name__ == "__main__":
             args.min_delimiter_second_media, args.max_delimiter_second_media
         )
 
-        # Compute both similarities
-        # -------------------------
-        S_semantic = semantic_similarity(
-            episode_summaries, chapter_summaries, args.semantic_similarity_function
-        )
-
-        S_structural = graph_similarity_matrix(
-            tvshow_graphs, novels_graphs, "edges", True, "common"
-        )
-
-        # Combination
-        # -----------
-        # Compute the best combination of both matrices
-        # S_combined = α × S_semantic + (1 - α) × S_structural
-        best_t, best_alpha, best_f1, best_M = find_best_combined_alignment(
-            G, S_semantic, S_structural
-        )
-
-        season_f1s = []
-
-        for season in range(
-            args.min_delimiter_first_media, args.max_delimiter_first_media + 1
-        ):
-
-            limits = [0] + TVSHOW_SEASON_LIMITS
-            start = limits[season - 1]
-            end = limits[season]
-            G_season = G[start:end, :]
-            M_season = best_M[start:end, :]
-
-            _, _, f1, _ = precision_recall_fscore_support(
-                G_season.flatten(),
-                M_season.flatten(),
-                average="binary",
-                zero_division=0.0,
-            )
-            season_f1s.append(f1)
-
         plt.style.use("science")
         fig, ax = plt.subplots()
         fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3)
-        ax.plot(
-            list(
-                range(
-                    args.min_delimiter_first_media, args.max_delimiter_first_media + 1
-                )
-            ),
-            season_f1s,
-        )
         ax.set_xlabel("Seasons", fontsize=FONTSIZE)
         ax.set_ylabel("F1-score", fontsize=FONTSIZE)
         ax.grid()
 
+        for similarity_function in ("tfidf", "sbert"):
+            # Compute both similarities
+            # -------------------------
+            S_semantic = semantic_similarity(
+                episode_summaries, chapter_summaries, similarity_function
+            )
+
+            S_structural = graph_similarity_matrix(
+                tvshow_graphs, novels_graphs, "edges", True, "common"
+            )
+
+            # Combination
+            # -----------
+            # Compute the best combination of both matrices
+            # S_combined = α × S_semantic + (1 - α) × S_structural
+            best_t, best_alpha, best_f1, best_M = find_best_combined_alignment(
+                G, S_semantic, S_structural
+            )
+
+            season_f1s = []
+
+            for season in range(
+                args.min_delimiter_first_media, args.max_delimiter_first_media + 1
+            ):
+                limits = [0] + TVSHOW_SEASON_LIMITS
+                start = limits[season - 1]
+                end = limits[season]
+                G_season = G[start:end, :]
+                M_season = best_M[start:end, :]
+
+                _, _, f1, _ = precision_recall_fscore_support(
+                    G_season.flatten(),
+                    M_season.flatten(),
+                    average="binary",
+                    zero_division=0.0,
+                )
+                season_f1s.append(f1)
+
+            ax.plot(
+                list(
+                    range(
+                        args.min_delimiter_first_media,
+                        args.max_delimiter_first_media + 1,
+                    )
+                ),
+                season_f1s,
+                label=similarity_function,
+            )
+
+        ax.legend()
         plt.tight_layout()
         if args.output:
             plt.savefig(args.output, bbox_inches="tight")

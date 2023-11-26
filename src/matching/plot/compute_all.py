@@ -19,12 +19,10 @@ configurations = {
 }
 
 for config_name, config_dict in configurations.items():
-
     out_dir = f"{root_dir}/{config_name}"
     os.makedirs(out_dir, exist_ok=True)
 
     for media_bounds in config_dict["media_bounds"]:
-
         m1_start, m1_end, m2_start, m2_end = media_bounds
 
         def build_out_path(name: str, extension: str) -> str:
@@ -36,11 +34,9 @@ for config_name, config_dict in configurations.items():
             return f"python3 {python_file} -m1 {m1_start} -x1 {m1_end} -m2 {m2_start} -x2 {m2_end} {end}"
 
         for alignment in ("structural", "semantic", "combined"):
-
             # PERFORMANCE TABLES
             # ------------------
             if alignment in ("semantic", "combined"):
-
                 if config_name != "tvshow-novels":
                     continue
 
@@ -64,17 +60,15 @@ for config_name, config_dict in configurations.items():
             # PERFORMANCE THROUGH TIME
             # ------------------------
             if alignment in ("semantic", "combined"):
-
                 if config_name != "tvshow-novels":
                     continue
 
-                for sim_fn in ("sbert", "tfidf"):
-                    out_file = build_out_path(f"perf_{alignment}_tt_{sim_fn}", "pdf")
-                    command = build_command(
-                        "plot_alignment_perf_through_time.py",
-                        f"--medias '{config_name}' -a {alignment} -s {sim_fn} --output '{out_file}'",
-                    )
-                    print_exec(command)
+                out_file = build_out_path(f"perf_{alignment}_tt", "pdf")
+                command = build_command(
+                    "plot_alignment_perf_through_time.py",
+                    f"--medias '{config_name}' -a {alignment} --output '{out_file}'",
+                )
+                print_exec(command)
 
             # structural
             else:
@@ -89,7 +83,6 @@ for config_name, config_dict in configurations.items():
             # PREDICTED ALIGNMENT
             # -------------------
             if alignment in ("semantic", "combined"):
-
                 if config_name != "tvshow-novels":
                     continue
 
