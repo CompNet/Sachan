@@ -103,6 +103,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            "locations" if args.blocks else None,
         )
 
         S = graph_similarity_matrix(
@@ -231,12 +232,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
-        )
-
-        tvshow_graphs = load_tvshow_graphs(
-            args.min_delimiter_first_media,
-            args.max_delimiter_first_media,
-            blocks="locations" if args.blocks else None,
+            "locations" if args.blocks else None,
         )
 
         novels_graphs = load_novels_graphs(

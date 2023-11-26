@@ -126,7 +126,6 @@ def load_medias_gold_alignment(
         gold_matrix = gold_matrix[ep_start:ep_end, :]
 
     elif medias == "tvshow-novels":
-
         if min_delimiter_first_media is None:
             min_delimiter_first_media = 0
         if max_delimiter_first_media is None:
@@ -152,6 +151,7 @@ def load_medias_graphs(
     max_delimiter_first_media: Optional[int],
     min_delimiter_second_media: Optional[int],
     max_delimiter_second_media: Optional[int],
+    tvshow_blocks: Optional[Literal["locations", "similarity"]] = None,
 ) -> Tuple[nx.Graph, nx.Graph]:
     """Load the instant graphs for two medias to compare them.
 
@@ -172,7 +172,7 @@ def load_medias_graphs(
             assert not min_delimiter is None
             assert not max_delimiter is None
             return load_tvshow_graphs(
-                min_season=min_delimiter, max_season=max_delimiter
+                min_season=min_delimiter, max_season=max_delimiter, blocks=tvshow_blocks
             )
         else:
             raise ValueError(f"wrong medias specification: {medias}")
@@ -337,7 +337,6 @@ def semantic_similarity(
     S = np.zeros((episodes_nb, chapters_nb))
 
     if sim_fn == "tfidf":
-
         vectorizer = TfidfVectorizer()
         v = vectorizer.fit(chapter_summaries + episode_summaries)
 
@@ -351,7 +350,6 @@ def semantic_similarity(
             S[i] = chapter_sims
 
     elif sim_fn == "sbert":
-
         print("Loading SentenceBERT model...", file=sys.stderr)
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 
@@ -419,7 +417,6 @@ def find_best_blocks_alignment(
     best_M = S > 0.0
 
     for t in np.arange(0.0, 1.0, 0.01):
-
         M_align_blocks = S >= t
 
         _, uniq_start_i = np.unique(block_to_episode, return_index=True)

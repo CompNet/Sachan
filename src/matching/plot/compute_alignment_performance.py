@@ -37,7 +37,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m",
@@ -82,13 +81,13 @@ if __name__ == "__main__":
     )
 
     if args.alignment == "structural":
-
         first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias,
             args.min_delimiter_first_media,
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            "locations" if args.blocks else None,
         )
 
         sim_modes = ("nodes", "edges")
@@ -97,13 +96,10 @@ if __name__ == "__main__":
         f1s = []
 
         for sim_mode in sim_modes:
-
             for use_weights in use_weights_modes:
-
                 cf_f1s = []
 
                 for character_filtering in character_filtering_modes:
-
                     S = graph_similarity_matrix(
                         first_media_graphs,
                         second_media_graphs,
@@ -150,7 +146,6 @@ if __name__ == "__main__":
             print(performance_df)
 
     elif args.alignment == "semantic":
-
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -183,7 +178,6 @@ if __name__ == "__main__":
             print(performance_df)
 
     elif args.alignment == "combined":
-
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -193,6 +187,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            "locations" if args.blocks else None,
         )
 
         episode_summaries = load_tvshow_episode_summaries(

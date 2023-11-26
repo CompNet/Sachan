@@ -30,7 +30,6 @@ from alignment_commons import (
 
 
 if __name__ == "__main__":
-
     FONTSIZE = 10
     COLUMN_WIDTH_IN = 5.166
 
@@ -72,7 +71,6 @@ if __name__ == "__main__":
     )
 
     if args.alignment == "structural":
-
         # Load graphs
         # -----------
         first_media_graphs, second_media_graphs = load_medias_graphs(
@@ -81,6 +79,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            "locations" if args.blocks else None,
         )
 
         # Compute similarity
@@ -118,7 +117,6 @@ if __name__ == "__main__":
             plt.show()
 
     elif args.alignment == "semantic":
-
         assert args.medias == "tvshow-novels"
 
         # Load summaries
@@ -158,7 +156,6 @@ if __name__ == "__main__":
             plt.show()
 
     elif args.alignment == "combined":
-
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -179,6 +176,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            "locations" if args.blocks else None,
         )
 
         # Compute similarity
