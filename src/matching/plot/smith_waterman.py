@@ -29,9 +29,7 @@ def smith_waterman_align(
 
     # Compute H
     for i in range(1, n + 1):
-
         for j in range(1, m + 1):
-
             linear_score = H[i - 1][j - 1] + S[i - 1][j - 1]
             vgap_score = max(H[:i, j] - W[-i:])
             hgap_score = max(H[i, :j] - W[-j:])
@@ -58,3 +56,5 @@ def smith_waterman_align(
         path_node = parents[path_node]
     i, j = path_node
     A[i - i, j - 1] = 1
+
+    return A, H
