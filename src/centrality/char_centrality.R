@@ -24,12 +24,13 @@ source("src/common/colors.R")
 ###############################################################################
 # parameters
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
-short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="wClo.", "betweenness"="Betw.", "w_betweenness"="wBetw.", "eigenvector"="Eig.", "w_eigenvector"="wEig")
+short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
-COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
-NARRATIVE_PART <- 5			# take the whole narrative (0) or only the first two (2) or five (5) narrative units
+COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
+NARRATIVE_PART <- 0			# take the whole narrative (0) or only the first two (2) or five (5) narrative units
 TOP_CHAR_NBR <- 20			# number of important characters
 ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex Affiliation
+narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
 
@@ -143,17 +144,23 @@ for(i in 1:length(gs))
 	for(cm in c("pearson","spearman"))
 	{	# all characters
 		cor.mat <- cor(x=centr.tab, method=cm)
+		rownames(cor.mat) <- short.names[rownames(cor.mat)]
+		colnames(cor.mat) <- short.names[colnames(cor.mat)]
 		plot.file <- file.path(local.folder,paste0("corrmat_all_",cm))
-		pdf(paste0(plot.file,".pdf"), bg="white")
-			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7)
+		pdf(paste0(plot.file,".pdf"), width=8, height=7, bg="white")
+			par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
+			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.1,1,0.1))
 			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
 		dev.off()
 		
 		# only most important characters
 		cor.mat <- cor(x=centr.tab[idx[1:TOP_CHAR_NBR],], method=cm)
+		rownames(cor.mat) <- short.names[rownames(cor.mat)]
+		colnames(cor.mat) <- short.names[colnames(cor.mat)]
 		plot.file <- file.path(local.folder,paste0("corrmat_top",TOP_CHAR_NBR,"_",cm))
-		pdf(paste0(plot.file,".pdf"), bg="white")
-			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7)
+		pdf(paste0(plot.file,".pdf"), width=8, height=7, bg="white")
+			par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
+			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.1,1,0.1))
 			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
 		dev.off()
 	}
@@ -222,7 +229,7 @@ for(i in 1:length(gs))
 	sil.scores <- c()
 	ks <- 2:9
 	for(k in ks)
-	{	cat("......Clustersing for k=",k,"\n",sep="")
+	{	cat("......Clustering for k=",k,"\n",sep="")
 		clusters <- cutree(dendro, k=k)
 		print(table(clusters))
 		sil <- silhouette(clusters, dd)
@@ -295,3 +302,23 @@ for(i in 1:length(gs))
 	tab.scores <- data.frame("k"=ks, "Silhouette"=sil.scores)
 	write.csv(x=tab.scores, file=file.path(local.folder,"silhouette_scores.csv"), row.names=FALSE, fileEncoding="UTF-8")
 }
+
+
+
+
+###############################################################################
+# plots used in the report
+#if(STANDARDIZE && !COMMON_CHARS_ONLY && NARRATIVE_PART==0)
+#{	for(i in 1:length(gs))
+#	{	g <- gs[[i]]
+#		local.folder <- file.path(out.folder, g.names[i])
+#		#
+#		src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
+#		tgt.file <- file.path(out.folder,paste0("named_corrmat_all_spearman_",g.names[i],".pdf"))
+#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+#		#
+#		src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
+#		tgt.file <- file.path(out.folder,paste0("named_corrmat_top20_spearman_",g.names[i],".pdf"))
+#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+#	}
+#}
