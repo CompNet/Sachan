@@ -44,22 +44,22 @@ if __name__ == "__main__":
         help="Medias on which to compute alignment. Either 'tvshow-comics' or 'tvshow-novels'",
     )
     parser.add_argument(
-        "-a",
-        "--alignment",
+        "-s",
+        "--similarity",
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
     )
     parser.add_argument(
-        "-s",
+        "-sf",
         "--similarity_function",
         type=str,
         default="tfidf",
         help="One of 'tfidf', 'sbert'.",
     )
     parser.add_argument(
-        "-am",
-        "--alignment-method",
+        "-a",
+        "--alignment",
         type=str,
         default="threshold",
         help="one of 'threshold', 'smith-waterman'",
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         args.max_delimiter_second_media,
     )
 
-    if args.alignment == "structural":
+    if args.similarity == "structural":
         # Load graphs
         # -----------
         first_media_graphs, second_media_graphs = load_medias_graphs(
@@ -98,7 +98,7 @@ if __name__ == "__main__":
             first_media_graphs, second_media_graphs, "edges", True, "common+named"
         )
 
-        if args.alignment_method == "threshold":
+        if args.alignment == "threshold":
             if args.blocks:
                 assert args.medias.startswith("tvshow")
                 block_to_episode = np.array(
@@ -109,7 +109,7 @@ if __name__ == "__main__":
                 )
             else:
                 best_t, best_f1, best_S_align = find_best_alignment(G, S)
-        elif args.alignment_method == "smith-waterman":
+        elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
             W_k = np.array(
@@ -128,7 +128,7 @@ if __name__ == "__main__":
                 G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
             )[2]
         else:
-            raise ValueError(f"unknown alignment method: {args.alignment_method}")
+            raise ValueError(f"unknown alignment method: {args.alignment}")
 
         print(f"{best_f1=}")
         print(f"{best_t=}")
@@ -149,7 +149,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.alignment == "semantic":
+    elif args.similarity == "semantic":
         assert args.medias == "tvshow-novels"
 
         # Load summaries
@@ -167,11 +167,11 @@ if __name__ == "__main__":
             episode_summaries, chapter_summaries, args.similarity_function
         )
 
-        if args.alignment_method == "threshold":
+        if args.alignment == "threshold":
             best_t, best_f1, best_S_align = find_best_alignment(G, S)
             print(f"{best_f1=}")
             print(f"{best_t=}")
-        elif args.alignment_method == "smith-waterman":
+        elif args.alignment == "smith-waterman":
             W_k = np.array(
                 [
                     0
@@ -188,7 +188,7 @@ if __name__ == "__main__":
                 G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
             )[2]
         else:
-            raise ValueError(f"unknown alignment method: {args.alignment_method}")
+            raise ValueError(f"unknown alignment method: {args.alignment}")
 
         # Plot
         # ----
@@ -206,7 +206,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.alignment == "combined":
+    elif args.similarity == "combined":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -241,11 +241,11 @@ if __name__ == "__main__":
 
         # Combination
         # -----------
-        if args.alignment_method == "threshold":
+        if args.alignment == "threshold":
             best_t, best_alpha, best_f1, best_M = find_best_combined_alignment(
                 G, S_semantic, S_structural
             )
-        elif args.alignment_method == "smith-waterman":
+        elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
             W_k = np.array(
@@ -270,7 +270,7 @@ if __name__ == "__main__":
                 G.flatten(), best_M.flatten(), average="binary", zero_division=0.0
             )[2]
         else:
-            raise ValueError(f"unknown alignment method: {args.alignment_method}")
+            raise ValueError(f"unknown alignment method: {args.alignment}")
 
         # Plot
         # ----

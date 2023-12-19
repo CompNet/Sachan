@@ -52,8 +52,8 @@ if __name__ == "__main__":
         help="Medias on which to compute alignment. Either 'tvshow-comics' or 'tvshow-novels'",
     )
     parser.add_argument(
-        "-a",
-        "--alignment",
+        "-s",
+        "--similarity",
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         args.max_delimiter_second_media,
     )
 
-    if args.alignment == "structural":
+    if args.similarity == "structural":
         assert args.medias in ("tvshow-comics", "tvshow-novels")
 
         first_media_graphs, second_media_graphs = load_medias_graphs(
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.alignment == "semantic":
+    elif args.similarity == "semantic":
         assert args.medias == "tvshow-novels"
 
         episode_summaries = load_tvshow_episode_summaries(
@@ -222,7 +222,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.alignment == "combined":
+    elif args.similarity == "combined":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -310,4 +310,4 @@ if __name__ == "__main__":
             plt.show()
 
     else:
-        raise ValueError(f"unknown alignment method: {args.alignment}")
+        raise ValueError(f"unknown alignment method: {args.similarity}")

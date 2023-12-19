@@ -11,7 +11,6 @@ from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sentence_transformers import SentenceTransformer
 from nltk import sent_tokenize
 
 
@@ -350,6 +349,8 @@ def semantic_similarity(
             S[i] = chapter_sims
 
     elif sim_fn == "sbert":
+        from sentence_transformers import SentenceTransformer
+
         print("Loading SentenceBERT model...", file=sys.stderr)
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 

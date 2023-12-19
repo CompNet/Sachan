@@ -33,73 +33,73 @@ for config_name, config_dict in configurations.items():
             m1_start, m1_end, m2_start, m2_end = media_bounds
             return f"python3 {python_file} -m1 {m1_start} -x1 {m1_end} -m2 {m2_start} -x2 {m2_end} {end}"
 
-        for alignment in ("structural", "semantic", "combined"):
+        for similarity in ("structural", "semantic", "combined"):
             # PERFORMANCE TABLES
             # ------------------
-            if alignment in ("semantic", "combined"):
+            if similarity in ("semantic", "combined"):
                 if config_name != "tvshow-novels":
                     continue
 
                 for sim_fn in ("sbert", "tfidf"):
-                    out_file = build_out_path(f"perf_{alignment}_{sim_fn}", "txt")
+                    out_file = build_out_path(f"perf_{similarity}_{sim_fn}", "txt")
                     command = build_command(
                         "compute_alignment_performance.py",
-                        f"--medias '{config_name}' -f plain -a {alignment} -s {sim_fn} > '{out_file}'",
+                        f"--medias '{config_name}' -f plain -s {similarity} -sf {sim_fn} > '{out_file}'",
                     )
                     print_exec(command)
 
             # structural
             else:
-                out_file = build_out_path(f"perf_{alignment}", "txt")
+                out_file = build_out_path(f"perf_{similarity}", "txt")
                 command = build_command(
                     "compute_alignment_performance.py",
-                    f"--medias '{config_name}' -a {alignment} -f plain > '{out_file}'",
+                    f"--medias '{config_name}' -s {similarity} -f plain > '{out_file}'",
                 )
                 print_exec(command)
 
             # PERFORMANCE THROUGH TIME
             # ------------------------
-            if alignment in ("semantic", "combined"):
+            if similarity in ("semantic", "combined"):
                 if config_name != "tvshow-novels":
                     continue
 
-                out_file = build_out_path(f"perf_{alignment}_tt", "pdf")
+                out_file = build_out_path(f"perf_{similarity}_tt", "pdf")
                 command = build_command(
                     "plot_alignment_perf_through_time.py",
-                    f"--medias '{config_name}' -a {alignment} --output '{out_file}'",
+                    f"--medias '{config_name}' -s {similarity} --output '{out_file}'",
                 )
                 print_exec(command)
 
             # structural
             else:
-                if alignment in ("tvshow-comics", "tvshow-novels"):
-                    out_file = build_out_path(f"perf_{alignment}_tt", "pdf")
+                if similarity in ("tvshow-comics", "tvshow-novels"):
+                    out_file = build_out_path(f"perf_{similarity}_tt", "pdf")
                     command = build_command(
                         "plot_alignment_perf_through_time.py",
-                        f"--medias '{config_name}' -a {alignment} --output '{out_file}'",
+                        f"--medias '{config_name}' -s {similarity} --output '{out_file}'",
                     )
                     print_exec(command)
 
             # PREDICTED ALIGNMENT
             # -------------------
-            if alignment in ("semantic", "combined"):
+            if similarity in ("semantic", "combined"):
                 if config_name != "tvshow-novels":
                     continue
 
                 for sim_fn in ("sbert", "tfidf"):
-                    out_file = build_out_path(f"{alignment}_{sim_fn}", "pdf")
+                    out_file = build_out_path(f"{similarity}_{sim_fn}", "pdf")
                     command = build_command(
                         "plot_alignment.py",
-                        f"-s {sim_fn} --medias '{config_name}' -a {alignment} --output '{out_file}'",
+                        f"-sf {sim_fn} --medias '{config_name}' -s {similarity} --output '{out_file}'",
                     )
                     print_exec(command)
 
             # structural
             else:
-                out_file = build_out_path(f"{alignment}", "pdf")
+                out_file = build_out_path(f"{similarity}", "pdf")
                 command = build_command(
                     "plot_alignment.py",
-                    f"--medias '{config_name}' -a {alignment} --output '{out_file}'",
+                    f"--medias '{config_name}' -s {similarity} --output '{out_file}'",
                 )
                 print_exec(command)
 
@@ -117,6 +117,6 @@ for config_name, config_dict in configurations.items():
             out_file = build_out_path(f"perf_structural_blocks", "txt")
             command = build_command(
                 "compute_alignment_performance.py",
-                f"--blocks --medias '{config_name}' -a structural -f plain > '{out_file}'",
+                f"--blocks --medias '{config_name}' -s structural -f plain > '{out_file}'",
             )
             print_exec(command)

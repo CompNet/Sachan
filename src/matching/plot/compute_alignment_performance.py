@@ -52,14 +52,14 @@ if __name__ == "__main__":
         help="Dataframe print format. Either 'latex' or 'plain' (default: 'latex')",
     )
     parser.add_argument(
-        "-a",
-        "--alignment",
+        "-s",
+        "--similarity",
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
     )
     parser.add_argument(
-        "-s",
+        "-sf",
         "--similarity_function",
         type=str,
         default="tfidf",
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         args.max_delimiter_second_media,
     )
 
-    if args.alignment == "structural":
+    if args.similarity == "structural":
         first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias,
             args.min_delimiter_first_media,
@@ -145,7 +145,7 @@ if __name__ == "__main__":
         else:
             print(performance_df)
 
-    elif args.alignment == "semantic":
+    elif args.similarity == "semantic":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
         else:
             print(performance_df)
 
-    elif args.alignment == "combined":
+    elif args.similarity == "combined":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -215,4 +215,4 @@ if __name__ == "__main__":
         print(f"{best_f1=}", flush=True)
 
     else:
-        raise ValueError(f"unknown alignment method: {args.alignment}")
+        raise ValueError(f"unknown alignment method: {args.similarity}")
