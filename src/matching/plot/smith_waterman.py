@@ -2,6 +2,12 @@ from typing import Tuple, Sequence
 import numpy as np
 
 
+def xnp_max(x: np.ndarray) -> Tuple[Tuple[int, ...], float]:
+    idx = np.argmax(x)
+    idx = np.unravel_index(idx, x.shape)
+    return idx, x[idx]
+
+
 def smith_waterman_align(
     seq1: Sequence, seq2: Sequence, S: np.ndarray, W: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
