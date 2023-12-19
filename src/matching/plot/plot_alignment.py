@@ -29,7 +29,7 @@ from alignment_commons import (
     load_novels_chapter_summaries,
     semantic_similarity,
 )
-from matching.plot.smith_waterman import smith_waterman_align
+from smith_waterman import smith_waterman_align_affine_gap
 
 
 if __name__ == "__main__":
@@ -112,16 +112,11 @@ if __name__ == "__main__":
         elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
-            W_k = np.array(
-                [
-                    0
-                    for k in range(
-                        1, max(len(first_media_graphs), len(second_media_graphs)) + 1
-                    )
-                ]
-            )
-            best_S_align, _ = smith_waterman_align(
-                first_media_graphs, second_media_graphs, S, W_k
+            # TODO: penalty are hardcoded as a test. Dont forget to
+            # change them when S will be modified in the
+            # function. Penalty also depend on the similarity type.
+            best_S_align, *_ = smith_waterman_align_affine_gap(
+                first_media_graphs, second_media_graphs, S, -0.1, -0.01
             )
             best_t = 0.0  # TODO
             best_f1 = precision_recall_fscore_support(
@@ -172,16 +167,11 @@ if __name__ == "__main__":
             print(f"{best_f1=}")
             print(f"{best_t=}")
         elif args.alignment == "smith-waterman":
-            W_k = np.array(
-                [
-                    0
-                    for k in range(
-                        1, max(len(episode_summaries), len(chapter_summaries)) + 1
-                    )
-                ]
-            )
-            best_S_align, _ = smith_waterman_align(
-                episode_summaries, chapter_summaries, S, W_k
+            # TODO: penalty are hardcoded as a test. Dont forget to
+            # change them when S will be modified in the
+            # function. Penalty also depend on the similarity type.
+            best_S_align, *_ = smith_waterman_align_affine_gap(
+                episode_summaries, chapter_summaries, S, -0.1, -0.01
             )
             best_t = 0.0  # TODO
             best_f1 = precision_recall_fscore_support(
@@ -246,23 +236,11 @@ if __name__ == "__main__":
                 G, S_semantic, S_structural
             )
         elif args.alignment == "smith-waterman":
-            if args.blocks:
-                raise RuntimeError("unimplemented")
-            W_k = np.array(
-                [0 for k in range(1, max(len(tvshow_graphs), len(novels_graphs)) + 1)]
-            )
-            # TODO "normalization"
-            sem_min = S_semantic.min()
-            sem_max = S_semantic.max()
-            struct_min = S_structural.min()
-            struct_max = S_structural.max()
-            S_structural = (
-                S_structural * ((sem_max - sem_min) / (struct_max - struct_min))
-                + sem_min
-                - struct_min
-            )
-            best_M, _ = smith_waterman_align(
-                tvshow_graphs, novels_graphs, S_semantic + S_structural, W_k
+            # TODO: penalty are hardcoded as a test. Dont forget to
+            # change them when S will be modified in the
+            # function. Penalty also depend on the similarity type.
+            best_M, *_ = smith_waterman_align_affine_gap(
+                tvshow_graphs, novels_graphs, S_semantic + S_structural, -0.1, -0.01
             )
             best_t = 0.0  # TODO
             best_alpha = 0.0  # TODO

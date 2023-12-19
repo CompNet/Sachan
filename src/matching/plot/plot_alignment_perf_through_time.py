@@ -23,8 +23,6 @@ from alignment_commons import (
     load_medias_gold_alignment,
     semantic_similarity,
     graph_similarity_matrix,
-    load_novels_graphs,
-    load_tvshow_graphs,
     load_medias_graphs,
     load_novels_chapter_summaries,
     load_tvshow_episode_summaries,
@@ -34,6 +32,7 @@ from alignment_commons import (
     find_best_alignment,
     TVSHOW_SEASON_LIMITS,
 )
+from smith_waterman import smith_waterman_align_affine_gap
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
@@ -57,6 +56,13 @@ if __name__ == "__main__":
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
+    )
+    parser.add_argument(
+        "-a",
+        "--alignment",
+        type=str,
+        default="threshold",
+        help="one of 'threshold', 'smith-waterman'",
     )
     parser.add_argument(
         "-j",
@@ -114,12 +120,29 @@ if __name__ == "__main__":
             args.character_filtering,
         )
 
-        if args.blocks:
-            assert args.medias.startswith("tvshow")
-            block_to_episode = np.array([get_episode_i(G) for G in first_media_graphs])
-            _, f1, M = find_best_blocks_alignment(G, S, block_to_episode)
+        if args.alignment == "threshold":
+            if args.blocks:
+                assert args.medias.startswith("tvshow")
+                block_to_episode = np.array(
+                    [get_episode_i(G) for G in first_media_graphs]
+                )
+                _, f1, M = find_best_blocks_alignment(G, S, block_to_episode)
+            else:
+                _, f1, M = find_best_alignment(G, S)
+        elif args.alignment == "smith-waterman":
+            if args.blocks:
+                raise RuntimeError("unimplemented")
+            # TODO: penalty are hardcoded as a test. Dont forget to
+            # change them when S will be modified in the
+            # function. Penalty also depend on the similarity type.
+            M, *_ = smith_waterman_align_affine_gap(
+                first_media_graphs, second_media_graphs, S, -0.1, -0.01
+            )
+            f1 = precision_recall_fscore_support(
+                G.flatten(), M.flatten(), average="binary", zero_division=0.0
+            )[2]
         else:
-            _, f1, M = find_best_alignment(G, S)
+            raise ValueError(f"unknown alignment method: {args.alignment}")
 
         season_f1s = []
 
@@ -183,7 +206,18 @@ if __name__ == "__main__":
             S = semantic_similarity(
                 episode_summaries, chapter_summaries, similarity_function  # type: ignore
             )
-            _, _, M = find_best_alignment(G, S)
+
+            if args.alignment == "threshold":
+                _, _, M = find_best_alignment(G, S)
+            elif args.alignment == "smith-waterman":
+                # TODO: penalty are hardcoded as a test. Dont forget to
+                # change them when S will be modified in the
+                # function. Penalty also depend on the similarity type.
+                M, *_ = smith_waterman_align_affine_gap(
+                    episode_summaries, chapter_summaries, S, -0.1, -0.01
+                )
+            else:
+                raise ValueError(f"unknown alignment method: {args.alignment}")
 
             season_f1s = []
 
@@ -235,10 +269,6 @@ if __name__ == "__main__":
             "locations" if args.blocks else None,
         )
 
-        novels_graphs = load_novels_graphs(
-            args.min_delimiter_second_media, args.max_delimiter_second_media
-        )
-
         episode_summaries = load_tvshow_episode_summaries(
             args.min_delimiter_first_media, args.max_delimiter_first_media
         )
@@ -266,11 +296,26 @@ if __name__ == "__main__":
 
             # Combination
             # -----------
-            # Compute the best combination of both matrices
-            # S_combined = α × S_semantic + (1 - α) × S_structural
-            best_t, best_alpha, best_f1, best_M = find_best_combined_alignment(
-                G, S_semantic, S_structural
-            )
+            if args.alignment == "threshold":
+                # Compute the best combination of both matrices
+                # S_combined = α × S_semantic + (1 - α) × S_structural
+                best_t, best_alpha, best_f1, best_M = find_best_combined_alignment(
+                    G, S_semantic, S_structural
+                )
+            elif args.alignment == "smith-waterman":
+                # TODO: penalty are hardcoded as a test. Dont forget to
+                # change them when S will be modified in the
+                # function. Penalty also depend on the similarity type.
+                best_M, *_ = smith_waterman_align_affine_gap(
+                    tvshow_graphs, novels_graphs, S_semantic + S_structural, -0.1, -0.01
+                )
+                best_t = 0.0  # TODO
+                best_alpha = 0.0  # TODO
+                best_f1 = precision_recall_fscore_support(
+                    G.flatten(), best_M.flatten(), average="binary", zero_division=0.0
+                )[2]
+            else:
+                raise ValueError(f"unknown alignment method: {args.alignment}")
 
             season_f1s = []
 
