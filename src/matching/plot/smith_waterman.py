@@ -8,6 +8,10 @@ def xnp_max(x: np.ndarray) -> Tuple[Tuple[int, ...], float]:
     return idx, x[idx]
 
 
+def xnp_sigmoid(x: np.ndarray) -> np.ndarray:
+    return 1 / (1 + np.exp(-x))
+
+
 def smith_waterman_align(
     seq1: Sequence, seq2: Sequence, S: np.ndarray, W: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
@@ -72,7 +76,10 @@ def smith_waterman_align_affine_gap(
     S: np.ndarray,
     gap_start_penalty: float,
     gap_cont_penalty: float,
+    neg_th: float,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    S = (xnp_sigmoid(S - np.mean(S)) - neg_th) * 2 - 1
+
     n = len(x)
     m = len(y)
     assert S.shape == (n, m)
@@ -149,7 +156,11 @@ def smith_waterman_align_affine_gap(
     while cell_score > 0:
         matrix_name, i, j = cell_address
         A[i - 1][j - 1] = 1
-        cell_address = parents[cell_address]
+        try:
+            cell_address = parents[cell_address]
+        # we arrived at the end of the matrix: return
+        except KeyError:
+            return A, M, X, Y
         matrix_name, i, j = cell_address
         cell_score = name_to_matrix[matrix_name][i][j]
     _, i, j = cell_address
