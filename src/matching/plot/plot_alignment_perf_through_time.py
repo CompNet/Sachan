@@ -19,6 +19,7 @@ from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import scienceplots
 from alignment_commons import (
     load_medias_gold_alignment,
     semantic_similarity,
@@ -132,11 +133,9 @@ if __name__ == "__main__":
         elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
-            # TODO: penalty are hardcoded as a test. Dont forget to
-            # change them when S will be modified in the
-            # function. Penalty also depend on the similarity type.
+            # TODO: penalties are hardcoded as a test.
             M, *_ = smith_waterman_align_affine_gap(
-                first_media_graphs, second_media_graphs, S, -0.1, -0.01
+                first_media_graphs, second_media_graphs, S, -0.1, -0.01, 0.0
             )
             f1 = precision_recall_fscore_support(
                 G.flatten(), M.flatten(), average="binary", zero_division=0.0
@@ -210,11 +209,9 @@ if __name__ == "__main__":
             if args.alignment == "threshold":
                 _, _, M = find_best_alignment(G, S)
             elif args.alignment == "smith-waterman":
-                # TODO: penalty are hardcoded as a test. Dont forget to
-                # change them when S will be modified in the
-                # function. Penalty also depend on the similarity type.
+                # TODO: penalty are hardcoded as a test.
                 M, *_ = smith_waterman_align_affine_gap(
-                    episode_summaries, chapter_summaries, S, -0.1, -0.01
+                    episode_summaries, chapter_summaries, S, -0.1, -0.01, 0.0
                 )
             else:
                 raise ValueError(f"unknown alignment method: {args.alignment}")
@@ -303,11 +300,14 @@ if __name__ == "__main__":
                     G, S_semantic, S_structural
                 )
             elif args.alignment == "smith-waterman":
-                # TODO: penalty are hardcoded as a test. Dont forget to
-                # change them when S will be modified in the
-                # function. Penalty also depend on the similarity type.
+                # TODO: penalties are hardcoded as a test.
                 best_M, *_ = smith_waterman_align_affine_gap(
-                    tvshow_graphs, novels_graphs, S_semantic + S_structural, -0.1, -0.01
+                    tvshow_graphs,
+                    novels_graphs,
+                    S_semantic + S_structural,
+                    -0.1,
+                    -0.01,
+                    0.0,
                 )
                 best_t = 0.0  # TODO
                 best_alpha = 0.0  # TODO

@@ -117,7 +117,6 @@ if __name__ == "__main__":
                     )
 
                     if args.alignment == "threshold":
-
                         if args.blocks:
                             assert args.medias.startswith("tvshow")
                             block_to_episode = np.array(
@@ -131,15 +130,12 @@ if __name__ == "__main__":
                             _, f1, _ = find_best_alignment(G, S)
 
                     elif args.alignment == "smith-waterman":
-
                         if args.blocks:
                             raise RuntimeError("unimplemented")
 
-                        # TODO: penalty are hardcoded as a test. Dont forget to
-                        # change them when S will be modified in the
-                        # function. Penalty also depend on the similarity type.
+                        # TODO: penalties are hardcoded as a test.
                         M, *_ = smith_waterman_align_affine_gap(
-                            first_media_graphs, second_media_graphs, S, 0.1, -0.01
+                            first_media_graphs, second_media_graphs, S, 0.1, -0.01, 0.0
                         )
                         f1 = precision_recall_fscore_support(
                             G.flatten(),
@@ -198,11 +194,9 @@ if __name__ == "__main__":
             if args.alignment == "threshold":
                 _, f1, _ = find_best_alignment(G, S)
             elif args.alignment == "smith-waterman":
-                # TODO: penalty are hardcoded as a test. Dont forget to
-                # change them when S will be modified in the
-                # function. Penalty also depend on the similarity type.
+                # TODO: penalty are hardcoded as a test.
                 M, *_ = smith_waterman_align_affine_gap(
-                    episode_summaries, chapter_summaries, S, -0.1, -0.01
+                    episode_summaries, chapter_summaries, S, -0.1, -0.01, 0.0
                 )
                 f1 = precision_recall_fscore_support(
                     G.flatten(), M.flatten(), average="binary", zero_division=0.0
@@ -261,11 +255,14 @@ if __name__ == "__main__":
             print(f"{best_alpha=}")
             print(f"{best_t=}")
         elif args.alignment == "smith-waterman":
-            # TODO: penalty are hardcoded as a test. Dont forget to
-            # change them when S will be modified in the
-            # function. Penalty also depend on the similarity type.
+            # TODO: penalty are hardcoded as a test.
             best_M, *_ = smith_waterman_align_affine_gap(
-                tvshow_graphs, novels_graphs, S_semantic + S_structural, -0.1, -0.01
+                tvshow_graphs,
+                novels_graphs,
+                S_semantic + S_structural,
+                -0.1,
+                -0.01,
+                0.0,
             )
             best_f1 = precision_recall_fscore_support(
                 G.flatten(), best_M.flatten(), average="binary", zero_division=0.0
