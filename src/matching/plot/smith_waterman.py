@@ -1,4 +1,4 @@
-from typing import Tuple, Sequence
+from typing import Tuple, Sequence, Dict, Optional
 import numpy as np
 
 
@@ -13,7 +13,7 @@ def xnp_sigmoid(x: np.ndarray) -> np.ndarray:
 
 
 def smith_waterman_align(
-    seq1: Sequence, seq2: Sequence, S: np.ndarray, W: np.ndarray
+    seq1: Sequence, seq2: Sequence, S: np.ndarray, W: np.ndarray, neg_th: float
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     :param seq1: first sequence to align, of length n
@@ -24,6 +24,8 @@ def smith_waterman_align(
     :return: two matrices: an alignment matrix, and the intermediary
              score matrix
     """
+    S = (xnp_sigmoid(S - np.mean(S)) - neg_th) * 2 - 1
+
     W = np.flip(W)
 
     n = len(seq1)
@@ -70,19 +72,17 @@ def smith_waterman_align(
     return A, H
 
 
-def smith_waterman_align_affine_gap(
-    x: Sequence,
-    y: Sequence,
+def _smith_waterman_compute_matrices(
     S: np.ndarray,
     gap_start_penalty: float,
     gap_cont_penalty: float,
     neg_th: float,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    S = (xnp_sigmoid(S - np.mean(S)) - neg_th) * 2 - 1
+) -> Tuple[
+    np.ndarray, np.ndarray, np.ndarray, Dict[Tuple[str, int, int], Tuple[str, int, int]]
+]:
+    S = (xnp_sigmoid((S - np.mean(S)) / np.std(S)) - neg_th) * 2 - 1
 
-    n = len(x)
-    m = len(y)
-    assert S.shape == (n, m)
+    n, m = S.shape
 
     M = np.zeros((n + 1, m + 1))
 
@@ -137,33 +137,86 @@ def smith_waterman_align_affine_gap(
             Y[i][j] = Yscore
             parents[("Y", i, j)] = Yparent
 
-    # Backtracking
-    # ------------
+    return M, X, Y, parents
+
+
+def _smith_waterman_backtrack(
+    M: np.ndarray,
+    X: np.ndarray,
+    Y: np.ndarray,
+    parents: Dict[Tuple[str, int, int], Tuple[str, int, int]],
+    visited_mask: np.ndarray,
+) -> Optional[Tuple[np.ndarray, np.ndarray]]:
+    n = M.shape[0] - 1
+    m = M.shape[1] - 1
+
     A = np.zeros((n, m))
+
+    new_visited_mask = np.copy(visited_mask)
 
     name_to_matrix = {"M": M, "X": X, "Y": Y}
 
     # start at the cell with the highest score of the 3 matrices
+    banned_scores = np.zeros((n + 1, m + 1))
+    banned_scores[visited_mask == 1] = float("-inf")
     possible_starts = [
         ((matrix_name,) + coords, score)
         for matrix_name, (coords, score) in [
-            ("M", xnp_max(M)),
-            ("X", xnp_max(X)),
-            ("Y", xnp_max(Y)),
+            ("M", xnp_max(M + banned_scores)),
+            ("X", xnp_max(X + banned_scores)),
+            ("Y", xnp_max(Y + banned_scores)),
         ]
     ]
     cell_address, cell_score = max(possible_starts, key=lambda ps: ps[1])
+
+    if cell_score <= 0:
+        return None
+
     while cell_score > 0:
+
         matrix_name, i, j = cell_address
+
+        if visited_mask[i][j] == 1:
+            break
+
         A[i - 1][j - 1] = 1
+
+        # we ban the current line and the current column from
+        # subsequent matching
+        new_visited_mask[i, :] = 1
+        new_visited_mask[:, j] = 1
+
         try:
             cell_address = parents[cell_address]
         # we arrived at the end of the matrix: return
         except KeyError:
-            return A, M, X, Y
+            break
+
         matrix_name, i, j = cell_address
         cell_score = name_to_matrix[matrix_name][i][j]
-    _, i, j = cell_address
-    A[i - 1][j - 1] = 1
+
+    return A, new_visited_mask
+
+
+def smith_waterman_align_affine_gap(
+    S: np.ndarray,
+    gap_start_penalty: float,
+    gap_cont_penalty: float,
+    neg_th: float,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    n, m = S.shape
+
+    M, X, Y, parents = _smith_waterman_compute_matrices(
+        S, gap_start_penalty, gap_cont_penalty, neg_th
+    )
+
+    A = np.zeros((n, m))
+    visited_mask = np.zeros((n + 1, m + 1))
+    while np.any(visited_mask == 0):
+        backtrack_out = _smith_waterman_backtrack(M, X, Y, parents, visited_mask)
+        if backtrack_out is None:
+            break
+        A_i, visited_mask = backtrack_out
+        A += A_i
 
     return A, M, X, Y

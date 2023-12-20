@@ -114,9 +114,7 @@ if __name__ == "__main__":
             if args.blocks:
                 raise RuntimeError("unimplemented")
             # TODO: penalties are hardcoded as a test.
-            best_S_align, *_ = smith_waterman_align_affine_gap(
-                first_media_graphs, second_media_graphs, S, -0.1, -0.01, 0.0
-            )
+            best_S_align, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
             best_t = 0.0  # TODO
             best_f1 = precision_recall_fscore_support(
                 G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
@@ -167,9 +165,7 @@ if __name__ == "__main__":
             print(f"{best_t=}")
         elif args.alignment == "smith-waterman":
             # TODO: penalties are hardcoded as a test.
-            best_S_align, *_ = smith_waterman_align_affine_gap(
-                episode_summaries, chapter_summaries, S, -0.1, -0.01, 0.0
-            )
+            best_S_align, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
             best_t = 0.0  # TODO
             best_f1 = precision_recall_fscore_support(
                 G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
@@ -235,12 +231,7 @@ if __name__ == "__main__":
         elif args.alignment == "smith-waterman":
             # TODO: penalty are hardcoded as a test.
             best_M, *_ = smith_waterman_align_affine_gap(
-                tvshow_graphs,
-                novels_graphs,
-                S_semantic + S_structural,
-                -0.1,
-                -0.01,
-                0.0,
+                S_semantic + S_structural, -0.5, -0.01, 0.1
             )
             best_t = 0.0  # TODO
             best_alpha = 0.0  # TODO
