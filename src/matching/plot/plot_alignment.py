@@ -18,7 +18,6 @@ import scienceplots
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
-    NOVEL_LIMITS,
     find_best_alignment,
     find_best_combined_alignment,
     graph_similarity_matrix,
@@ -30,7 +29,10 @@ from alignment_commons import (
     load_novels_chapter_summaries,
     semantic_similarity,
 )
-from smith_waterman import smith_waterman_align_affine_gap
+from smith_waterman import (
+    smith_waterman_align_affine_gap,
+    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
+)
 
 
 if __name__ == "__main__":
@@ -42,7 +44,7 @@ if __name__ == "__main__":
         "-m",
         "--medias",
         type=str,
-        help="Medias on which to compute alignment. Either 'tvshow-comics' or 'tvshow-novels'",
+        help="Medias on which to compute alignment. One of 'tvshow-comics', 'tvshow-novels', 'novels-comics'",
     )
     parser.add_argument(
         "-s",
@@ -113,8 +115,9 @@ if __name__ == "__main__":
         elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
-            # TODO: penalties are hardcoded as a test.
-            best_S_align, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
+            best_S_align, *_ = smith_waterman_align_affine_gap(
+                S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
+            )
             best_t = 0.0  # TODO
             best_f1 = precision_recall_fscore_support(
                 G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
@@ -164,12 +167,7 @@ if __name__ == "__main__":
             print(f"{best_f1=}")
             print(f"{best_t=}")
         elif args.alignment == "smith-waterman":
-            # TODO: penalties are hardcoded as a test.
-            best_S_align, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
-            best_t = 0.0  # TODO
-            best_f1 = precision_recall_fscore_support(
-                G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
-            )[2]
+            raise NotImplementedError
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
 

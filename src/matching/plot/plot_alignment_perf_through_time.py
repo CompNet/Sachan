@@ -15,7 +15,6 @@
 # Author: Arthur Amalvy
 import argparse, os, sys
 import numpy as np
-from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
@@ -33,7 +32,10 @@ from alignment_commons import (
     find_best_alignment,
     TVSHOW_SEASON_LIMITS,
 )
-from smith_waterman import smith_waterman_align_affine_gap
+from smith_waterman import (
+    smith_waterman_align_affine_gap,
+    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
+)
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
@@ -133,8 +135,9 @@ if __name__ == "__main__":
         elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
-            # TODO: penalties are hardcoded as a test.
-            M, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
+            M, *_ = smith_waterman_align_affine_gap(
+                S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
+            )
             f1 = precision_recall_fscore_support(
                 G.flatten(), M.flatten(), average="binary", zero_division=0.0
             )[2]

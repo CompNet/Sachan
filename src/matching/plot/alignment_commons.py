@@ -126,14 +126,14 @@ def load_medias_gold_alignment(
 
     elif medias == "tvshow-novels":
         if min_delimiter_first_media is None:
-            min_delimiter_first_media = 0
+            min_delimiter_first_media = 1
         if max_delimiter_first_media is None:
-            max_delimiter_first_media = 8
+            max_delimiter_first_media = 6
         ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_delimiter_first_media - 1)]
         ep_end = TVSHOW_SEASON_LIMITS[max_delimiter_first_media - 1]
 
         if min_delimiter_second_media is None:
-            min_delimiter_second_media = 0
+            min_delimiter_second_media = 1
         if max_delimiter_second_media is None:
             max_delimiter_second_media = 5
         ch_start = ([0] + NOVEL_LIMITS)[max(0, min_delimiter_second_media - 1)]
@@ -146,10 +146,10 @@ def load_medias_gold_alignment(
 
 def load_medias_graphs(
     medias: Literal["novels-comics", "tvshow-comics", "tvshow-novels"],
-    min_delimiter_first_media: Optional[int],
-    max_delimiter_first_media: Optional[int],
-    min_delimiter_second_media: Optional[int],
-    max_delimiter_second_media: Optional[int],
+    min_delimiter_first_media: Optional[int] = None,
+    max_delimiter_first_media: Optional[int] = None,
+    min_delimiter_second_media: Optional[int] = None,
+    max_delimiter_second_media: Optional[int] = None,
     tvshow_blocks: Optional[Literal["locations", "similarity"]] = None,
 ) -> Tuple[nx.Graph, nx.Graph]:
     """Load the instant graphs for two medias to compare them.
@@ -162,14 +162,14 @@ def load_medias_graphs(
         media: str, min_delimiter: Optional[int], max_delimiter: Optional[int]
     ) -> List[nx.Graph]:
         if media == "novels":
-            assert not min_delimiter is None
-            assert not max_delimiter is None
+            min_delimiter = min_delimiter or 1
+            max_delimiter = max_delimiter or 5
             return load_novels_graphs(min_novel=min_delimiter, max_novel=max_delimiter)
         elif media == "comics":
             return load_comics_graphs()
         elif media == "tvshow":
-            assert not min_delimiter is None
-            assert not max_delimiter is None
+            min_delimiter = min_delimiter or 1
+            max_delimiter = max_delimiter or 6
             return load_tvshow_graphs(
                 min_season=min_delimiter, max_season=max_delimiter, blocks=tvshow_blocks
             )

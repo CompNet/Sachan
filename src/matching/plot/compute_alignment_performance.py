@@ -14,10 +14,9 @@
 #
 # Author: Arthur Amalvy
 from typing import List, Literal
-import argparse, os, sys
+import os, argparse
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     find_best_alignment,
@@ -31,7 +30,10 @@ from alignment_commons import (
     load_novels_chapter_summaries,
     load_tvshow_episode_summaries,
 )
-from matching.plot.smith_waterman import smith_waterman_align_affine_gap
+from matching.plot.smith_waterman import (
+    smith_waterman_align_affine_gap,
+    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
+)
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -133,8 +135,9 @@ if __name__ == "__main__":
                         if args.blocks:
                             raise RuntimeError("unimplemented")
 
-                        # TODO: penalties are hardcoded as a test.
-                        M, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
+                        M, *_ = smith_waterman_align_affine_gap(
+                            S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
+                        )
                         f1 = precision_recall_fscore_support(
                             G.flatten(),
                             M.flatten(),
@@ -192,11 +195,7 @@ if __name__ == "__main__":
             if args.alignment == "threshold":
                 _, f1, _ = find_best_alignment(G, S)
             elif args.alignment == "smith-waterman":
-                # TODO: penalty are hardcoded as a test.
-                M, *_ = smith_waterman_align_affine_gap(S, -0.5, -0.01, 0.1)
-                f1 = precision_recall_fscore_support(
-                    G.flatten(), M.flatten(), average="binary", zero_division=0.0
-                )[2]
+                raise NotImplementedError
             else:
                 raise ValueError(f"unknown alignment method: {args.alignment}")
 
