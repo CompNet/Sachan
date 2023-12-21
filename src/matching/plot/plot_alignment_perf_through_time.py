@@ -27,10 +27,11 @@ from alignment_commons import (
     load_novels_chapter_summaries,
     load_tvshow_episode_summaries,
     find_best_combined_alignment,
-    find_best_blocks_alignment,
     get_episode_i,
     find_best_alignment,
     TVSHOW_SEASON_LIMITS,
+    threshold_align_blocks,
+    MEDIAS_STRUCTURAL_THRESHOLD,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
@@ -129,20 +130,23 @@ if __name__ == "__main__":
                 block_to_episode = np.array(
                     [get_episode_i(G) for G in first_media_graphs]
                 )
-                _, f1, M = find_best_blocks_alignment(G, S, block_to_episode)
+                M = threshold_align_blocks(
+                    S, MEDIAS_STRUCTURAL_THRESHOLD[args.medias], block_to_episode
+                )
             else:
-                _, f1, M = find_best_alignment(G, S)
+                M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
         elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
             M, *_ = smith_waterman_align_affine_gap(
                 S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
             )
-            f1 = precision_recall_fscore_support(
-                G.flatten(), M.flatten(), average="binary", zero_division=0.0
-            )[2]
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
+
+        f1 = precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )[2]
 
         season_f1s = []
 

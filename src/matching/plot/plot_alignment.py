@@ -24,10 +24,11 @@ from alignment_commons import (
     load_medias_gold_alignment,
     load_medias_graphs,
     get_episode_i,
-    find_best_blocks_alignment,
     load_tvshow_episode_summaries,
     load_novels_chapter_summaries,
     semantic_similarity,
+    threshold_align_blocks,
+    MEDIAS_STRUCTURAL_THRESHOLD,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
@@ -107,34 +108,34 @@ if __name__ == "__main__":
                 block_to_episode = np.array(
                     [get_episode_i(G) for G in first_media_graphs]
                 )
-                best_t, best_f1, best_S_align = find_best_blocks_alignment(
-                    G, S, block_to_episode
+                M = threshold_align_blocks(
+                    S, MEDIAS_STRUCTURAL_THRESHOLD[args.medias], block_to_episode
                 )
             else:
-                best_t, best_f1, best_S_align = find_best_alignment(G, S)
+                M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
+
         elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
-            best_S_align, *_ = smith_waterman_align_affine_gap(
+            M, *_ = smith_waterman_align_affine_gap(
                 S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
             )
-            best_t = 0.0  # TODO
-            best_f1 = precision_recall_fscore_support(
-                G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
-            )[2]
+
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
 
-        print(f"{best_f1=}")
-        print(f"{best_t=}")
+        f1 = precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )[2]
+        print(f"{f1=}")
 
         # Plot
         # ----
         plt.style.use("science")
         fig, ax = plt.subplots()
         fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
-        ax.set_title(f"t = {best_t}, F1 = {best_f1}", fontsize=FONTSIZE)
-        ax.imshow(best_S_align, interpolation="none")
+        ax.set_title(f"F1 = {f1}", fontsize=FONTSIZE)
+        ax.imshow(M, interpolation="none")
         ax.set_xlabel(args.medias.split("-")[0], fontsize=FONTSIZE)
         ax.set_ylabel(args.medias.split("-")[1], fontsize=FONTSIZE)
 

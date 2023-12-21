@@ -20,7 +20,6 @@ import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     find_best_alignment,
-    find_best_blocks_alignment,
     find_best_combined_alignment,
     load_medias_gold_alignment,
     load_medias_graphs,
@@ -29,6 +28,8 @@ from alignment_commons import (
     semantic_similarity,
     load_novels_chapter_summaries,
     load_tvshow_episode_summaries,
+    threshold_align_blocks,
+    MEDIAS_STRUCTURAL_THRESHOLD,
 )
 from matching.plot.smith_waterman import (
     smith_waterman_align_affine_gap,
@@ -124,12 +125,13 @@ if __name__ == "__main__":
                             block_to_episode = np.array(
                                 [get_episode_i(G) for G in first_media_graphs]
                             )
-                            _, f1, _ = find_best_blocks_alignment(
-                                G, S, block_to_episode
+                            M = threshold_align_blocks(
+                                S,
+                                MEDIAS_STRUCTURAL_THRESHOLD[args.medias],
+                                block_to_episode,
                             )
-
                         else:
-                            _, f1, _ = find_best_alignment(G, S)
+                            M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
 
                     elif args.alignment == "smith-waterman":
                         if args.blocks:
@@ -138,15 +140,16 @@ if __name__ == "__main__":
                         M, *_ = smith_waterman_align_affine_gap(
                             S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
                         )
-                        f1 = precision_recall_fscore_support(
-                            G.flatten(),
-                            M.flatten(),
-                            average="binary",
-                            zero_division=0.0,
-                        )[2]
 
                     else:
                         raise ValueError(f"unknown alignment method: {args.alignment}")
+
+                    f1 = precision_recall_fscore_support(
+                        G.flatten(),
+                        M.flatten(),
+                        average="binary",
+                        zero_division=0.0,
+                    )[2]
 
                     cf_f1s.append(f1)
 

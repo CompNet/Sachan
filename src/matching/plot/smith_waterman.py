@@ -9,6 +9,15 @@ from alignment_commons import (
 )
 
 
+#: tuned parameters found using :func:`tune_smith_waterman_params` for
+#: each pair of medias using the two other pairs.
+MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS = {
+    "tvshow-novels": {"gap_start_penalty": 0.02, "gap_cont_penalty": 0.01, "neg_th": 0},
+    "tvshow-comics": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.01, "neg_th": 0},
+    "novels-comics": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0},
+}
+
+
 def xnp_max(x: np.ndarray) -> Tuple[Tuple[int, ...], float]:
     idx = np.argmax(x)
     idx = np.unravel_index(idx, x.shape)
@@ -169,14 +178,6 @@ def smith_waterman_align_affine_gap(
         A += A_i
 
     return A, M, X, Y
-
-
-#: tuned parameters found using :func:`tune_smith_waterman_params`
-MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS = {
-    "tvshow-novels": {"gap_start_penalty": 0.02, "gap_cont_penalty": 0.01, "neg_th": 0},
-    "tvshow-comics": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.01, "neg_th": 0},
-    "novels-comics": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0},
-}
 
 
 def tune_smith_waterman_params(

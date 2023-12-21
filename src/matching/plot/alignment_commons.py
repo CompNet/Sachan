@@ -2,7 +2,7 @@
 #
 # Author: Arthur Amalvy
 import pickle
-from typing import Optional, Literal, List, Tuple
+from typing import Optional, Literal, List, Tuple, cast
 import copy, os, sys, glob
 import numpy as np
 import networkx as nx
@@ -19,6 +19,14 @@ NOVEL_LIMITS = [73, 143, 225, 271, 344]
 
 # the end of each season, in number of episodes
 TVSHOW_SEASON_LIMITS = [10, 20, 30, 40, 50, 60, 67, 73]
+
+#: tuned threshold found using :func:`tune_threshold` for each pair of
+#: medias using the two other pairs.
+MEDIAS_STRUCTURAL_THRESHOLD = {
+    "tvshow-novels": 0.05,
+    "novels-comics": 0.03,
+    "tvshow-comics": 0.08,
+}
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -478,3 +486,82 @@ def find_best_combined_alignment(
     best_M = best_S > best_t
 
     return (best_t, best_alpha, best_f1, best_M)
+
+
+def threshold_align_blocks(
+    S: np.ndarray, t: float, block_to_episode: np.ndarray
+) -> np.ndarray:
+    M_align_blocks = S >= t
+
+    _, uniq_start_i = np.unique(block_to_episode, return_index=True)
+    splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
+
+    M = []
+    for split in splits:
+        M.append(np.any(split, axis=0))
+
+    M = np.stack(M)
+
+    return M
+
+
+def tune_threshold(
+    X_tune: List[np.ndarray],
+    G_tune: List[np.ndarray],
+    threshold_search_space: np.ndarray,
+) -> float:
+    best_t = threshold_search_space[0]
+    best_f1 = 0
+
+    progress = tqdm(threshold_search_space)
+
+    for t in progress:
+        f1_list = []
+
+        for X, G in zip(X_tune, G_tune):
+            M = X > t
+            f1 = precision_recall_fscore_support(
+                G.flatten(), M.flatten(), average="binary", zero_division=0.0
+            )[2]
+            f1_list.append(f1)
+
+        mean_f1 = sum(f1_list) / len(f1_list)
+        progress.set_description(f"tuning ({t:.2f}, {mean_f1:.2f})")
+        if mean_f1 > best_f1:
+            best_t = t
+            best_f1 = mean_f1
+
+    return best_t
+
+
+def tune_threshold_other_medias(
+    media_pair: Literal["tvshow-novels", "novels-comics", "tvshow-comics"],
+    sim_mode: Literal["structural", "semantic"],
+    threshold_search_space: np.ndarray,
+) -> float:
+    all_media_pairs = {"tvshow-novels", "novels-comics", "tvshow-comics"}
+    other_media_pairs = all_media_pairs - {media_pair}
+
+    X_tune = []
+    G_tune = []
+
+    for pair in other_media_pairs:
+        pair = cast(Literal["tvshow-novels", "novels-comics", "tvshow-comics"], pair)
+
+        G = load_medias_gold_alignment(pair)
+
+        if sim_mode == "structural":
+            first_media_graphs, second_media_graphs = load_medias_graphs(pair)
+            X = graph_similarity_matrix(
+                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+            )
+        elif sim_mode == "semantic":
+            raise NotImplementedError
+        else:
+            raise ValueError(f"unknown sim_mode: {sim_mode}")
+
+        X = X[: G.shape[0], : G.shape[1]]
+        X_tune.append(X)
+        G_tune.append(G)
+
+    return tune_threshold(X_tune, G_tune, threshold_search_space)
