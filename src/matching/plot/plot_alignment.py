@@ -14,22 +14,26 @@
 # Author: Arthur Amalvy
 import argparse
 import matplotlib.pyplot as plt
+import scienceplots
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
-    NOVEL_LIMITS,
     find_best_alignment,
     find_best_combined_alignment,
     graph_similarity_matrix,
     load_medias_gold_alignment,
     load_medias_graphs,
     get_episode_i,
-    find_best_blocks_alignment,
     load_tvshow_episode_summaries,
     load_novels_chapter_summaries,
     semantic_similarity,
+    threshold_align_blocks,
+    MEDIAS_STRUCTURAL_THRESHOLD,
 )
-from matching.plot.smith_waterman import smith_waterman_align
+from smith_waterman import (
+    smith_waterman_align_affine_gap,
+    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
+)
 
 
 if __name__ == "__main__":
@@ -41,25 +45,25 @@ if __name__ == "__main__":
         "-m",
         "--medias",
         type=str,
-        help="Medias on which to compute alignment. Either 'tvshow-comics' or 'tvshow-novels'",
+        help="Medias on which to compute alignment. One of 'tvshow-comics', 'tvshow-novels', 'novels-comics'",
     )
     parser.add_argument(
-        "-a",
-        "--alignment",
+        "-s",
+        "--similarity",
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
     )
     parser.add_argument(
-        "-s",
+        "-sf",
         "--similarity_function",
         type=str,
         default="tfidf",
         help="One of 'tfidf', 'sbert'.",
     )
     parser.add_argument(
-        "-am",
-        "--alignment-method",
+        "-a",
+        "--alignment",
         type=str,
         default="threshold",
         help="one of 'threshold', 'smith-waterman'",
@@ -80,7 +84,7 @@ if __name__ == "__main__":
         args.max_delimiter_second_media,
     )
 
-    if args.alignment == "structural":
+    if args.similarity == "structural":
         # Load graphs
         # -----------
         first_media_graphs, second_media_graphs = load_medias_graphs(
@@ -98,48 +102,40 @@ if __name__ == "__main__":
             first_media_graphs, second_media_graphs, "edges", True, "common+named"
         )
 
-        if args.alignment_method == "threshold":
+        if args.alignment == "threshold":
             if args.blocks:
                 assert args.medias.startswith("tvshow")
                 block_to_episode = np.array(
                     [get_episode_i(G) for G in first_media_graphs]
                 )
-                best_t, best_f1, best_S_align = find_best_blocks_alignment(
-                    G, S, block_to_episode
+                M = threshold_align_blocks(
+                    S, MEDIAS_STRUCTURAL_THRESHOLD[args.medias], block_to_episode
                 )
             else:
-                best_t, best_f1, best_S_align = find_best_alignment(G, S)
-        elif args.alignment_method == "smith-waterman":
+                M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
+
+        elif args.alignment == "smith-waterman":
             if args.blocks:
                 raise RuntimeError("unimplemented")
-            W_k = np.array(
-                [
-                    0
-                    for k in range(
-                        1, max(len(first_media_graphs), len(second_media_graphs)) + 1
-                    )
-                ]
+            M, *_ = smith_waterman_align_affine_gap(
+                S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
             )
-            best_S_align, _ = smith_waterman_align(
-                first_media_graphs, second_media_graphs, S, W_k
-            )
-            best_t = 0.0  # TODO
-            best_f1 = precision_recall_fscore_support(
-                G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
-            )[2]
-        else:
-            raise ValueError(f"unknown alignment method: {args.alignment_method}")
 
-        print(f"{best_f1=}")
-        print(f"{best_t=}")
+        else:
+            raise ValueError(f"unknown alignment method: {args.alignment}")
+
+        f1 = precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )[2]
+        print(f"{f1=}")
 
         # Plot
         # ----
         plt.style.use("science")
         fig, ax = plt.subplots()
         fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
-        ax.set_title(f"t = {best_t}, F1 = {best_f1}", fontsize=FONTSIZE)
-        ax.imshow(best_S_align, interpolation="none")
+        ax.set_title(f"F1 = {f1}", fontsize=FONTSIZE)
+        ax.imshow(M, interpolation="none")
         ax.set_xlabel(args.medias.split("-")[0], fontsize=FONTSIZE)
         ax.set_ylabel(args.medias.split("-")[1], fontsize=FONTSIZE)
 
@@ -149,7 +145,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.alignment == "semantic":
+    elif args.similarity == "semantic":
         assert args.medias == "tvshow-novels"
 
         # Load summaries
@@ -167,28 +163,14 @@ if __name__ == "__main__":
             episode_summaries, chapter_summaries, args.similarity_function
         )
 
-        if args.alignment_method == "threshold":
+        if args.alignment == "threshold":
             best_t, best_f1, best_S_align = find_best_alignment(G, S)
             print(f"{best_f1=}")
             print(f"{best_t=}")
-        elif args.alignment_method == "smith-waterman":
-            W_k = np.array(
-                [
-                    0
-                    for k in range(
-                        1, max(len(episode_summaries), len(chapter_summaries)) + 1
-                    )
-                ]
-            )
-            best_S_align, _ = smith_waterman_align(
-                episode_summaries, chapter_summaries, S, W_k
-            )
-            best_t = 0.0  # TODO
-            best_f1 = precision_recall_fscore_support(
-                G.flatten(), best_S_align.flatten(), average="binary", zero_division=0.0
-            )[2]
+        elif args.alignment == "smith-waterman":
+            raise NotImplementedError
         else:
-            raise ValueError(f"unknown alignment method: {args.alignment_method}")
+            raise ValueError(f"unknown alignment method: {args.alignment}")
 
         # Plot
         # ----
@@ -206,7 +188,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.alignment == "combined":
+    elif args.similarity == "combined":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -241,28 +223,14 @@ if __name__ == "__main__":
 
         # Combination
         # -----------
-        if args.alignment_method == "threshold":
+        if args.alignment == "threshold":
             best_t, best_alpha, best_f1, best_M = find_best_combined_alignment(
                 G, S_semantic, S_structural
             )
-        elif args.alignment_method == "smith-waterman":
-            if args.blocks:
-                raise RuntimeError("unimplemented")
-            W_k = np.array(
-                [0 for k in range(1, max(len(tvshow_graphs), len(novels_graphs)) + 1)]
-            )
-            # TODO "normalization"
-            sem_min = S_semantic.min()
-            sem_max = S_semantic.max()
-            struct_min = S_structural.min()
-            struct_max = S_structural.max()
-            S_structural = (
-                S_structural * ((sem_max - sem_min) / (struct_max - struct_min))
-                + sem_min
-                - struct_min
-            )
-            best_M, _ = smith_waterman_align(
-                tvshow_graphs, novels_graphs, S_semantic + S_structural, W_k
+        elif args.alignment == "smith-waterman":
+            # TODO: penalty are hardcoded as a test.
+            best_M, *_ = smith_waterman_align_affine_gap(
+                S_semantic + S_structural, -0.5, -0.01, 0.1
             )
             best_t = 0.0  # TODO
             best_alpha = 0.0  # TODO
@@ -270,7 +238,7 @@ if __name__ == "__main__":
                 G.flatten(), best_M.flatten(), average="binary", zero_division=0.0
             )[2]
         else:
-            raise ValueError(f"unknown alignment method: {args.alignment_method}")
+            raise ValueError(f"unknown alignment method: {args.alignment}")
 
         # Plot
         # ----

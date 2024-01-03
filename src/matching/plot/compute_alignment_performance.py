@@ -14,14 +14,12 @@
 #
 # Author: Arthur Amalvy
 from typing import List, Literal
-import argparse, os, sys
+import os, argparse
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     find_best_alignment,
-    find_best_blocks_alignment,
     find_best_combined_alignment,
     load_medias_gold_alignment,
     load_medias_graphs,
@@ -30,6 +28,12 @@ from alignment_commons import (
     semantic_similarity,
     load_novels_chapter_summaries,
     load_tvshow_episode_summaries,
+    threshold_align_blocks,
+    MEDIAS_STRUCTURAL_THRESHOLD,
+)
+from matching.plot.smith_waterman import (
+    smith_waterman_align_affine_gap,
+    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
 )
 
 
@@ -52,18 +56,25 @@ if __name__ == "__main__":
         help="Dataframe print format. Either 'latex' or 'plain' (default: 'latex')",
     )
     parser.add_argument(
-        "-a",
-        "--alignment",
+        "-s",
+        "--similarity",
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
     )
     parser.add_argument(
-        "-s",
+        "-sf",
         "--similarity_function",
         type=str,
         default="tfidf",
         help="One of 'tfidf', 'sbert'.",
+    )
+    parser.add_argument(
+        "-a",
+        "--alignment",
+        type=str,
+        default="threshold",
+        help="one of 'threshold', 'smith-waterman'",
     )
     parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
     parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)
@@ -80,7 +91,7 @@ if __name__ == "__main__":
         args.max_delimiter_second_media,
     )
 
-    if args.alignment == "structural":
+    if args.similarity == "structural":
         first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias,
             args.min_delimiter_first_media,
@@ -108,15 +119,37 @@ if __name__ == "__main__":
                         character_filtering,  # type: ignore
                     )
 
-                    if args.blocks:
-                        assert args.medias.startswith("tvshow")
-                        block_to_episode = np.array(
-                            [get_episode_i(G) for G in first_media_graphs]
+                    if args.alignment == "threshold":
+                        if args.blocks:
+                            assert args.medias.startswith("tvshow")
+                            block_to_episode = np.array(
+                                [get_episode_i(G) for G in first_media_graphs]
+                            )
+                            M = threshold_align_blocks(
+                                S,
+                                MEDIAS_STRUCTURAL_THRESHOLD[args.medias],
+                                block_to_episode,
+                            )
+                        else:
+                            M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
+
+                    elif args.alignment == "smith-waterman":
+                        if args.blocks:
+                            raise RuntimeError("unimplemented")
+
+                        M, *_ = smith_waterman_align_affine_gap(
+                            S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
                         )
-                        _, f1, _ = find_best_blocks_alignment(G, S, block_to_episode)
 
                     else:
-                        _, f1, _ = find_best_alignment(G, S)
+                        raise ValueError(f"unknown alignment method: {args.alignment}")
+
+                    f1 = precision_recall_fscore_support(
+                        G.flatten(),
+                        M.flatten(),
+                        average="binary",
+                        zero_division=0.0,
+                    )[2]
 
                     cf_f1s.append(f1)
 
@@ -145,7 +178,7 @@ if __name__ == "__main__":
         else:
             print(performance_df)
 
-    elif args.alignment == "semantic":
+    elif args.similarity == "semantic":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -162,7 +195,13 @@ if __name__ == "__main__":
             S = semantic_similarity(
                 episode_summaries, chapter_summaries, similarity_function
             )
-            _, f1, _ = find_best_alignment(G, S)
+            if args.alignment == "threshold":
+                _, f1, _ = find_best_alignment(G, S)
+            elif args.alignment == "smith-waterman":
+                raise NotImplementedError
+            else:
+                raise ValueError(f"unknown alignment method: {args.alignment}")
+
             f1s.append(f1)
 
         performance_df = pd.DataFrame(f1s, columns=["F1"], index=sim_fns)
@@ -177,7 +216,7 @@ if __name__ == "__main__":
         else:
             print(performance_df)
 
-    elif args.alignment == "combined":
+    elif args.similarity == "combined":
         assert args.medias == "tvshow-novels"
         assert not args.blocks
 
@@ -207,12 +246,23 @@ if __name__ == "__main__":
 
         # Combination
         # -----------
-        best_t, best_alpha, best_f1, _ = find_best_combined_alignment(
-            G, S_semantic, S_structural
-        )
-        print(f"{best_alpha=}")
-        print(f"{best_t=}")
+        if args.alignment == "threshold":
+            best_t, best_alpha, best_f1, _ = find_best_combined_alignment(
+                G, S_semantic, S_structural
+            )
+            print(f"{best_alpha=}")
+            print(f"{best_t=}")
+        elif args.alignment == "smith-waterman":
+            # TODO: penalty are hardcoded as a test.
+            best_M, *_ = smith_waterman_align_affine_gap(
+                S_semantic + S_structural, -0.5, -0.01, 0.1
+            )
+            best_f1 = precision_recall_fscore_support(
+                G.flatten(), best_M.flatten(), average="binary", zero_division=0.0
+            )[2]
+        else:
+            raise ValueError(f"unknown alignment method: {args.alignment}")
         print(f"{best_f1=}", flush=True)
 
     else:
-        raise ValueError(f"unknown alignment method: {args.alignment}")
+        raise ValueError(f"unknown alignment method: {args.similarity}")
