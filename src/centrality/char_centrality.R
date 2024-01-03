@@ -308,17 +308,21 @@ for(i in 1:length(gs))
 
 ###############################################################################
 # plots used in the report
-#if(STANDARDIZE && !COMMON_CHARS_ONLY && NARRATIVE_PART==0)
-#{	for(i in 1:length(gs))
-#	{	g <- gs[[i]]
-#		local.folder <- file.path(out.folder, g.names[i])
-#		#
-#		src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
-#		tgt.file <- file.path(out.folder,paste0("named_corrmat_all_spearman_",g.names[i],".pdf"))
-#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-#		#
-#		src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
-#		tgt.file <- file.path(out.folder,paste0("named_corrmat_top20_spearman_",g.names[i],".pdf"))
-#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-#	}
-#}
+if(STANDARDIZE && !COMMON_CHARS_ONLY && NARRATIVE_PART==2)
+{	for(i in 1:length(gs))
+	{	cat("Processing graph ",src.file,"\n")
+		
+		g <- gs[[i]]
+		local.folder <- file.path(out.folder, g.names[i])
+		#
+		src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
+		tgt.file <- file.path(out.folder,paste0("named_S",NARRATIVE_PART,"_corrmat_all_spearman_",g.names[i],".pdf"))
+		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+		cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
+		#
+		src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
+		tgt.file <- file.path(out.folder,paste0("named_S",NARRATIVE_PART,"_corrmat_top20_spearman_",g.names[i],".pdf"))
+		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+		cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
+	}
+}
