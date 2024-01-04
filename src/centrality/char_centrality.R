@@ -15,6 +15,7 @@ library("scales")
 library("plot.matrix")
 library("fmsb")
 library("cluster")
+library("latex2exp")
 
 source("src/common/colors.R")
 
@@ -26,8 +27,8 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
-COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
-NARRATIVE_PART <- 0			# take the whole narrative (0) or only the first two (2) or five (5) narrative units
+COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
+NARRATIVE_PART <- 2			# take the whole narrative (0) or only the first two (2) or five (5) narrative units
 TOP_CHAR_NBR <- 20			# number of important characters
 ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex Affiliation
 narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
@@ -85,6 +86,8 @@ if(COMMON_CHARS_ONLY)
 ###############################################################################
 # compute centralities
 centr.tabs <- list()
+radar.data <- list()
+radar.cols <- list()
 
 # loop over networks
 for(i in 1:length(gs))
@@ -176,7 +179,7 @@ for(i in 1:length(gs))
 		radarchart(
 			as.data.frame(rbind(mm,centr.tab[rev(idx),])),	# values to plot 
 			#maxmin=FALSE,									# prevents the lib from expecting the first row to contain certain parameters
-			title=g.names[i],								# main title
+			title=narr.names[g.names[i]],					# main title
 			#axistype=3, axislabcol="BLACK",				# display axis values
 			pty=32,											# don't plot points
 			pcol=rev(cols),									# line colors
@@ -187,6 +190,11 @@ for(i in 1:length(gs))
 		)
 		legend(x="bottomleft", legend=chars[selected.chars], fill=sel.cols, inset=-0.10, xpd=TRUE)
 	dev.off()
+	# keep for later plot
+	tmp.list <- list(); tmp.list[["none"]] <- as.data.frame(rbind(mm,centr.tab[rev(idx),]))
+	radar.data[[i]] <- tmp.list
+	tmp.list <- list(); tmp.list[["none"]] <- rev(cols)
+	radar.cols[[i]] <- tmp.list
 	
 	# radar plots with attributes
 	for(att in ATTR_LIST)
@@ -208,7 +216,7 @@ for(i in 1:length(gs))
 			radarchart(
 				as.data.frame(rbind(mm,centr.tab[rev(idx),])),	# values to plot 
 				#maxmin=FALSE,									# prevents the lib from expecting the first row to contain certain parameters
-				title=g.names[i],								# main title
+				title=narr.names[g.names[i]],					# main title
 				#axistype=3, axislabcol="BLACK",				# display axis values
 				pty=32,											# don't plot points
 				pcol=rev(cols),									# line colors
@@ -219,6 +227,11 @@ for(i in 1:length(gs))
 			)
 			legend(x="bottomleft", legend=names(sel.cols), fill=sel.cols, inset=-0.10, xpd=TRUE, title=att)
 		dev.off()
+		# keep for later plot
+		tmp.list <- radar.data[[i]]; tmp.list[[att]] <- as.data.frame(rbind(mm,centr.tab[rev(idx),]))
+		radar.data[[i]] <- tmp.list
+		tmp.list <- radar.cols[[i]]; tmp.list[[att]] <- rev(cols)
+		radar.cols[[i]] <- tmp.list
 	}
 	
 	# perform clustering
@@ -238,6 +251,11 @@ for(i in 1:length(gs))
 		cat("........Average silhouette:",score,"\n")
 		sil.scores <- c(sil.scores, score) 
 		
+		# order clusters by increasing centrality, to improve plot readability
+		clust.avg <- sapply(1:k, function(kk) mean(centr.tab[clusters==kk,]))
+		perm <- rank(clust.avg)
+		clusters <- perm[clusters]
+		
 		# radar plots with main characters
 		selected.chars <- 1:5
 		sel.cols <- brewer_pal(type="qual", palette=2)(length(selected.chars))
@@ -245,14 +263,14 @@ for(i in 1:length(gs))
 		cols[selected.chars] <- sel.cols
 		plot.file <- file.path(local.folder,paste0("radar_k",k))
 		pdf(paste0(plot.file,".pdf"), bg="white", width=pps[k,2], height=pps[k,1])
-			parameter <- par(mfrow=pp[k,]) #set up the plotting space
+			parameter <- par(mfrow=pp[k,]) # set up the plotting space
 			for(j in 1:k)
 			{	ii <- which(clusters[idx]==j)
-				tt <- paste0("C",j,": ",length(ii)," (%",round(100*length(ii)/length(clusters)),")")
+				tt <- TeX(paste0("$C_",j,"$",": ",length(ii)," (%",round(100*length(ii)/length(clusters)),")"))
 				par(mar=c(0, 0, 1, 0)+0.2)	# margins Bottom Left Top Right
 				parameter <- radarchart(
 					as.data.frame(rbind(mm,centr.tab[rev(idx[ii]),])), 
-					pty=32, pcol=rev(cols[ii]), plty=1, plwd=2, cglty=3, 
+					pty=32, pcol=rev(cols[ii]), plty=1, plwd=1.5, cglty=3, 
 					cglwd=1, cglcol="BLACK", vlabels=anames, title=tt)
 			}
 		dev.off()
@@ -275,16 +293,16 @@ for(i in 1:length(gs))
 			anames <- short.names[colnames(centr.tab)]
 			plot.file <- file.path(local.folder,paste0("radar_k",k,"_att=",att))
 			pdf(paste0(plot.file,".pdf"), bg="white", width=pps[k,2], height=pps[k,1])
-				parameter <- par(mfrow=pp[k,]) #set up the plotting space
+				parameter <- par(mfrow=pp[k,]) # set up the plotting space
 				for(j in 1:k)
 				{	ii <- which(clusters[idx]==j)
 					tt <- table(vals[ii])
 					tab[j,names(tt)] <- tt
-					tt <- paste0("C",j,": ",length(ii)," (%",round(100*length(ii)/length(clusters)),")")
+					tt <- TeX(paste0("$C_",j,"$",": ",length(ii)," (%",round(100*length(ii)/length(clusters)),")"))
 					par(mar=c(0, 0, 1, 0)+0.2)	# margins Bottom Left Top Right
 					parameter <- radarchart(
 						as.data.frame(rbind(mm,centr.tab[rev(idx[ii]),])), 
-						pty=32, pcol=rev(cols[ii]), plty=1, plwd=2, cglty=3, 
+						pty=32, pcol=rev(cols[ii]), plty=1, plwd=1.5, cglty=3, 
 						cglwd=1, cglcol="BLACK", vlabels=anames, title=tt)
 				}
 			dev.off()
@@ -303,26 +321,53 @@ for(i in 1:length(gs))
 	write.csv(x=tab.scores, file=file.path(local.folder,"silhouette_scores.csv"), row.names=FALSE, fileEncoding="UTF-8")
 }
 
+# additional plot containing all three radar plots at once (for all narratives)
+for(att in c("none",ATTR_LIST))
+{	# set file name
+	plot.file <- file.path(out.folder,"radar_all")
+	if(att!="none")
+		plot.file <- paste0(plot.file,"_att=",att)
+	
+	# create file
+	pdf(paste0(plot.file,".pdf"), bg="white", width=pps[3,2], height=pps[3,1])
+	parameter <- par(mfrow=pp[3,]) # set up the plotting space
+	for(i in 1:length(narr.names))
+	{	par(mar=c(0, 0, 1, 0)+0.2)	# margins Bottom Left Top Right
+		parameter <- radarchart(
+				radar.data[[i]][[att]], 
+				pty=32, pcol=radar.cols[[i]][[att]], plty=1, plwd=1.5, cglty=3, 
+				cglwd=1, cglcol="BLACK", vlabels=short.names[colnames(centr.tab)], title=narr.names[g.names[i]])
+	}
+	dev.off()
+}
+
 
 
 
 ###############################################################################
 # plots used in the report
-if(STANDARDIZE && !COMMON_CHARS_ONLY && NARRATIVE_PART==2)
-{	for(i in 1:length(gs))
-	{	cat("Processing graph ",src.file,"\n")
-		
-		g <- gs[[i]]
-		local.folder <- file.path(out.folder, g.names[i])
-		#
-		src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
-		tgt.file <- file.path(out.folder,paste0("named_S",NARRATIVE_PART,"_corrmat_all_spearman_",g.names[i],".pdf"))
-		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-		cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
-		#
-		src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
-		tgt.file <- file.path(out.folder,paste0("named_S",NARRATIVE_PART,"_corrmat_top20_spearman_",g.names[i],".pdf"))
-		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-		cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
-	}
-}
+#if(STANDARDIZE && NARRATIVE_PART==2)
+#{	for(i in 1:length(gs))
+#	{	cat("Processing graph ",g.names[i],"\n")
+#		
+#		g <- gs[[i]]
+#		local.folder <- file.path(out.folder, g.names[i])
+#		
+#		if(COMMON_CHARS_ONLY)
+#			fchar <- "common"
+#		else
+#			fchar <- "named"
+#		
+#		# all characters
+#		src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
+#		tgt.file <- file.path(out.folder,paste0(fchar,"_S",NARRATIVE_PART,"_corrmat_all_spearman_",g.names[i],".pdf"))
+#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+#		cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
+#		
+#		# only top 20 characters
+#		src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
+#		tgt.file <- file.path(out.folder,paste0(fchar,"_S",NARRATIVE_PART,"_corrmat_top20_spearman_",g.names[i],".pdf"))
+#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+#		cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
+#	}
+#}
