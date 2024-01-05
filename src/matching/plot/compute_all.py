@@ -15,7 +15,7 @@ root_dir = f"{script_dir}/../../../out/matching/plot"
 configurations = {
     "tvshow-novels": {"media_bounds": [(1, 6, 1, 5), (1, 2, 1, 2)]},
     "tvshow-comics": {"media_bounds": [(1, 2, 1, 2)]},
-    "novels-comics": {"media_bounds": [(1, 2, 1, 2)]},
+    "comics-novels": {"media_bounds": [(1, 2, 1, 2)]},
 }
 
 for config_name, config_dict in configurations.items():
@@ -34,23 +34,16 @@ for config_name, config_dict in configurations.items():
             return f"python3 {python_file} -m1 {m1_start} -x1 {m1_end} -m2 {m2_start} -x2 {m2_end} {end}"
 
         for alignment in ("threshold", "smith-waterman"):
-
             for similarity in ("structural", "semantic", "combined"):
                 # PERFORMANCE TABLES
                 # ------------------
                 if similarity in ("semantic", "combined"):
-                    if config_name != "tvshow-novels":
-                        continue
-
-                    for sim_fn in ("sbert", "tfidf"):
-                        out_file = build_out_path(
-                            f"perf_{similarity}_{sim_fn}_{alignment}", "txt"
-                        )
-                        command = build_command(
-                            "compute_alignment_performance.py",
-                            f"--medias '{config_name}' -f plain -s {similarity} -sf {sim_fn} -a {alignment} > '{out_file}'",
-                        )
-                        print_exec(command)
+                    out_file = build_out_path(f"perf_{similarity}_{alignment}", "txt")
+                    command = build_command(
+                        "compute_alignment_performance.py",
+                        f"--medias '{config_name}' -f plain -s {similarity} -a {alignment} > '{out_file}'",
+                    )
+                    print_exec(command)
 
                 # structural
                 else:
@@ -63,37 +56,31 @@ for config_name, config_dict in configurations.items():
 
                 # PERFORMANCE THROUGH TIME
                 # ------------------------
-                if similarity in ("semantic", "combined"):
-                    if config_name != "tvshow-novels":
-                        continue
+                # if similarity in ("semantic", "combined"):
+                #     out_file = build_out_path(
+                #         f"perf_{similarity}_{alignment}_tt", "pdf"
+                #     )
+                #     command = build_command(
+                #         "plot_alignment_perf_through_time.py",
+                #         f"--medias '{config_name}' -s {similarity} -a {alignment} --output '{out_file}'",
+                #     )
+                #     print_exec(command)
 
-                    out_file = build_out_path(
-                        f"perf_{similarity}_{alignment}_tt", "pdf"
-                    )
-                    command = build_command(
-                        "plot_alignment_perf_through_time.py",
-                        f"--medias '{config_name}' -s {similarity} -a {alignment} --output '{out_file}'",
-                    )
-                    print_exec(command)
-
-                # structural
-                else:
-                    if similarity in ("tvshow-comics", "tvshow-novels"):
-                        out_file = build_out_path(
-                            f"perf_{similarity}_{alignment}_tt", "pdf"
-                        )
-                        command = build_command(
-                            "plot_alignment_perf_through_time.py",
-                            f"--medias '{config_name}' -s {similarity} -a {alignment} --output '{out_file}'",
-                        )
-                        print_exec(command)
+                # # structural
+                # else:
+                #     if similarity in ("tvshow-comics", "tvshow-novels"):
+                #         out_file = build_out_path(
+                #             f"perf_{similarity}_{alignment}_tt", "pdf"
+                #         )
+                #         command = build_command(
+                #             "plot_alignment_perf_through_time.py",
+                #             f"--medias '{config_name}' -s {similarity} -a {alignment} --output '{out_file}'",
+                #         )
+                #         print_exec(command)
 
                 # PREDICTED ALIGNMENT
                 # -------------------
                 if similarity in ("semantic", "combined"):
-                    if config_name != "tvshow-novels":
-                        continue
-
                     for sim_fn in ("sbert", "tfidf"):
                         out_file = build_out_path(
                             f"{similarity}_{sim_fn}_{alignment}", "pdf"

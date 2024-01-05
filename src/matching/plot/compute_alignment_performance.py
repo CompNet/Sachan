@@ -4,7 +4,7 @@
 #
 # Example usage:
 #
-# python compute_alignment_performance.py -m novels-comics -a structural -f plain
+# python compute_alignment_performance.py -m comics-novels -a structural -f plain
 #
 #
 # For more details, see:
@@ -19,21 +19,23 @@ import pandas as pd
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
-    find_best_alignment,
-    find_best_combined_alignment,
     load_medias_gold_alignment,
     load_medias_graphs,
     graph_similarity_matrix,
     get_episode_i,
     semantic_similarity,
-    load_novels_chapter_summaries,
-    load_tvshow_episode_summaries,
     threshold_align_blocks,
+    combined_similarities,
+    load_medias_summaries,
     MEDIAS_STRUCTURAL_THRESHOLD,
+    MEDIAS_SEMANTIC_THRESHOLD,
+    MEDIAS_COMBINED_THRESHOLD,
 )
 from matching.plot.smith_waterman import (
     smith_waterman_align_affine_gap,
     MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
+    MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS,
+    MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS,
 )
 
 
@@ -46,7 +48,7 @@ if __name__ == "__main__":
         "-m",
         "--medias",
         type=str,
-        help="Medias on which to compute alignment. Either 'novels-comics', 'tvshow-comics' or 'tvshow-novels'",
+        help="Medias on which to compute alignment. Either 'comics-novels', 'tvshow-comics' or 'tvshow-novels'",
     )
     parser.add_argument(
         "-f",
@@ -61,13 +63,6 @@ if __name__ == "__main__":
         type=str,
         default="structural",
         help="one of 'structural', 'semantic' or 'combined'",
-    )
-    parser.add_argument(
-        "-sf",
-        "--similarity_function",
-        type=str,
-        default="tfidf",
-        help="One of 'tfidf', 'sbert'.",
     )
     parser.add_argument(
         "-a",
@@ -179,33 +174,40 @@ if __name__ == "__main__":
             print(performance_df)
 
     elif args.similarity == "semantic":
-        assert args.medias == "tvshow-novels"
         assert not args.blocks
 
-        episode_summaries = load_tvshow_episode_summaries(
-            args.min_delimiter_first_media, args.max_delimiter_first_media
-        )
-        chapter_summaries = load_novels_chapter_summaries(
-            args.min_delimiter_second_media, args.max_delimiter_second_media
+        first_summaries, second_summaries = load_medias_summaries(
+            args.medias,
+            args.min_delimiter_first_media,
+            args.max_delimiter_first_media,
+            args.min_delimiter_second_media,
+            args.max_delimiter_second_media,
         )
 
         sim_fns: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
         f1s = []
         for similarity_function in sim_fns:
             S = semantic_similarity(
-                episode_summaries, chapter_summaries, similarity_function
+                first_summaries, second_summaries, similarity_function
             )
             if args.alignment == "threshold":
-                _, f1, _ = find_best_alignment(G, S)
+                M = S > MEDIAS_SEMANTIC_THRESHOLD[args.medias][similarity_function]
             elif args.alignment == "smith-waterman":
-                raise NotImplementedError
+                M, *_ = smith_waterman_align_affine_gap(
+                    S,
+                    **MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS[args.medias][
+                        similarity_function
+                    ],
+                )
             else:
                 raise ValueError(f"unknown alignment method: {args.alignment}")
 
+            f1 = precision_recall_fscore_support(
+                G.flatten(), M.flatten(), average="binary", zero_division=0.0
+            )[2]
             f1s.append(f1)
 
         performance_df = pd.DataFrame(f1s, columns=["F1"], index=sim_fns)
-
         if args.format == "latex":
             LaTeX_export = (
                 performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
@@ -217,52 +219,65 @@ if __name__ == "__main__":
             print(performance_df)
 
     elif args.similarity == "combined":
-        assert args.medias == "tvshow-novels"
         assert not args.blocks
 
-        tvshow_graphs, novels_graphs = load_medias_graphs(
-            "tvshow-novels",
+        # Load summaries
+        # --------------
+        first_summaries, second_summaries = load_medias_summaries(
+            args.medias,
             args.min_delimiter_first_media,
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
-            "locations" if args.blocks else None,
         )
 
-        episode_summaries = load_tvshow_episode_summaries(
-            args.min_delimiter_first_media, args.max_delimiter_first_media
-        )
-        chapter_summaries = load_novels_chapter_summaries(
-            args.min_delimiter_second_media, args.max_delimiter_second_media
-        )
-
-        S_semantic = semantic_similarity(
-            episode_summaries, chapter_summaries, args.similarity_function
+        # Load networks
+        # -------------
+        tvshow_graphs, novels_graphs = load_medias_graphs(
+            args.medias,
+            args.min_delimiter_first_media,
+            args.max_delimiter_first_media,
+            args.min_delimiter_second_media,
+            args.max_delimiter_second_media,
         )
 
         S_structural = graph_similarity_matrix(
-            tvshow_graphs, novels_graphs, "edges", True, "common"
+            tvshow_graphs, novels_graphs, "edges", True
         )
 
-        # Combination
-        # -----------
-        if args.alignment == "threshold":
-            best_t, best_alpha, best_f1, _ = find_best_combined_alignment(
-                G, S_semantic, S_structural
-            )
-            print(f"{best_alpha=}")
-            print(f"{best_t=}")
-        elif args.alignment == "smith-waterman":
-            # TODO: penalty are hardcoded as a test.
-            best_M, *_ = smith_waterman_align_affine_gap(
-                S_semantic + S_structural, -0.5, -0.01, 0.1
-            )
-            best_f1 = precision_recall_fscore_support(
-                G.flatten(), best_M.flatten(), average="binary", zero_division=0.0
+        sim_fns: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
+        f1s = []
+
+        for sim_fn in sim_fns:
+            S_semantic = semantic_similarity(first_summaries, second_summaries, sim_fn)
+            S_combined = combined_similarities(S_structural, S_semantic)
+
+            if args.alignment == "threshold":
+                threshold = MEDIAS_COMBINED_THRESHOLD[args.medias][sim_fn]
+                M = S_combined > threshold
+            elif args.alignment == "smith-waterman":
+                M, *_ = smith_waterman_align_affine_gap(
+                    S_semantic + S_structural,
+                    **MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS[args.medias][sim_fn],
+                )
+            else:
+                raise ValueError(f"unknown alignment method: {args.alignment}")
+
+            f1 = precision_recall_fscore_support(
+                G.flatten(), M.flatten(), average="binary", zero_division=0.0
             )[2]
+            f1s.append(f1)
+
+        performance_df = pd.DataFrame(f1s, columns=["F1"], index=sim_fns)
+        if args.format == "latex":
+            LaTeX_export = (
+                performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
+                .highlight_max(props="bfseries: ;", axis=None)
+                .to_latex(hrules=True)
+            )
+            print(LaTeX_export)
         else:
-            raise ValueError(f"unknown alignment method: {args.alignment}")
-        print(f"{best_f1=}", flush=True)
+            print(performance_df)
 
     else:
-        raise ValueError(f"unknown alignment method: {args.similarity}")
+        raise ValueError(f"unknown similarity: {args.similarity}")
