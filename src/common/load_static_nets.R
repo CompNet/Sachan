@@ -63,13 +63,6 @@ if(!is.na(file.cx))
 g.tv <- read.graph(file.tv, format="graphml")
 g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)				# keep only named characters
 E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)				# normalize weights
-# list of graphs
-{	if(!is.na(file.cx))
-		gs <- list("novels"=g.nv, "comics"=g.cx, "tvshow"=g.tv)
-	else
-		gs <- list("novels"=g.nv, "tvshow"=g.tv)
-	g.names <- names(gs)
-}
 
 
 
@@ -98,6 +91,18 @@ if(!is.na(file.cx))
 aff <- aff.map[V(g.tv)$name]
 aff[is.na(aff)] <- "Unknown"
 V(g.tv)$affiliation <- aff
+
+
+
+
+###############################################################################
+# list of graphs
+{	if(!is.na(file.cx))
+		gs <- list("novels"=g.nv, "comics"=g.cx, "tvshow"=g.tv)
+	else
+		gs <- list("novels"=g.nv, "tvshow"=g.tv)
+	g.names <- names(gs)
+}
 
 
 
