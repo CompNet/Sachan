@@ -331,7 +331,7 @@ for(att in c("none",ATTR_LIST))
 	# create file
 	pdf(paste0(plot.file,".pdf"), bg="white", width=pps[3,2], height=pps[3,1])
 	parameter <- par(mfrow=pp[3,]) # set up the plotting space
-	for(i in 1:length(narr.names))
+	for(i in 1:length(gs))
 	{	par(mar=c(0, 0, 1, 0)+0.2)	# margins Bottom Left Top Right
 		parameter <- radarchart(
 				radar.data[[i]][[att]], 
