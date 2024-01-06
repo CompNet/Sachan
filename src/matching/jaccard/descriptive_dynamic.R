@@ -23,7 +23,7 @@ source("src/common/stats.R")
 ###############################################################################
 # processing parameters
 COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
-CUMULATIVE <- FALSE			# use the instant or cumulative networks
+CUMULATIVE <- TRUE			# use the instant or cumulative networks
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters
 
@@ -304,20 +304,36 @@ for(i in 1:(length(gs)-1))
 		tab1 <- data.frame(rownames(best.matches1),dyn.matches1)
 		colnames(tab1) <- c("Character","Match")
 		write.csv(x=tab1, file=file.path(local.folder,paste0(file.pref,"series_",comp.name,"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
-		perf.all1 <- length(which(tab1[,1]==tab1[,2]))/nrow(tab1)
-		perf.top1 <- length(which(tab1[1:TOP_CHAR_NBR,1]==tab1[1:TOP_CHAR_NBR,2]))/TOP_CHAR_NBR
+		corr.all1 <- tab1[tab1[,1]==tab1[,2],1]
+		perf.all1 <- length(corr.all1)/nrow(tab1)
+		corr.top1 <- tab1[1:TOP_CHAR_NBR,1][tab1[1:TOP_CHAR_NBR,1]==tab1[1:TOP_CHAR_NBR,2]]
+		perf.top1 <- length(corr.top1)/TOP_CHAR_NBR
 		perf.tab <- c(perf.all1,perf.top1)
+		
 		# same, in the other direction (g2 vs g1)
 		best.matches2 <- best.matches2[apply(best.matches2,1,function(row) !all(is.na(row))),]
 		dyn.matches2 <- apply(best.matches2, 1, function(row) mode(row,na.rm=TRUE))
 		tab2 <- data.frame(rownames(best.matches2),dyn.matches2)
 		colnames(tab2) <- c("Character","Match")
 		write.csv(x=tab2, file=file.path(local.folder,paste0(file.pref,"series_",g.names[j],"_vs_",g.names[i],"_all.csv")), row.names=FALSE, fileEncoding="UTF-8")
-		perf.all2 <- length(which(tab2[,1]==tab2[,2]))/nrow(tab2)
-		perf.top2 <- length(which(tab2[1:TOP_CHAR_NBR,1]==tab2[1:TOP_CHAR_NBR,2]))/TOP_CHAR_NBR
+		corr.all2 <- tab2[tab2[,1]==tab2[,2],1]
+		perf.all2 <- length(corr.all2)/nrow(tab2)
+		corr.top2 <- tab2[1:TOP_CHAR_NBR,1][tab2[1:TOP_CHAR_NBR,1]==tab2[1:TOP_CHAR_NBR,2]]
+		perf.top2 <- length(corr.top2)/TOP_CHAR_NBR
 		perf.tab <- cbind(perf.tab, c(perf.all2,perf.top2))
+		
+		# overall performance (both directions at once)
+		corr.all <- intersect(corr.all1, corr.all2)
+		perf.all <- length(corr.all)/length(union(tab1[,1],tab2[,1]))
+		cat("  Number of characters considered (all):",length(union(tab1[,1],tab2[,1])),"\n")
+		corr.top <- intersect(corr.top1, corr.top2)
+		perf.top <- length(corr.top)/length(union(tab1[1:TOP_CHAR_NBR,1],tab2[1:TOP_CHAR_NBR,1]))
+		cat("  Number of characters considered (top-20):",length(union(tab1[1:TOP_CHAR_NBR,1],tab2[1:TOP_CHAR_NBR,1])),"\n")
+		perf.tab <- cbind(perf.tab, c(perf.all,perf.top))
+		
+		# finalize table
 		rownames(perf.tab) <- c("All","Top-20")
-		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]))
+		colnames(perf.tab) <- c(comp.name, paste0(g.names[j], "_vs_", g.names[i]), "overall")
 		# record perfs
 		write.csv(x=perf.tab, file=file.path(local.folder,paste0(file.pref,"series_perf.csv")), row.names=FALSE, fileEncoding="UTF-8")
 		cat("Performance when matching to the most similar character over the whole series:\n",sep="");print(perf.tab)

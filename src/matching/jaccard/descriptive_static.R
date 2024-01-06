@@ -16,9 +16,9 @@ library("plot.matrix")
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
+COMMON_CHARS_ONLY <- FALSE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 MEAS <- "jaccard"			# no alternative for now
-TOP_CHAR_NBR <- 20			# number of important characters
+TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 
 
 
@@ -212,7 +212,7 @@ for(i in 1:(length(gs)-1))
 			plot(sim.mat[idx[1:TOP_CHAR_NBR],idx[1:TOP_CHAR_NBR]], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.5)
 		dev.off()
 		
-		# compute some form of performance by considering the most similar alters vs. self
+		# compute some sort of performance by considering the most similar alters vs. self
 		sim.self <- diag(sim.mat)
 		tmp <- sim.mat; diag(tmp) <- 0
 		sim.alter1 <- apply(tmp, 1, max)
@@ -223,13 +223,15 @@ for(i in 1:(length(gs)-1))
 		acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
 		acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
 		acc <- length(which(sim.self>sim.alter))/length(sim.self)
+		cat("  Number of characters used to compute the perf:",length(sim.self),"\n")
 		perf.tab <- c(acc1,acc2,acc)
-		# only top characters
+		# focus only on most important characters
 		idx <- idx[1:TOP_CHAR_NBR]
 		acc1 <- length(which(sim.self[idx]>sim.alter2[idx]))/length(d1[idx]>0)
 		acc2 <- length(which(sim.self[idx]>sim.alter1[idx]))/length(d2[idx]>0)
 		acc <- length(which(sim.self[idx]>sim.alter[idx]))/length(sim.self[idx])
 		perf.tab <- rbind(perf.tab, c(acc1,acc2,acc))
+		cat("  Number of characters used to compute the top-20 perf:",length(idx),"\n")
 		rownames(perf.tab) <- c("All","Top-20")
 		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]),"overall")
 		write.csv(x=perf.tab, file=file.path(local.folder,"sim_perf.csv"), row.names=FALSE, fileEncoding="UTF-8")
