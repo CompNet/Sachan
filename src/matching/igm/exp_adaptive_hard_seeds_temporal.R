@@ -50,8 +50,9 @@ gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
 
-tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
-colnames(tab.exact.matches) <- methods
+
+tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
+colnames(tab.exact.matches) <- c(methods,"CharNbr")
 rownames(tab.exact.matches) <- rep(NA,nrow(tab.exact.matches))
 tab.evol.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1),ncol=length(methods))
 colnames(tab.evol.matches) <- methods
@@ -72,6 +73,7 @@ for(i in 1:(length(gs)-1))
 		rownames(tab.evol.matches)[2*r] <- comp.name.rev
 		
 		# loop over matching methods
+		all.chr.names <- c()
 		for(m in 1:length(methods))
 		{	method <- methods[m]
 			cat("......Applying method ",method,"\n",sep="")
@@ -90,10 +92,11 @@ for(i in 1:(length(gs)-1))
 				g2 <- gs[[j]][[k]]
 				
 				# focus on characters common to both networks
-				names <- intersect(V(g1)$name,V(g2)$name)
-				idx1 <- which(!(V(g1)$name %in% names))
+				chr.names <- intersect(V(g1)$name,V(g2)$name)
+				all.chr.names <- union(all.chr.names,chr.names)
+				idx1 <- which(!(V(g1)$name %in% chr.names))
 				g1 <- delete_vertices(g1,idx1)
-				idx2 <- which(!(V(g2)$name %in% names))
+				idx2 <- which(!(V(g2)$name %in% chr.names))
 				g2 <- delete_vertices(g2,idx2)
 				
 				# indentify top characters
@@ -273,6 +276,10 @@ for(i in 1:(length(gs)-1))
 			tab.evol.matches[2*r-1,method] <- perf.evol1
 			tab.evol.matches[2*r,method] <- perf.evol2
 		}
+		
+		# update perf table
+		tab.exact.matches[r,"CharNbr"] <- length(all.chr.names)
+		
 		r <- r + 1
 	}
 }

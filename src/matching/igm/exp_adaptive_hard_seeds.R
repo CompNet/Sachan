@@ -54,8 +54,8 @@ top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:TOP_CHAR_NBR]
 # adaptive hard seeding
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
 
-tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
-colnames(tab.exact.matches) <- methods
+tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
+colnames(tab.exact.matches) <- c(methods,"CharNbr")
 rownames(tab.exact.matches) <- rep(NA,nrow(tab.exact.matches))
 r <- 1
 sn <- c(0, 5, 10, 15, 20, 30, 40, 50, 60, 70, 80, 90, 100, 115, 130)	# numbers of seeds
@@ -78,6 +78,10 @@ for(i in 1:(length(gs)-1))
 		g1 <- delete_vertices(g1,idx1)
 		idx2 <- which(!(V(g2)$name %in% names))
 		g2 <- delete_vertices(g2,idx2)
+		
+		# update perf table
+		char.nbr <- length(union(V(g1)$name,V(g2)$name))
+		tab.exact.matches[r,"CharNbr"] <- char.nbr
 		
 		# build the vertex similarity matrix
 		sim.mat <- NULL
@@ -244,6 +248,9 @@ for(i in 1:(length(gs)-1))
 # record overall table
 print(tab.exact.matches)
 write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
+tab.exact.matches.prop <- t(apply(tab.exact.matches, 1, function(row) row[1:(length(row)-1)]/row[length(row)]))
+print(tab.exact.matches.prop)
+write.csv(x=tab.exact.matches.prop, file=file.path(out.folder,mode.folder,"exact_matches_comparison_prop.csv"), row.names=TRUE, fileEncoding="UTF-8")
 
 
 

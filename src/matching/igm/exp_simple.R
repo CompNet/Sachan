@@ -19,7 +19,7 @@ library("iGraphMatch")
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
 COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
-CENTER_GRAPHS <- FALSE		# whether to perform the centering preprocessing step
+CENTER_GRAPHS <- TRUE		# whether to perform the centering preprocessing step
 USE_SEEDS <- FALSE			# whether to use seeds to bootstrap the matching process
 USE_SEEDS_NBR <- 15			# number of seeds used (if any)
 ATTR <- "both"				# attribute used during matching: none sex affiliation both
@@ -73,8 +73,8 @@ char.seeds <- top.chars[1:USE_SEEDS_NBR]
 # start matching
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
 
-tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods))
-colnames(tab.exact.matches) <- methods
+tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
+colnames(tab.exact.matches) <- c(methods,"CharNbr")
 rownames(tab.exact.matches) <- rep(NA,nrow(tab.exact.matches))
 r <- 1
 
@@ -123,6 +123,10 @@ for(i in 1:(length(gs)-1))
 		seeds <- NULL
 		if(USE_SEEDS)
 			seeds <- cbind(match(char.seeds,V(g1)$name), match(char.seeds,V(g2)$name))
+		
+		# update perf table
+		char.nbr <- length(union(V(g1)$name,V(g2)$name))
+		tab.exact.matches[r,"CharNbr"] <- char.nbr
 		
 		# loop over matching methods
 		for(m in 1:length(methods))
@@ -255,3 +259,6 @@ for(i in 1:(length(gs)-1))
 # record overall table
 print(tab.exact.matches)
 write.csv(x=tab.exact.matches, file=file.path(out.folder,mode.folder,"exact_matches_comparison.csv"), row.names=TRUE, fileEncoding="UTF-8")
+tab.exact.matches.prop <- t(apply(tab.exact.matches, 1, function(row) row[1:(length(row)-1)]/row[length(row)]))
+print(tab.exact.matches.prop)
+write.csv(x=tab.exact.matches.prop, file=file.path(out.folder,mode.folder,"exact_matches_comparison_prop.csv"), row.names=TRUE, fileEncoding="UTF-8")
