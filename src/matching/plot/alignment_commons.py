@@ -1,10 +1,11 @@
 # Common functions for temporal matching
 #
 # Author: Arthur Amalvy
-import pickle
+from collections import defaultdict
 from typing import Optional, Literal, List, Tuple, cast
-import copy, os, sys, glob
+import copy, os, sys, glob, pickle
 import numpy as np
+import pandas as pd
 import networkx as nx
 from more_itertools import flatten
 from tqdm import tqdm
@@ -12,6 +13,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from nltk import sent_tokenize
+from graph_utils import cumulative_graph
 
 
 # the end of each novel, in number of chapters
@@ -20,12 +22,28 @@ NOVEL_LIMITS = [73, 143, 225, 271, 344]
 # the end of each season, in number of episodes
 TVSHOW_SEASON_LIMITS = [10, 20, 30, 40, 50, 60, 67, 73]
 
-#: tuned threshold found using :func:`tune_threshold` for each pair of
-#: medias using the two other pairs.
+# tuned structural threshold found using :func:`tune_threshold` for
+# each pair of medias using the two other pairs.
 MEDIAS_STRUCTURAL_THRESHOLD = {
-    "tvshow-novels": 0.05,
-    "novels-comics": 0.03,
-    "tvshow-comics": 0.08,
+    "tvshow-novels": 0.06,
+    "comics-novels": 0.03,
+    "tvshow-comics": 0.06,
+}
+
+# tuned semantic threshold found using :func:`tune_threshold` for each
+# pair of medias using the two other pairs.
+MEDIAS_SEMANTIC_THRESHOLD = {
+    "tvshow-comics": {"tfidf": 0.21, "sbert": 0.68},
+    "tvshow-novels": {"tfidf": 0.16, "sbert": 0.65},
+    "comics-novels": {"tfidf": 0.15, "sbert": 0.63},
+}
+
+# tuned combined threshold found using :func:`tune_threshold` for each
+# pair of medias using the two other pairs.
+MEDIAS_COMBINED_THRESHOLD = {
+    "tvshow-comics": {"tfidf": 0.23, "sbert": 0.39},
+    "tvshow-novels": {"tfidf": 0.23, "sbert": 0.39},
+    "comics-novels": {"tfidf": 0.26, "sbert": 0.4},
 }
 
 
@@ -90,8 +108,16 @@ def load_novels_graphs(min_novel: int = 1, max_novel: int = 5) -> List[nx.Graph]
     return novel_graphs
 
 
-def load_comics_graphs() -> List[nx.Graph]:
-    """Load graphs for each chapter of the comics."""
+def load_comics_graphs(
+    granularity: Literal["issue", "chapter"] = "issue"
+) -> List[nx.Graph]:
+    """Load graphs for each chapter of the comics.
+
+    :param granularity: either 'issue' (one graph per issue) or
+        'chapter' (one graph per book chapter)
+    """
+    assert granularity in ("issue", "chapter")
+
     comics_graphs = []
     for path in sorted(glob.glob(f"{root_dir}/in/comics/instant/chapter/*.graphml")):
         comics_graphs.append(nx.read_graphml(path))
@@ -101,19 +127,48 @@ def load_comics_graphs() -> List[nx.Graph]:
         for G in comics_graphs
     ]
 
-    return comics_graphs
+    if granularity == "chapter":
+        return comics_graphs
+
+    # granularity == "issue"
+    # comics_graphs has one graph per novel chapter. We must convert
+    # that to one graph per issue (an issue contains several chapters
+    # from the novel)
+    df = pd.read_csv(f"{root_dir}/in/plot_alignment/comics_mapping.csv")
+    chapter_to_issue = dict(zip(df["Rank"], df["Volume"]))  # example: {1: "AGOT01"}
+
+    # group graphs by issue
+    issue_graphs = defaultdict(list)
+    for graph in comics_graphs:
+        chapter_str = graph.graph["NarrUnit"]
+        chapter = int(chapter_str.split("_")[1])
+        issue = chapter_to_issue[chapter]
+        issue_graphs[issue].append(graph)
+
+    # join episode graphs for each issue
+    issue_graphs = {k: list(cumulative_graph(v))[-1] for k, v in issue_graphs.items()}
+
+    # sort issues correctly
+    sorted_keys = sorted([k for k in issue_graphs if k.startswith("AGOT")])
+    sorted_keys += sorted([k for k in issue_graphs if k.startswith("ACOK")])
+    issue_graphs = [issue_graphs[issue] for issue in sorted_keys]
+
+    # sanity check
+    assert len(issue_graphs) == 56
+
+    return issue_graphs
 
 
 def load_medias_gold_alignment(
-    medias: Literal["novels-comics", "tvshow-comics", "tvshow-novels"],
+    medias: Literal["comics-novels", "tvshow-comics", "tvshow-novels"],
     min_delimiter_first_media: Optional[int] = None,
     max_delimiter_first_media: Optional[int] = None,
     min_delimiter_second_media: Optional[int] = None,
     max_delimiter_second_media: Optional[int] = None,
 ) -> np.ndarray:
     MEDIAS_TO_PATH = {
-        "novels-comics": f"{root_dir}/in/plot_alignment/novels_comics_gold_alignment.pickle",
-        "tvshow-comics": f"{root_dir}/in/plot_alignment/tvshow_comics_gold_alignment.pickle",
+        "comics-novels": f"{root_dir}/in/plot_alignment/comics_novels_i2c_gold_alignment.pickle",
+        "tvshow-comics": f"{root_dir}/in/plot_alignment/tvshow_comics_i2e_gold_alignment.pickle",
         "tvshow-novels": f"{root_dir}/in/plot_alignment/tvshow_novels_gold_alignment.pickle",
     }
     matrix_path = MEDIAS_TO_PATH.get(medias)
@@ -153,41 +208,41 @@ def load_medias_gold_alignment(
 
 
 def load_medias_graphs(
-    medias: Literal["novels-comics", "tvshow-comics", "tvshow-novels"],
+    medias: Literal["comics-novels", "tvshow-comics", "tvshow-novels"],
     min_delimiter_first_media: Optional[int] = None,
     max_delimiter_first_media: Optional[int] = None,
     min_delimiter_second_media: Optional[int] = None,
     max_delimiter_second_media: Optional[int] = None,
     tvshow_blocks: Optional[Literal["locations", "similarity"]] = None,
-) -> Tuple[nx.Graph, nx.Graph]:
+) -> Tuple[List[nx.Graph], List[nx.Graph]]:
     """Load the instant graphs for two medias to compare them.
 
     :return: (graph for first media, graph for second media)
     """
-    splitted = medias.split("-")
+    first_media, second_media = medias.split("-")
 
     def load_graphs(
         media: str, min_delimiter: Optional[int], max_delimiter: Optional[int]
     ) -> List[nx.Graph]:
         if media == "novels":
-            min_delimiter = min_delimiter or 1
-            max_delimiter = max_delimiter or 5
-            return load_novels_graphs(min_novel=min_delimiter, max_novel=max_delimiter)
+            return load_novels_graphs(
+                min_novel=min_delimiter or 1, max_novel=max_delimiter or 5
+            )
         elif media == "comics":
             return load_comics_graphs()
         elif media == "tvshow":
-            min_delimiter = min_delimiter or 1
-            max_delimiter = max_delimiter or 6
             return load_tvshow_graphs(
-                min_season=min_delimiter, max_season=max_delimiter, blocks=tvshow_blocks
+                min_season=min_delimiter or 1,
+                max_season=max_delimiter or 6,
+                blocks=tvshow_blocks,
             )
         else:
             raise ValueError(f"wrong medias specification: {medias}")
 
     return (
-        load_graphs(splitted[0], min_delimiter_first_media, max_delimiter_first_media),
+        load_graphs(first_media, min_delimiter_first_media, max_delimiter_first_media),
         load_graphs(
-            splitted[1], min_delimiter_second_media, max_delimiter_second_media
+            second_media, min_delimiter_second_media, max_delimiter_second_media
         ),
     )
 
@@ -208,6 +263,50 @@ def load_novels_chapter_summaries(min_novel: int = 1, max_novel: int = 5) -> Lis
     ch_start = ([0] + NOVEL_LIMITS)[max(0, min_novel - 1)]
     ch_end = NOVEL_LIMITS[max_novel - 1]
     return chapter_summaries[ch_start:ch_end]
+
+
+def load_comics_issue_summaries() -> List[str]:
+    with open(f"{root_dir}/in/plot_alignment/comics_issue_summaries.txt") as f:
+        comics_summaries = f.read().split("\n\n")
+        comics_summaries = [
+            s if not s == "NO SUMMARY" else "" for s in comics_summaries
+        ]
+    return comics_summaries
+
+
+def load_medias_summaries(
+    medias: Literal["comics-novels", "tvshow-comics", "tvshow-novels"],
+    min_delimiter_first_media: Optional[int] = None,
+    max_delimiter_first_media: Optional[int] = None,
+    min_delimiter_second_media: Optional[int] = None,
+    max_delimiter_second_media: Optional[int] = None,
+) -> Tuple[List[str], List[str]]:
+    first_media, second_media = medias.split("-")
+
+    def load_summaries(
+        media: str, min_delimiter: Optional[int], max_delimiter: Optional[int]
+    ) -> List[str]:
+        if media == "novels":
+            return load_novels_chapter_summaries(
+                min_novel=min_delimiter or 1, max_novel=max_delimiter or 5
+            )
+        elif media == "comics":
+            return load_comics_issue_summaries()
+        elif media == "tvshow":
+            return load_tvshow_episode_summaries(
+                min_season=min_delimiter or 1, max_season=max_delimiter or 6
+            )
+        else:
+            raise ValueError(f"wrong medias specification: {medias}")
+
+    return (
+        load_summaries(
+            first_media, min_delimiter_first_media, max_delimiter_first_media
+        ),
+        load_summaries(
+            second_media, min_delimiter_second_media, max_delimiter_second_media
+        ),
+    )
 
 
 def filtered_graph(G: nx.Graph, nodes: list) -> nx.Graph:
@@ -330,31 +429,31 @@ def graph_similarity_matrix(
 
 
 def semantic_similarity(
-    episode_summaries: List[str],
-    chapter_summaries: List[str],
+    first_summaries: List[str],
+    second_summaries: List[str],
     sim_fn: Literal["tfidf", "sbert"],
 ) -> np.ndarray:
-    """Compute a semantic similarity matrix between episode and chapter summaries
+    """Compute a semantic similarity matrix between summaries
 
-    :return: a numpy array of shape (episodes_nb, chapters_nb)
+    :return: a numpy array of shape (len(first_summaries), len(second_summaries))
     """
-    episodes_nb = len(episode_summaries)
-    chapters_nb = len(chapter_summaries)
-
-    S = np.zeros((episodes_nb, chapters_nb))
+    S = np.zeros((len(first_summaries), len(second_summaries)))
 
     if sim_fn == "tfidf":
         vectorizer = TfidfVectorizer()
-        v = vectorizer.fit(chapter_summaries + episode_summaries)
+        _ = vectorizer.fit(second_summaries + first_summaries)
 
-        chapters_v = vectorizer.transform(chapter_summaries)
+        second_v = vectorizer.transform(second_summaries)
 
-        for i, e_summary in enumerate(tqdm(episode_summaries)):
-            sents = sent_tokenize(e_summary)
-            e_summary_v = vectorizer.transform(sents)
-            chapter_sims = np.max(cosine_similarity(e_summary_v, chapters_v), axis=0)
-            assert chapter_sims.shape == (chapters_nb,)
-            S[i] = chapter_sims
+        for i, first_summary in enumerate(tqdm(first_summaries)):
+            sents = sent_tokenize(first_summary)
+            if len(sents) == 0:  # in case of an empty summary
+                S[i] = np.zeros((len(second_summaries),))
+                continue
+            first_v = vectorizer.transform(sents)
+            second_sims = np.max(cosine_similarity(first_v, second_v), axis=0)
+            assert second_sims.shape == (len(second_summaries),)
+            S[i] = second_sims
 
     elif sim_fn == "sbert":
         from sentence_transformers import SentenceTransformer
@@ -362,18 +461,19 @@ def semantic_similarity(
         print("Loading SentenceBERT model...", file=sys.stderr)
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 
-        print("Embedding chapter summaries...", file=sys.stderr)
-        chapters_v = stransformer.encode(chapter_summaries)
+        print("Embedding second summaries...", file=sys.stderr)
+        second_v = stransformer.encode(second_summaries)
 
-        print(
-            "Embedding episode summaries and computing similarity...", file=sys.stderr
-        )
-        for i, e_summary in enumerate(tqdm(episode_summaries)):
-            sents = sent_tokenize(e_summary)
-            e_summary_v = stransformer.encode(sents)
-            chapters_sims = np.max(cosine_similarity(e_summary_v, chapters_v), axis=0)
-            assert chapters_sims.shape == (chapters_nb,)
-            S[i] = chapters_sims
+        print("Embedding first summaries and computing similarity...", file=sys.stderr)
+        for i, first_summary in enumerate(tqdm(first_summaries)):
+            sents = sent_tokenize(first_summary)
+            if len(sents) == 0:  # in case of an empty summary
+                S[i] = np.zeros((len(second_summaries),))
+                continue
+            first_v = stransformer.encode(sents)
+            second_sims = np.max(cosine_similarity(first_v, second_v), axis=0)
+            assert second_sims.shape == (len(second_summaries),)
+            S[i] = second_sims
 
     else:
         raise ValueError(
@@ -381,6 +481,18 @@ def semantic_similarity(
         )
 
     return S
+
+
+def combined_similarities(
+    S_structural: np.ndarray, S_semantic: np.ndarray
+) -> np.ndarray:
+    S_semantic = (S_semantic - np.min(S_semantic)) / (
+        np.max(S_semantic) - np.min(S_semantic)
+    )
+    S_structural = (S_structural - np.min(S_structural)) / (
+        np.max(S_structural) - np.min(S_structural)
+    )
+    return 0.5 * S_semantic + 0.5 * S_structural
 
 
 def find_best_alignment(
@@ -535,18 +647,19 @@ def tune_threshold(
 
 
 def tune_threshold_other_medias(
-    media_pair: Literal["tvshow-novels", "novels-comics", "tvshow-comics"],
-    sim_mode: Literal["structural", "semantic"],
+    media_pair: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    sim_mode: Literal["structural", "semantic", "combined"],
     threshold_search_space: np.ndarray,
+    semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
 ) -> float:
-    all_media_pairs = {"tvshow-novels", "novels-comics", "tvshow-comics"}
+    all_media_pairs = {"tvshow-novels", "comics-novels", "tvshow-comics"}
     other_media_pairs = all_media_pairs - {media_pair}
 
     X_tune = []
     G_tune = []
 
     for pair in other_media_pairs:
-        pair = cast(Literal["tvshow-novels", "novels-comics", "tvshow-comics"], pair)
+        pair = cast(Literal["tvshow-novels", "comics-novels", "tvshow-comics"], pair)
 
         G = load_medias_gold_alignment(pair)
 
@@ -556,7 +669,18 @@ def tune_threshold_other_medias(
                 first_media_graphs, second_media_graphs, "edges", True, "common+named"
             )
         elif sim_mode == "semantic":
-            raise NotImplementedError
+            first_summaries, second_summaries = load_medias_summaries(pair)
+            X = semantic_similarity(first_summaries, second_summaries, semantic_sim_fn)
+        elif sim_mode == "combined":
+            first_media_graphs, second_media_graphs = load_medias_graphs(pair)
+            S_structural = graph_similarity_matrix(
+                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+            )
+            first_summaries, second_summaries = load_medias_summaries(pair)
+            S_semantic = semantic_similarity(
+                first_summaries, second_summaries, semantic_sim_fn
+            )
+            X = combined_similarities(S_structural, S_semantic)
         else:
             raise ValueError(f"unknown sim_mode: {sim_mode}")
 

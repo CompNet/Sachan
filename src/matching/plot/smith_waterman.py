@@ -5,16 +5,57 @@ import numpy as np
 from alignment_commons import (
     load_medias_gold_alignment,
     load_medias_graphs,
+    load_medias_summaries,
     graph_similarity_matrix,
+    semantic_similarity,
+    combined_similarities,
 )
 
 
-#: tuned parameters found using :func:`tune_smith_waterman_params` for
-#: each pair of medias using the two other pairs.
+# tuned structural parameters found using
+# :func:`tune_smith_waterman_params` for each pair of medias using the
+# two other pairs.
 MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS = {
-    "tvshow-novels": {"gap_start_penalty": 0.02, "gap_cont_penalty": 0.01, "neg_th": 0},
-    "tvshow-comics": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.01, "neg_th": 0},
-    "novels-comics": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0},
+    "tvshow-novels": {"gap_start_penalty": 0.06, "gap_cont_penalty": 0.0, "neg_th": 0},
+    "tvshow-comics": {"gap_start_penalty": 0.12, "gap_cont_penalty": 0.0, "neg_th": 0},
+    "comics-novels": {"gap_start_penalty": 0.02, "gap_cont_penalty": 0.0, "neg_th": 0},
+}
+
+# tuned semantic parameters found using
+# :func:`tune_smith_waterman_params` for each pair of medias using the
+# two other pairs.
+MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS = {
+    "tvshow-comics": {
+        "tfidf": {"gap_start_penalty": 0.08, "gap_cont_penalty": 0.01, "neg_th": 0.0},
+        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.06, "neg_th": 0.0},
+    },
+    "tvshow-novels": {
+        "tfidf": {"gap_start_penalty": 0.01, "gap_cont_penalty": 0.03, "neg_th": 0.0},
+        "sbert": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.06, "neg_th": 0.0},
+    },
+    "comics-novels": {
+        "tfidf": {"gap_start_penalty": 0.08, "gap_cont_penalty": 0.01, "neg_th": 0.0},
+        "sbert": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.0, "neg_th": 0.0},
+    },
+}
+
+
+# tuned combined parameters found using
+# :func:`tune_smith_waterman_params` for each pair of medias using the
+# two other pairs.
+MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS = {
+    "tvshow-comics": {
+        "tfidf": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0.0},
+        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0.0},
+    },
+    "tvshow-novels": {
+        "tfidf": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.02, "neg_th": 0.0},
+        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.0, "neg_th": 0.0},
+    },
+    "comics-novels": {
+        "tfidf": {"gap_start_penalty": 0.01, "gap_cont_penalty": 0.01, "neg_th": 0.0},
+        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.0, "neg_th": 0.0},
+    },
 }
 
 
@@ -238,11 +279,12 @@ def tune_smith_waterman_params(
 
 
 def tune_smith_waterman_params_other_medias(
-    media_pair: Literal["tvshow-novels", "novels-comics", "tvshow-comics"],
-    sim_mode: Literal["structural", "semantic"],
+    media_pair: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    sim_mode: Literal["structural", "semantic", "combined"],
     gap_start_penalty_search_space: np.ndarray,
     gap_cont_penalty_search_space: np.ndarray,
     neg_th_search_space: np.ndarray,
+    semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
 ) -> Tuple[float, float, float]:
     """
     Utility function, providing an higher level interface to
@@ -259,17 +301,19 @@ def tune_smith_waterman_params_other_medias(
         :func:`tune_smith_waterman_params`
     :param neg_th_search_space: as in
         :func:`tune_smith_waterman_params`
+    :param semantic_sim_fn: if ``sim_mode == 'semantic'``, specifiy
+        the similarity function (either ``'tfidf'`` or ``'sbert'``)
 
-    :return: ``(gap_start_penalty, gat_cont_penalty, neg_th)``
+    :return: ``(gap_start_penalty, gap_cont_penalty, neg_th)``
     """
-    all_media_pairs = {"tvshow-novels", "novels-comics", "tvshow-comics"}
+    all_media_pairs = {"tvshow-novels", "comics-novels", "tvshow-comics"}
     other_media_pairs = all_media_pairs - {media_pair}
 
     X_tune = []
     G_tune = []
 
     for pair in other_media_pairs:
-        pair = cast(Literal["tvshow-novels", "novels-comics", "tvshow-comics"], pair)
+        pair = cast(Literal["tvshow-novels", "comics-novels", "tvshow-comics"], pair)
 
         G = load_medias_gold_alignment(pair)
 
@@ -279,7 +323,18 @@ def tune_smith_waterman_params_other_medias(
                 first_media_graphs, second_media_graphs, "edges", True, "common+named"
             )
         elif sim_mode == "semantic":
-            raise NotImplementedError
+            first_summaries, second_summaries = load_medias_summaries(pair)
+            X = semantic_similarity(first_summaries, second_summaries, semantic_sim_fn)
+        elif sim_mode == "combined":
+            first_media_graphs, second_media_graphs = load_medias_graphs(pair)
+            S_structural = graph_similarity_matrix(
+                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+            )
+            first_summaries, second_summaries = load_medias_summaries(pair)
+            S_semantic = semantic_similarity(
+                first_summaries, second_summaries, semantic_sim_fn
+            )
+            X = combined_similarities(S_structural, S_semantic)
         else:
             raise ValueError(f"unknown sim_mode: {sim_mode}")
 
