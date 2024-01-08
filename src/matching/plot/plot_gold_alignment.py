@@ -45,9 +45,8 @@ if __name__ == "__main__":
     )
 
     plt.style.use("science")
-    fig, ax = plt.subplots()
-    fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
-    ax.imshow(G, interpolation="none")
+    fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
+    ax.imshow(G, interpolation="none", aspect="auto")
 
     if args.medias == "comics-novels":
         ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
@@ -59,7 +58,6 @@ if __name__ == "__main__":
         ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
         ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
-    plt.tight_layout()
     if args.output:
         plt.savefig(args.output, bbox_inches="tight")
     else:
