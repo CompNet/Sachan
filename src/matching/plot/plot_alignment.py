@@ -134,10 +134,9 @@ if __name__ == "__main__":
         # Plot
         # ----
         plt.style.use("science")
-        fig, ax = plt.subplots()
-        fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
+        fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
         ax.set_title(f"F1 = {f1:.2f}", fontsize=FONTSIZE)
-        ax.imshow(M, interpolation="none")
+        ax.imshow(M, interpolation="none", aspect="auto")
         first_media, second_media = args.medias.split("-")
         ax.set_xlabel(second_media, fontsize=FONTSIZE)
         ax.set_ylabel(first_media, fontsize=FONTSIZE)
@@ -185,10 +184,9 @@ if __name__ == "__main__":
         # Plot
         # ----
         plt.style.use("science")
-        fig, ax = plt.subplots()
-        fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
+        fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
         ax.set_title(f"F1 = {f1:.2f}", fontsize=FONTSIZE)
-        ax.imshow(M, interpolation="none")
+        ax.imshow(M, interpolation="none", aspect="auto")
         first_media, second_media = args.medias.split("-")
         ax.set_xlabel(second_media, fontsize=FONTSIZE)
         ax.set_ylabel(first_media, fontsize=FONTSIZE)
@@ -255,10 +253,9 @@ if __name__ == "__main__":
         # Plot
         # ----
         plt.style.use("science")
-        fig, ax = plt.subplots()
-        fig.set_size_inches(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.6)
+        fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
         ax.set_title(f"F1 = {f1:.2f}", fontsize=FONTSIZE)
-        ax.imshow(M, interpolation="none")
+        ax.imshow(M, interpolation="none", aspect="auto")
         ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
         ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
 

@@ -349,3 +349,20 @@ def tune_smith_waterman_params_other_medias(
         gap_cont_penalty_search_space,
         neg_th_search_space,
     )
+
+
+def smith_waterman_align_blocks(
+    S: np.ndarray, block_to_episode: np.ndarray, **sw_kwargs
+) -> np.ndarray:
+    M_align_blocks, *_ = smith_waterman_align_affine_gap(S, **sw_kwargs)
+
+    _, uniq_start_i = np.unique(block_to_episode, return_index=True)
+    splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
+
+    M = []
+    for split in splits:
+        M.append(np.any(split, axis=0))
+
+    M = np.stack(M)
+
+    return M
