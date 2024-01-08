@@ -437,23 +437,14 @@ def semantic_similarity(
 
     :return: a numpy array of shape (len(first_summaries), len(second_summaries))
     """
-    S = np.zeros((len(first_summaries), len(second_summaries)))
-
     if sim_fn == "tfidf":
         vectorizer = TfidfVectorizer()
-        _ = vectorizer.fit(second_summaries + first_summaries)
+        _ = vectorizer.fit(first_summaries + second_summaries)
 
+        first_v = vectorizer.transform(first_summaries)
         second_v = vectorizer.transform(second_summaries)
 
-        for i, first_summary in enumerate(tqdm(first_summaries)):
-            sents = sent_tokenize(first_summary)
-            if len(sents) == 0:  # in case of an empty summary
-                S[i] = np.zeros((len(second_summaries),))
-                continue
-            first_v = vectorizer.transform(sents)
-            second_sims = np.max(cosine_similarity(first_v, second_v), axis=0)
-            assert second_sims.shape == (len(second_summaries),)
-            S[i] = second_sims
+        S = cosine_similarity(first_v, second_v)
 
     elif sim_fn == "sbert":
         from sentence_transformers import SentenceTransformer
@@ -461,19 +452,13 @@ def semantic_similarity(
         print("Loading SentenceBERT model...", file=sys.stderr)
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 
+        print("Embedding first summaries...", file=sys.stderr)
+        first_v = stransformer.encode(first_summaries)
+
         print("Embedding second summaries...", file=sys.stderr)
         second_v = stransformer.encode(second_summaries)
 
-        print("Embedding first summaries and computing similarity...", file=sys.stderr)
-        for i, first_summary in enumerate(tqdm(first_summaries)):
-            sents = sent_tokenize(first_summary)
-            if len(sents) == 0:  # in case of an empty summary
-                S[i] = np.zeros((len(second_summaries),))
-                continue
-            first_v = stransformer.encode(sents)
-            second_sims = np.max(cosine_similarity(first_v, second_v), axis=0)
-            assert second_sims.shape == (len(second_summaries),)
-            S[i] = second_sims
+        S = cosine_similarity(first_v, second_v)
 
     else:
         raise ValueError(
