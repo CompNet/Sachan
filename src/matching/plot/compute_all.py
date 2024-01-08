@@ -100,6 +100,16 @@ for config_name, config_dict in configurations.items():
                     )
                     print_exec(command)
 
+        # BLOCKS (TABLES ONLY)
+        # --------------------
+        if config_name == "tvshow-novels":
+            out_file = build_out_path(f"perf_structural_{alignment}_blocks", "txt")
+            command = build_command(
+                "compute_alignment_performance.py",
+                f"--blocks --medias '{config_name}' -s structural -a {alignment} -f latex > '{out_file}'",
+            )
+            print_exec(command)
+
         # GOLD ALIGNMENT PLOTS
         # --------------------
         out_file = build_out_path("gold", "pdf")
@@ -107,13 +117,3 @@ for config_name, config_dict in configurations.items():
             "plot_gold_alignment.py", f"--medias '{config_name}' --output '{out_file}'"
         )
         print_exec(command)
-
-        # BLOCKS (TABLES ONLY)
-        # --------------------
-        if config_name in ("tvshow-novels", "tvshow-comics"):
-            out_file = build_out_path(f"perf_structural_blocks", "txt")
-            command = build_command(
-                "compute_alignment_performance.py",
-                f"--blocks --medias '{config_name}' -s structural -f plain > '{out_file}'",
-            )
-            print_exec(command)

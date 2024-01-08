@@ -33,6 +33,7 @@ from alignment_commons import (
 )
 from matching.plot.smith_waterman import (
     smith_waterman_align_affine_gap,
+    smith_waterman_align_blocks,
     MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
     MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS,
     MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS,
@@ -130,11 +131,20 @@ if __name__ == "__main__":
 
                     elif args.alignment == "smith-waterman":
                         if args.blocks:
-                            raise RuntimeError("unimplemented")
-
-                        M, *_ = smith_waterman_align_affine_gap(
-                            S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
-                        )
+                            assert args.medias.startswith("tvshow")
+                            block_to_episode = np.array(
+                                [get_episode_i(G) for G in first_media_graphs]
+                            )
+                            M = smith_waterman_align_blocks(
+                                S,
+                                block_to_episode,
+                                **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias],
+                            )
+                        else:
+                            M, *_ = smith_waterman_align_affine_gap(
+                                S,
+                                **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias],
+                            )
 
                     else:
                         raise ValueError(f"unknown alignment method: {args.alignment}")
