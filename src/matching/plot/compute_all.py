@@ -38,19 +38,19 @@ for config_name, config_dict in configurations.items():
                 # PERFORMANCE TABLES
                 # ------------------
                 if similarity in ("semantic", "combined"):
-                    out_file = build_out_path(f"perf_{similarity}_{alignment}", "txt")
+                    out_file = build_out_path(f"perf_{similarity}_{alignment}", "tex")
                     command = build_command(
                         "compute_alignment_performance.py",
-                        f"--medias '{config_name}' -f plain -s {similarity} -a {alignment} > '{out_file}'",
+                        f"--medias '{config_name}' -f latex -s {similarity} -a {alignment} > '{out_file}'",
                     )
                     print_exec(command)
 
                 # structural
                 else:
-                    out_file = build_out_path(f"perf_{similarity}_{alignment}", "txt")
+                    out_file = build_out_path(f"perf_{similarity}_{alignment}", "tex")
                     command = build_command(
                         "compute_alignment_performance.py",
-                        f"--medias '{config_name}' -s {similarity} -a {alignment} -f plain > '{out_file}'",
+                        f"--medias '{config_name}' -s {similarity} -a {alignment} -f latex > '{out_file}'",
                     )
                     print_exec(command)
 
