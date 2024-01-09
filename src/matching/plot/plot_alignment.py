@@ -12,7 +12,7 @@
 #
 #
 # Author: Arthur Amalvy
-import argparse
+import argparse, json
 import matplotlib.pyplot as plt
 import scienceplots
 import numpy as np
@@ -64,6 +64,13 @@ if __name__ == "__main__":
         help="One of 'tfidf', 'sbert'.",
     )
     parser.add_argument(
+        "-sk",
+        "--structural_kwargs",
+        type=str,
+        default='{"mode": "edges", "use_weights": true, "character_filtering": "common+named"}',
+        help="JSON formatted kwargs for structural alignment",
+    )
+    parser.add_argument(
         "-a",
         "--alignment",
         type=str,
@@ -100,8 +107,9 @@ if __name__ == "__main__":
 
         # Compute similarity
         # ------------------
+        structural_kwargs = json.load(args.structural_kwargs)
         S = graph_similarity_matrix(
-            first_media_graphs, second_media_graphs, "edges", True, "common+named"
+            first_media_graphs, second_media_graphs, **structural_kwargs
         )
 
         if args.alignment == "threshold":
