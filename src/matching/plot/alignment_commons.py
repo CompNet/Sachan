@@ -357,6 +357,7 @@ def graph_similarity_matrix(
     mode: Literal["nodes", "edges"],
     use_weights: bool,
     character_filtering: Literal["none", "common", "named", "common+named"] = "common",
+    silent: bool = False,
 ) -> np.ndarray:
     """Compute a similarity matrixs between two lists of graph, using
     a tweaked Jaccard index.
@@ -371,6 +372,8 @@ def graph_similarity_matrix(
             - Each character, if ``mode == "nodes"``
 
             - Interactions between characters, if ``mode == "edges"``
+
+    :param silent: if False, displays a progress bar
 
     :return: a similarity matrix of shape ``(n, m)``
     """
@@ -414,7 +417,7 @@ def graph_similarity_matrix(
     # Compute n^2 similarity
     M = np.zeros((len(G_lst), len(H_lst)))
 
-    for G_i, G in enumerate(tqdm(G_lst)):
+    for G_i, G in enumerate(tqdm(G_lst, disable=silent)):
         for H_i, H in enumerate(H_lst):
             weights = None
             if use_weights:
@@ -432,6 +435,7 @@ def semantic_similarity(
     first_summaries: List[str],
     second_summaries: List[str],
     sim_fn: Literal["tfidf", "sbert"],
+    silent: bool = False,
 ) -> np.ndarray:
     """Compute a semantic similarity matrix between summaries
 
@@ -449,13 +453,16 @@ def semantic_similarity(
     elif sim_fn == "sbert":
         from sentence_transformers import SentenceTransformer
 
-        print("Loading SentenceBERT model...", file=sys.stderr)
+        if not silent:
+            print("Loading SentenceBERT model...", file=sys.stderr)
         stransformer = SentenceTransformer("all-mpnet-base-v2")
 
-        print("Embedding first summaries...", file=sys.stderr)
+        if not silent:
+            print("Embedding first summaries...", file=sys.stderr)
         first_v = stransformer.encode(first_summaries)
 
-        print("Embedding second summaries...", file=sys.stderr)
+        if not silent:
+            print("Embedding second summaries...", file=sys.stderr)
         second_v = stransformer.encode(second_summaries)
 
         S = cosine_similarity(first_v, second_v)
@@ -606,11 +613,12 @@ def tune_threshold(
     X_tune: List[np.ndarray],
     G_tune: List[np.ndarray],
     threshold_search_space: np.ndarray,
+    silent: bool = False,
 ) -> float:
     best_t = threshold_search_space[0]
     best_f1 = 0
 
-    progress = tqdm(threshold_search_space)
+    progress = tqdm(threshold_search_space, disable=silent)
 
     for t in progress:
         f1_list = []
@@ -636,6 +644,7 @@ def tune_threshold_other_medias(
     sim_mode: Literal["structural", "semantic", "combined"],
     threshold_search_space: np.ndarray,
     semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
+    silent: bool = False,
 ) -> float:
     all_media_pairs = {"tvshow-novels", "comics-novels", "tvshow-comics"}
     other_media_pairs = all_media_pairs - {media_pair}
@@ -651,19 +660,31 @@ def tune_threshold_other_medias(
         if sim_mode == "structural":
             first_media_graphs, second_media_graphs = load_medias_graphs(pair)
             X = graph_similarity_matrix(
-                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+                first_media_graphs,
+                second_media_graphs,
+                "edges",
+                True,
+                "common+named",
+                silent=silent,
             )
         elif sim_mode == "semantic":
             first_summaries, second_summaries = load_medias_summaries(pair)
-            X = semantic_similarity(first_summaries, second_summaries, semantic_sim_fn)
+            X = semantic_similarity(
+                first_summaries, second_summaries, semantic_sim_fn, silent=silent
+            )
         elif sim_mode == "combined":
             first_media_graphs, second_media_graphs = load_medias_graphs(pair)
             S_structural = graph_similarity_matrix(
-                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+                first_media_graphs,
+                second_media_graphs,
+                "edges",
+                True,
+                "common+named",
+                silent=silent,
             )
             first_summaries, second_summaries = load_medias_summaries(pair)
             S_semantic = semantic_similarity(
-                first_summaries, second_summaries, semantic_sim_fn
+                first_summaries, second_summaries, semantic_sim_fn, silent=silent
             )
             X = combined_similarities(S_structural, S_semantic)
         else:
@@ -673,4 +694,4 @@ def tune_threshold_other_medias(
         X_tune.append(X)
         G_tune.append(G)
 
-    return tune_threshold(X_tune, G_tune, threshold_search_space)
+    return tune_threshold(X_tune, G_tune, threshold_search_space, silent=silent)

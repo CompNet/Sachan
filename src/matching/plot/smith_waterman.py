@@ -227,6 +227,7 @@ def tune_smith_waterman_params(
     gap_start_penalty_search_space: np.ndarray,
     gap_cont_penalty_search_space: np.ndarray,
     neg_th_search_space: np.ndarray,
+    silent: bool = False,
 ) -> Tuple[float, float, float]:
     """Tune the parameters of smith-waterman using bruteforce.
 
@@ -250,7 +251,7 @@ def tune_smith_waterman_params(
     best_neg_th = 0.0
     best_f1 = 0.0
 
-    progress = tqdm(gap_start_penalty_search_space)
+    progress = tqdm(gap_start_penalty_search_space, disable=silent)
 
     for gap_start_penalty in progress:
         for gap_cont_penalty in gap_cont_penalty_search_space:
@@ -285,6 +286,10 @@ def tune_smith_waterman_params_other_medias(
     gap_cont_penalty_search_space: np.ndarray,
     neg_th_search_space: np.ndarray,
     semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
+    structural_mode: Literal["nodes", "edges"] = "edges",
+    structural_use_weights: bool = True,
+    structural_filtering: Literal["none", "common", "named", "common+named"] = "common",
+    silent: bool = False,
 ) -> Tuple[float, float, float]:
     """
     Utility function, providing an higher level interface to
@@ -303,6 +308,9 @@ def tune_smith_waterman_params_other_medias(
         :func:`tune_smith_waterman_params`
     :param semantic_sim_fn: if ``sim_mode == 'semantic'``, specifiy
         the similarity function (either ``'tfidf'`` or ``'sbert'``)
+    :param structural_mode:
+    :param structural_use_weights:
+    :param structural_filtering:
 
     :return: ``(gap_start_penalty, gap_cont_penalty, neg_th)``
     """
@@ -320,19 +328,31 @@ def tune_smith_waterman_params_other_medias(
         if sim_mode == "structural":
             first_media_graphs, second_media_graphs = load_medias_graphs(pair)
             X = graph_similarity_matrix(
-                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+                first_media_graphs,
+                second_media_graphs,
+                structural_mode,
+                structural_use_weights,
+                structural_filtering,
+                silent=silent,
             )
         elif sim_mode == "semantic":
             first_summaries, second_summaries = load_medias_summaries(pair)
-            X = semantic_similarity(first_summaries, second_summaries, semantic_sim_fn)
+            X = semantic_similarity(
+                first_summaries, second_summaries, semantic_sim_fn, silent=silent
+            )
         elif sim_mode == "combined":
             first_media_graphs, second_media_graphs = load_medias_graphs(pair)
             S_structural = graph_similarity_matrix(
-                first_media_graphs, second_media_graphs, "edges", True, "common+named"
+                first_media_graphs,
+                second_media_graphs,
+                structural_mode,
+                structural_use_weights,
+                structural_filtering,
+                silent=silent,
             )
             first_summaries, second_summaries = load_medias_summaries(pair)
             S_semantic = semantic_similarity(
-                first_summaries, second_summaries, semantic_sim_fn
+                first_summaries, second_summaries, semantic_sim_fn, silent=silent
             )
             X = combined_similarities(S_structural, S_semantic)
         else:
@@ -348,6 +368,7 @@ def tune_smith_waterman_params_other_medias(
         gap_start_penalty_search_space,
         gap_cont_penalty_search_space,
         neg_th_search_space,
+        silent=silent,
     )
 
 
