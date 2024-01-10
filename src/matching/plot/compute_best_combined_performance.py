@@ -95,7 +95,7 @@ with tqdm(total=3 * 2 * 2 * 2 * 4) as pbar:
 df = pd.DataFrame.from_dict(df_dict)
 LaTeX_export = (
     df.style.format(lambda v: "{:.2f}".format(v * 100))
-    .highlight_max(props="bfseries: ;", axis=None)
-    .to_latex(hrules=True, sparse_index=False, multicol_align="c")
+    .hide(axis=0)  # hide id column
+    .to_latex(hrules=True, column_format="ccc")
 )
 print(LaTeX_export)
