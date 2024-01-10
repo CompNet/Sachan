@@ -11,16 +11,6 @@ from alignment_commons import (
     combined_similarities,
 )
 
-
-# tuned structural parameters found using
-# :func:`tune_smith_waterman_params` for each pair of medias using the
-# two other pairs.
-MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS = {
-    "tvshow-novels": {"gap_start_penalty": 0.06, "gap_cont_penalty": 0.0, "neg_th": 0},
-    "tvshow-comics": {"gap_start_penalty": 0.12, "gap_cont_penalty": 0.0, "neg_th": 0},
-    "comics-novels": {"gap_start_penalty": 0.02, "gap_cont_penalty": 0.0, "neg_th": 0},
-}
-
 # tuned semantic parameters found using
 # :func:`tune_smith_waterman_params` for each pair of medias using the
 # two other pairs.
@@ -43,6 +33,8 @@ MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS = {
 # tuned combined parameters found using
 # :func:`tune_smith_waterman_params` for each pair of medias using the
 # two other pairs.
+# TODO: this was tuned using a specific structural config! This should
+# be adapted to each config!
 MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS = {
     "tvshow-comics": {
         "tfidf": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0.0},

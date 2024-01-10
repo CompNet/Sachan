@@ -22,14 +22,6 @@ NOVEL_LIMITS = [73, 143, 225, 271, 344]
 # the end of each season, in number of episodes
 TVSHOW_SEASON_LIMITS = [10, 20, 30, 40, 50, 60, 67, 73]
 
-# tuned structural threshold found using :func:`tune_threshold` for
-# each pair of medias using the two other pairs.
-MEDIAS_STRUCTURAL_THRESHOLD = {
-    "tvshow-novels": 0.06,
-    "comics-novels": 0.03,
-    "tvshow-comics": 0.06,
-}
-
 # tuned semantic threshold found using :func:`tune_threshold` for each
 # pair of medias using the two other pairs.
 MEDIAS_SEMANTIC_THRESHOLD = {
@@ -40,6 +32,8 @@ MEDIAS_SEMANTIC_THRESHOLD = {
 
 # tuned combined threshold found using :func:`tune_threshold` for each
 # pair of medias using the two other pairs.
+# TODO: this was tuned using a specific structural config! This should
+# be adapted to each config!
 MEDIAS_COMBINED_THRESHOLD = {
     "tvshow-comics": {"tfidf": 0.23, "sbert": 0.39},
     "tvshow-novels": {"tfidf": 0.23, "sbert": 0.39},
@@ -644,6 +638,11 @@ def tune_threshold_other_medias(
     sim_mode: Literal["structural", "semantic", "combined"],
     threshold_search_space: np.ndarray,
     semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
+    structural_mode: Literal["edges", "nodes"] = "edges",
+    structural_use_weights: bool = True,
+    structural_filtering: Literal[
+        "none", "common", "named", "common+named"
+    ] = "common+named",
     silent: bool = False,
 ) -> float:
     all_media_pairs = {"tvshow-novels", "comics-novels", "tvshow-comics"}
@@ -662,9 +661,9 @@ def tune_threshold_other_medias(
             X = graph_similarity_matrix(
                 first_media_graphs,
                 second_media_graphs,
-                "edges",
-                True,
-                "common+named",
+                structural_mode,
+                structural_use_weights,
+                structural_filtering,
                 silent=silent,
             )
         elif sim_mode == "semantic":
@@ -677,9 +676,9 @@ def tune_threshold_other_medias(
             S_structural = graph_similarity_matrix(
                 first_media_graphs,
                 second_media_graphs,
-                "edges",
-                True,
-                "common+named",
+                structural_mode,
+                structural_use_weights,
+                structural_filtering,
                 silent=silent,
             )
             first_summaries, second_summaries = load_medias_summaries(pair)

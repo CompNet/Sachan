@@ -17,6 +17,7 @@ from typing import List, Literal
 import os, argparse
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     load_medias_gold_alignment,
@@ -27,16 +28,16 @@ from alignment_commons import (
     threshold_align_blocks,
     combined_similarities,
     load_medias_summaries,
-    MEDIAS_STRUCTURAL_THRESHOLD,
     MEDIAS_SEMANTIC_THRESHOLD,
     MEDIAS_COMBINED_THRESHOLD,
+    tune_threshold_other_medias,
 )
 from matching.plot.smith_waterman import (
     smith_waterman_align_affine_gap,
     smith_waterman_align_blocks,
-    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
     MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS,
     MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS,
+    tune_smith_waterman_params_other_medias,
 )
 
 
@@ -102,63 +103,98 @@ if __name__ == "__main__":
         character_filtering_modes = ("none", "common", "named", "common+named")
         f1s = []
 
-        for sim_mode in sim_modes:
-            for use_weights in use_weights_modes:
-                cf_f1s = []
+        with tqdm(
+            total=len(sim_modes)
+            * len(use_weights_modes)
+            * len(character_filtering_modes)
+        ) as pbar:
 
-                for character_filtering in character_filtering_modes:
-                    S = graph_similarity_matrix(
-                        first_media_graphs,
-                        second_media_graphs,
-                        sim_mode,  # type: ignore
-                        use_weights,
-                        character_filtering,  # type: ignore
-                    )
+            for sim_mode in sim_modes:
+                for use_weights in use_weights_modes:
+                    cf_f1s = []
 
-                    if args.alignment == "threshold":
-                        if args.blocks:
-                            assert args.medias.startswith("tvshow")
-                            block_to_episode = np.array(
-                                [get_episode_i(G) for G in first_media_graphs]
+                    for character_filtering in character_filtering_modes:
+                        S = graph_similarity_matrix(
+                            first_media_graphs,
+                            second_media_graphs,
+                            sim_mode,  # type: ignore
+                            use_weights,
+                            character_filtering,  # type: ignore
+                            silent=True,
+                        )
+
+                        if args.alignment == "threshold":
+                            t = tune_threshold_other_medias(
+                                args.medias,
+                                "structural",
+                                np.arange(0.0, 1.0, 0.01),
+                                structural_mode=sim_mode,  # type: ignore
+                                structural_use_weights=use_weights,
+                                structural_filtering=character_filtering,  # type: ignore
+                                silent=True,
                             )
-                            M = threshold_align_blocks(
-                                S,
-                                MEDIAS_STRUCTURAL_THRESHOLD[args.medias],
-                                block_to_episode,
+                            if args.blocks:
+                                assert args.medias.startswith("tvshow")
+                                block_to_episode = np.array(
+                                    [get_episode_i(G) for G in first_media_graphs]
+                                )
+                                M = threshold_align_blocks(S, t, block_to_episode)
+                            else:
+                                M = S > t
+
+                        elif args.alignment == "smith-waterman":
+                            (
+                                gap_start_penalty,
+                                gap_cont_penalty,
+                                neg_th,
+                            ) = tune_smith_waterman_params_other_medias(
+                                args.medias,
+                                "structural",
+                                np.arange(0.0, 0.2, 0.01),
+                                np.arange(0.0, 0.2, 0.01),
+                                np.arange(0.0, 0.1, 0.1),
+                                structural_mode=sim_mode,  # type: ignore
+                                structural_use_weights=use_weights,
+                                structural_filtering=character_filtering,  # type: ignore
+                                silent=True,
                             )
+                            if args.blocks:
+                                assert args.medias.startswith("tvshow")
+                                block_to_episode = np.array(
+                                    [get_episode_i(G) for G in first_media_graphs]
+                                )
+                                M = smith_waterman_align_blocks(
+                                    S,
+                                    block_to_episode,
+                                    gap_start_penalty=gap_start_penalty,
+                                    gap_cont_penalty=gap_cont_penalty,
+                                    neg_th=neg_th,
+                                )
+                            else:
+                                M, *_ = smith_waterman_align_affine_gap(
+                                    S,
+                                    gap_start_penalty=gap_start_penalty,
+                                    gap_cont_penalty=gap_cont_penalty,
+                                    neg_th=neg_th,
+                                )
+
                         else:
-                            M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
-
-                    elif args.alignment == "smith-waterman":
-                        if args.blocks:
-                            assert args.medias.startswith("tvshow")
-                            block_to_episode = np.array(
-                                [get_episode_i(G) for G in first_media_graphs]
-                            )
-                            M = smith_waterman_align_blocks(
-                                S,
-                                block_to_episode,
-                                **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias],
-                            )
-                        else:
-                            M, *_ = smith_waterman_align_affine_gap(
-                                S,
-                                **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias],
+                            raise ValueError(
+                                f"unknown alignment method: {args.alignment}"
                             )
 
-                    else:
-                        raise ValueError(f"unknown alignment method: {args.alignment}")
+                        f1 = precision_recall_fscore_support(
+                            G.flatten(),
+                            M.flatten(),
+                            average="binary",
+                            zero_division=0.0,
+                        )[2]
 
-                    f1 = precision_recall_fscore_support(
-                        G.flatten(),
-                        M.flatten(),
-                        average="binary",
-                        zero_division=0.0,
-                    )[2]
+                        cf_f1s.append(f1)
 
-                    cf_f1s.append(f1)
+                        pbar.update(1)
 
-                f1s.append(cf_f1s)
+                    f1s.append(cf_f1s)
 
         use_weights_display = {False: "no", True: "yes"}
         mcolumns = pd.MultiIndex.from_product(

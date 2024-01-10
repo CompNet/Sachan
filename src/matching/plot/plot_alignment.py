@@ -25,16 +25,16 @@ from alignment_commons import (
     load_medias_summaries,
     semantic_similarity,
     threshold_align_blocks,
-    MEDIAS_STRUCTURAL_THRESHOLD,
     MEDIAS_SEMANTIC_THRESHOLD,
     MEDIAS_COMBINED_THRESHOLD,
     combined_similarities,
+    tune_threshold_other_medias,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
-    MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS,
     MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS,
     MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS,
+    tune_smith_waterman_params_other_medias,
 )
 
 
@@ -107,28 +107,50 @@ if __name__ == "__main__":
 
         # Compute similarity
         # ------------------
-        structural_kwargs = json.load(args.structural_kwargs)
+        structural_kwargs = json.loads(args.structural_kwargs)
         S = graph_similarity_matrix(
             first_media_graphs, second_media_graphs, **structural_kwargs
         )
 
         if args.alignment == "threshold":
+            t = tune_threshold_other_medias(
+                args.medias,
+                "structural",
+                np.arange(0.0, 1.0, 0.01),
+                structural_mode=structural_kwargs["mode"],
+                structural_use_weights=structural_kwargs["use_weights"],
+                structural_filtering=structural_kwargs["character_filtering"],
+            )
+            print(f"found {t=}")
             if args.blocks:
                 assert args.medias.startswith("tvshow")
                 block_to_episode = np.array(
                     [get_episode_i(G) for G in first_media_graphs]
                 )
-                M = threshold_align_blocks(
-                    S, MEDIAS_STRUCTURAL_THRESHOLD[args.medias], block_to_episode
-                )
+                M = threshold_align_blocks(S, t, block_to_episode)
             else:
-                M = S > MEDIAS_STRUCTURAL_THRESHOLD[args.medias]
+                M = S > t
 
         elif args.alignment == "smith-waterman":
+            (
+                gap_start_penalty,
+                gap_cont_penalty,
+                neg_th,
+            ) = tune_smith_waterman_params_other_medias(
+                args.medias,
+                "structural",
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.1, 0.1),
+                structural_mode=structural_kwargs["mode"],
+                structural_use_weights=structural_kwargs["use_weights"],
+                structural_filtering=structural_kwargs["character_filtering"],
+            )
+            print(f"found {gap_start_penalty=} {gap_cont_penalty=} {neg_th=}")
             if args.blocks:
                 raise NotImplementedError
             M, *_ = smith_waterman_align_affine_gap(
-                S, **MEDIAS_SMITH_WATERMAN_STRUCTURAL_PARAMS[args.medias]
+                S, gap_start_penalty, gap_cont_penalty, neg_th
             )
 
         else:
