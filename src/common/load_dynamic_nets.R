@@ -2,6 +2,9 @@
 # 
 # Author: Vincent Labatut
 # 08/2023
+#
+# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# source("src/common/load_dynamic_nets.R")
 ###############################################################################
 
 

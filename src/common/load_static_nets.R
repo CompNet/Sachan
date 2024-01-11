@@ -4,6 +4,9 @@
 # 
 # Author: Vincent Labatut
 # 08/2023
+#
+# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# source("src/common/load_static_nets.R")
 ###############################################################################
 
 
@@ -117,6 +120,13 @@ for(i in 1:length(gs))
 	imp.mat[match(V(gs[[i]])$name, all.char.names),g.names[i]] <- degree(gs[[i]])/gorder(gs[[i]])
 imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
 ranked.chars <- all.char.names[order(imp.moy,decreasing=TRUE)]
+
+# export for later use
+tab <- data.frame(all.char.names,imp.mat,imp.moy)
+tab <- tab[order(imp.moy,decreasing=TRUE),]
+rownames(tab) <- NULL
+colnames(tab) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
+write.csv(x=tab, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 
 # 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
