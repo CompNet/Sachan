@@ -195,13 +195,33 @@ if __name__ == "__main__":
         )
 
         if args.alignment == "threshold":
-            M = S > MEDIAS_SEMANTIC_THRESHOLD[args.medias][args.similarity_function]
+            t = tune_threshold_other_medias(
+                args.medias,
+                "semantic",
+                np.arange(0.0, 1.0, 0.01),
+                semantic_sim_fn=args.similarity_function,
+                silent=True,
+            )
+            M = S > t
         elif args.alignment == "smith-waterman":
+            (
+                gap_start_penalty,
+                gap_cont_penalty,
+                neg_th,
+            ) = tune_smith_waterman_params_other_medias(
+                args.medias,
+                "semantic",
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.1, 0.1),
+                semantic_sim_fn=args.similarity_function,
+                silent=True,
+            )
             M, *_ = smith_waterman_align_affine_gap(
                 S,
-                **MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS[args.medias][
-                    args.similarity_function
-                ],
+                gap_start_penalty=gap_start_penalty,
+                gap_cont_penalty=gap_cont_penalty,
+                neg_th=neg_th,
             )
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
@@ -263,14 +283,36 @@ if __name__ == "__main__":
         # Combination
         # -----------
         if args.alignment == "threshold":
-            threshold = MEDIAS_COMBINED_THRESHOLD[args.medias][args.similarity_function]
-            M = S_combined > threshold
+            t = tune_threshold_other_medias(
+                args.medias,
+                "combined",
+                np.arange(0.0, 1.0, 0.01),
+                semantic_sim_fn=args.similarity_function,
+                structural_mode=args.structural_kwargs["mode"],
+                structural_use_weights=args.structural_kwargs["use_weights"],
+                structural_filtering=args.structural_kwargs["filtering"],
+                silent=True,
+            )
+            M = S_combined > t
         elif args.alignment == "smith-waterman":
+            (
+                gap_start_penalty,
+                gap_cont_penalty,
+                neg_th,
+            ) = tune_smith_waterman_params_other_medias(
+                args.medias,
+                "combined",
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.1, 0.1),  # effectively no search
+                semantic_sim_fn=args.similarity_function,
+                structural_mode=args.structural_kwargs["mode"],
+                structural_use_weights=args.structural_kwargs["use_weights"],
+                structural_filtering=args.structural_kwargs["filtering"],
+                silent=True,
+            )
             M, *_ = smith_waterman_align_affine_gap(
-                S_semantic + S_structural,
-                **MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS[args.medias][
-                    args.similarity_function
-                ],
+                S_combined, gap_start_penalty, gap_cont_penalty, neg_th
             )
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
