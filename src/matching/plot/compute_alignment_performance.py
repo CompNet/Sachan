@@ -1,50 +1,29 @@
-# Compute several variations of alignment and output the
-# resulting performance table
-#
-#
-# Example usage:
-#
-# python compute_alignment_performance.py -m comics-novels -a structural -f plain
-#
-#
-# For more details, see:
-#
-# python compute_structural_alignment_performance.py --help
-#
-#
-# Author: Arthur Amalvy
 from typing import List, Literal
-import os, argparse
-import pandas as pd
-import numpy as np
+import argparse, pickle, os, itertools
 from tqdm import tqdm
+import numpy as np
+import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     load_medias_gold_alignment,
     load_medias_graphs,
-    graph_similarity_matrix,
-    get_episode_i,
-    semantic_similarity,
-    threshold_align_blocks,
-    combined_similarities,
     load_medias_summaries,
-    MEDIAS_SEMANTIC_THRESHOLD,
-    MEDIAS_COMBINED_THRESHOLD,
+    graph_similarity_matrix,
+    semantic_similarity,
     tune_threshold_other_medias,
+    combined_similarities,
 )
-from matching.plot.smith_waterman import (
+from smith_waterman import (
     smith_waterman_align_affine_gap,
-    smith_waterman_align_blocks,
-    MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS,
-    MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS,
     tune_smith_waterman_params_other_medias,
 )
 
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-
+root_dir = f"{script_dir}/../../.."
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m",
@@ -53,54 +32,46 @@ if __name__ == "__main__":
         help="Medias on which to compute alignment. Either 'comics-novels', 'tvshow-comics' or 'tvshow-novels'",
     )
     parser.add_argument(
-        "-f",
-        "--format",
-        type=str,
-        default="latex",
-        help="Dataframe print format. Either 'latex' or 'plain' (default: 'latex')",
-    )
-    parser.add_argument(
         "-s",
         "--similarity",
         type=str,
         default="structural",
-        help="one of 'structural', 'semantic' or 'combined'",
+        help="one of 'structural', 'semantic' 'combined'",
     )
-    parser.add_argument(
-        "-a",
-        "--alignment",
-        type=str,
-        default="threshold",
-        help="one of 'threshold', 'smith-waterman'",
-    )
-    parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
-    parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)
-    parser.add_argument("-m2", "--min-delimiter-second-media", type=int, default=None)
-    parser.add_argument("-x2", "--max-delimiter-second-media", type=int, default=None)
-    parser.add_argument("-b", "--blocks", action="store_true")
     args = parser.parse_args()
 
-    G = load_medias_gold_alignment(
-        args.medias,
-        args.min_delimiter_first_media,
-        args.max_delimiter_first_media,
-        args.min_delimiter_second_media,
-        args.max_delimiter_second_media,
-    )
+    if args.medias == "tvshow-novels":
+        delimiters = (1, 6, 1, 5)
+    elif args.medias == "tvshow-comics":
+        delimiters = (1, 2, 1, 2)
+    elif args.medias == "comics-novels":
+        delimiters = (1, 2, 1, 2)
+    else:
+        raise ValueError(f"unknown media pair: {args.medias}")
+
+    G = load_medias_gold_alignment(args.medias, *delimiters)
 
     if args.similarity == "structural":
+
         first_media_graphs, second_media_graphs = load_medias_graphs(
-            args.medias,
-            args.min_delimiter_first_media,
-            args.max_delimiter_first_media,
-            args.min_delimiter_second_media,
-            args.max_delimiter_second_media,
-            "locations" if args.blocks else None,
+            args.medias, *delimiters
         )
 
-        sim_modes = ("nodes", "edges")
+        sim_modes: List[Literal["nodes", "edges"]] = ["nodes", "edges"]
         use_weights_modes = (False, True)
-        character_filtering_modes = ("none", "common", "named", "common+named")
+        character_filtering_modes: List[
+            Literal["none", "common", "named", "common+named"]
+        ] = ["none", "common", "named", "common+named"]
+
+        columns = [
+            "sim_mode",
+            "use_weights",
+            "character_filtering",
+            "alignment",
+            "f1",
+            "precision",
+            "recall",
+        ]
         f1s = []
 
         with tqdm(
@@ -110,220 +81,298 @@ if __name__ == "__main__":
         ) as pbar:
 
             for sim_mode in sim_modes:
+
                 for use_weights in use_weights_modes:
-                    cf_f1s = []
 
                     for character_filtering in character_filtering_modes:
                         S = graph_similarity_matrix(
                             first_media_graphs,
                             second_media_graphs,
-                            sim_mode,  # type: ignore
+                            sim_mode,
                             use_weights,
-                            character_filtering,  # type: ignore
+                            character_filtering,
                             silent=True,
                         )
 
-                        if args.alignment == "threshold":
-                            t = tune_threshold_other_medias(
-                                args.medias,
-                                "structural",
-                                np.arange(0.0, 1.0, 0.01),
-                                structural_mode=sim_mode,  # type: ignore
-                                structural_use_weights=use_weights,
-                                structural_filtering=character_filtering,  # type: ignore
-                                silent=True,
-                            )
-                            if args.blocks:
-                                assert args.medias.startswith("tvshow")
-                                block_to_episode = np.array(
-                                    [get_episode_i(G) for G in first_media_graphs]
-                                )
-                                M = threshold_align_blocks(S, t, block_to_episode)
-                            else:
-                                M = S > t
+                        # threshold alignment
+                        # -------------------
+                        t = tune_threshold_other_medias(
+                            args.medias,
+                            "structural",
+                            np.arange(0.0, 1.0, 0.01),
+                            structural_mode=sim_mode,
+                            structural_use_weights=use_weights,
+                            structural_filtering=character_filtering,
+                            silent=True,
+                        )
+                        M = S > t
 
-                        elif args.alignment == "smith-waterman":
-                            (
-                                gap_start_penalty,
-                                gap_cont_penalty,
-                                neg_th,
-                            ) = tune_smith_waterman_params_other_medias(
-                                args.medias,
-                                "structural",
-                                np.arange(0.0, 0.2, 0.01),
-                                np.arange(0.0, 0.2, 0.01),
-                                np.arange(0.0, 0.1, 0.1),
-                                structural_mode=sim_mode,  # type: ignore
-                                structural_use_weights=use_weights,
-                                structural_filtering=character_filtering,  # type: ignore
-                                silent=True,
-                            )
-                            if args.blocks:
-                                assert args.medias.startswith("tvshow")
-                                block_to_episode = np.array(
-                                    [get_episode_i(G) for G in first_media_graphs]
-                                )
-                                M = smith_waterman_align_blocks(
-                                    S,
-                                    block_to_episode,
-                                    gap_start_penalty=gap_start_penalty,
-                                    gap_cont_penalty=gap_cont_penalty,
-                                    neg_th=neg_th,
-                                )
-                            else:
-                                M, *_ = smith_waterman_align_affine_gap(
-                                    S,
-                                    gap_start_penalty=gap_start_penalty,
-                                    gap_cont_penalty=gap_cont_penalty,
-                                    neg_th=neg_th,
-                                )
-
-                        else:
-                            raise ValueError(
-                                f"unknown alignment method: {args.alignment}"
-                            )
-
-                        f1 = precision_recall_fscore_support(
+                        precision, recall, f1, _ = precision_recall_fscore_support(
                             G.flatten(),
                             M.flatten(),
                             average="binary",
                             zero_division=0.0,
-                        )[2]
+                        )
 
-                        cf_f1s.append(f1)
+                        f1s.append(
+                            (
+                                sim_mode,
+                                use_weights,
+                                character_filtering,
+                                "threshold",
+                                f1,
+                                precision,
+                                recall,
+                            )
+                        )
 
+                        # SW alignment
+                        # ------------
+                        (
+                            gap_start_penalty,
+                            gap_cont_penalty,
+                            neg_th,
+                        ) = tune_smith_waterman_params_other_medias(
+                            args.medias,
+                            "structural",
+                            np.arange(0.0, 0.2, 0.01),
+                            np.arange(0.0, 0.2, 0.01),
+                            np.arange(0.0, 0.1, 0.1),
+                            structural_mode=sim_mode,
+                            structural_use_weights=use_weights,
+                            structural_filtering=character_filtering,
+                            silent=True,
+                        )
+                        M, *_ = smith_waterman_align_affine_gap(
+                            S,
+                            gap_start_penalty=gap_start_penalty,
+                            gap_cont_penalty=gap_cont_penalty,
+                            neg_th=neg_th,
+                        )
+
+                        precision, recall, f1, _ = precision_recall_fscore_support(
+                            G.flatten(),
+                            M.flatten(),
+                            average="binary",
+                            zero_division=0.0,
+                        )
+
+                        f1s.append(
+                            (
+                                sim_mode,
+                                use_weights,
+                                character_filtering,
+                                "smith-waterman",
+                                f1,
+                                precision,
+                                recall,
+                            )
+                        )
+
+                        # tqdm update
+                        # -----------
                         pbar.update(1)
 
-                    f1s.append(cf_f1s)
-
-        use_weights_display = {False: "no", True: "yes"}
-        mcolumns = pd.MultiIndex.from_product(
-            [sim_modes, [use_weights_display[m] for m in use_weights_modes]],
-            names=["Jaccard index", "weighted"],
-        )
-
-        performance_df = pd.DataFrame(
-            np.array(f1s).T,
-            index=character_filtering_modes,
-            columns=mcolumns,
-        )
-        performance_df.index.name = "character filtering"
-
-        if args.format == "latex":
-            LaTeX_export = (
-                performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
-                .highlight_max(props="bfseries: ;", axis=None)
-                .to_latex(hrules=True, sparse_index=False, multicol_align="c")
-            )
-            print(LaTeX_export)
-        else:
-            print(performance_df)
+        df = pd.DataFrame(f1s, columns=columns)
+        dir_name = f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}"
+        os.makedirs(dir_name, exist_ok=True)
+        with open(f"{dir_name}/df.pickle", "wb") as f:
+            pickle.dump(df, f)
 
     elif args.similarity == "semantic":
-        assert not args.blocks
 
         first_summaries, second_summaries = load_medias_summaries(
-            args.medias,
-            args.min_delimiter_first_media,
-            args.max_delimiter_first_media,
-            args.min_delimiter_second_media,
-            args.max_delimiter_second_media,
+            args.medias, *delimiters
         )
 
         sim_fns: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
+
+        columns = ["sim_fn", "alignment", "f1", "precision", "recall"]
         f1s = []
-        for similarity_function in sim_fns:
+
+        for similarity_function in tqdm(sim_fns):
             S = semantic_similarity(
-                first_summaries, second_summaries, similarity_function
+                first_summaries, second_summaries, similarity_function, silent=True
             )
-            if args.alignment == "threshold":
-                M = S > MEDIAS_SEMANTIC_THRESHOLD[args.medias][similarity_function]
-            elif args.alignment == "smith-waterman":
-                M, *_ = smith_waterman_align_affine_gap(
-                    S,
-                    **MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS[args.medias][
-                        similarity_function
-                    ],
-                )
-            else:
-                raise ValueError(f"unknown alignment method: {args.alignment}")
 
-            f1 = precision_recall_fscore_support(
+            # threshold alignment
+            # -------------------
+            t = tune_threshold_other_medias(
+                args.medias,
+                "semantic",
+                np.arange(0.0, 1.0, 0.01),
+                semantic_sim_fn=similarity_function,
+                silent=True,
+            )
+            M = S > t
+
+            precision, recall, f1, _ = precision_recall_fscore_support(
                 G.flatten(), M.flatten(), average="binary", zero_division=0.0
-            )[2]
-            f1s.append(f1)
-
-        performance_df = pd.DataFrame(f1s, columns=["F1"], index=sim_fns)
-        if args.format == "latex":
-            LaTeX_export = (
-                performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
-                .highlight_max(props="bfseries: ;", axis=None)
-                .to_latex(hrules=True)
             )
-            print(LaTeX_export)
-        else:
-            print(performance_df)
+            f1s.append((similarity_function, "threshold", f1, precision, recall))
+
+            # SW alignment
+            # ------------
+            (
+                gap_start_penalty,
+                gap_cont_penalty,
+                neg_th,
+            ) = tune_smith_waterman_params_other_medias(
+                args.medias,
+                "semantic",
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.2, 0.01),
+                np.arange(0.0, 0.1, 0.1),
+                semantic_sim_fn=similarity_function,
+                silent=True,
+            )
+            M, *_ = smith_waterman_align_affine_gap(
+                S,
+                gap_start_penalty=gap_start_penalty,
+                gap_cont_penalty=gap_cont_penalty,
+                neg_th=neg_th,
+            )
+
+            precision, recall, f1, _ = precision_recall_fscore_support(
+                G.flatten(), M.flatten(), average="binary", zero_division=0.0
+            )
+            f1s.append((similarity_function, "smith-waterman", f1, precision, recall))
 
     elif args.similarity == "combined":
-        assert not args.blocks
 
-        # Load summaries
-        # --------------
-        first_summaries, second_summaries = load_medias_summaries(
-            args.medias,
-            args.min_delimiter_first_media,
-            args.max_delimiter_first_media,
-            args.min_delimiter_second_media,
-            args.max_delimiter_second_media,
-        )
-
-        # Load networks
-        # -------------
-        tvshow_graphs, novels_graphs = load_medias_graphs(
-            args.medias,
-            args.min_delimiter_first_media,
-            args.max_delimiter_first_media,
-            args.min_delimiter_second_media,
-            args.max_delimiter_second_media,
-        )
-
-        S_structural = graph_similarity_matrix(
-            tvshow_graphs, novels_graphs, "edges", True
-        )
-
-        sim_fns: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
+        columns = [
+            "semantic_sim_fn",
+            "structural_sim_mode",
+            "structural_use_weights",
+            "structural_character_filtering",
+            "alignment",
+            "f1",
+            "precision",
+            "recall",
+        ]
         f1s = []
 
-        for sim_fn in sim_fns:
-            S_semantic = semantic_similarity(first_summaries, second_summaries, sim_fn)
-            S_combined = combined_similarities(S_structural, S_semantic)
+        # sim_fn * mode * use_weights * filtering
+        with tqdm(total=2 * 2 * 2 * 4) as pbar:
 
-            if args.alignment == "threshold":
-                threshold = MEDIAS_COMBINED_THRESHOLD[args.medias][sim_fn]
-                M = S_combined > threshold
-            elif args.alignment == "smith-waterman":
-                M, *_ = smith_waterman_align_affine_gap(
-                    S_semantic + S_structural,
-                    **MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS[args.medias][sim_fn],
-                )
-            else:
-                raise ValueError(f"unknown alignment method: {args.alignment}")
+            first_graphs, second_graphs = load_medias_graphs(args.medias, *delimiters)
+            G = load_medias_gold_alignment(args.medias, *delimiters)
 
-            f1 = precision_recall_fscore_support(
-                G.flatten(), M.flatten(), average="binary", zero_division=0.0
-            )[2]
-            f1s.append(f1)
-
-        performance_df = pd.DataFrame(f1s, columns=["F1"], index=sim_fns)
-        if args.format == "latex":
-            LaTeX_export = (
-                performance_df.style.format(lambda v: "{:.2f}".format(v * 100))
-                .highlight_max(props="bfseries: ;", axis=None)
-                .to_latex(hrules=True)
+            first_summaries, second_summaries = load_medias_summaries(
+                args.medias, *delimiters
             )
-            print(LaTeX_export)
-        else:
-            print(performance_df)
+
+            sim_fn_lst: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
+            for sim_fn in sim_fn_lst:
+
+                S_sem = semantic_similarity(
+                    first_summaries, second_summaries, sim_fn, silent=True
+                )
+
+                modes: List[Literal["nodes", "edges"]] = ["nodes", "edges"]
+                filtering_lst: List[
+                    Literal["none", "common", "named", "common+named"]
+                ] = ["none", "common", "named", "common+named"]
+                for mode, use_weights, filtering in itertools.product(
+                    modes, [True, False], filtering_lst
+                ):
+
+                    S_struct = graph_similarity_matrix(
+                        first_graphs,
+                        second_graphs,
+                        mode,
+                        use_weights,
+                        filtering,
+                        silent=True,
+                    )
+
+                    S_combined = combined_similarities(S_struct, S_sem)
+
+                    # threshold alignment
+                    # -------------------
+                    t = tune_threshold_other_medias(
+                        args.medias,
+                        "combined",
+                        np.arange(0.0, 1.0, 0.01),
+                        semantic_sim_fn=sim_fn,
+                        structural_mode=mode,
+                        structural_use_weights=use_weights,
+                        structural_filtering=filtering,
+                        silent=True,
+                    )
+                    M = S_combined > t
+
+                    precision, recall, f1, _ = precision_recall_fscore_support(
+                        G.flatten(),
+                        M.flatten(),
+                        average="binary",
+                        zero_division=0.0,
+                    )
+
+                    f1s.append(
+                        (
+                            sim_fn,
+                            mode,
+                            use_weights,
+                            filtering,
+                            "threshold",
+                            "f1",
+                            "precision",
+                            "recall",
+                        )
+                    )
+
+                    # SW alignment
+                    # ------------
+                    (
+                        gap_start_penalty,
+                        gap_cont_penalty,
+                        neg_th,
+                    ) = tune_smith_waterman_params_other_medias(
+                        args.medias,
+                        "combined",
+                        np.arange(0.0, 0.2, 0.01),
+                        np.arange(0.0, 0.2, 0.01),
+                        np.arange(0.0, 0.1, 0.1),  # effectively no search
+                        sim_fn,
+                        mode,
+                        use_weights,
+                        filtering,
+                        silent=True,
+                    )
+
+                    M, *_ = smith_waterman_align_affine_gap(
+                        S_combined, gap_start_penalty, gap_cont_penalty, neg_th
+                    )
+
+                    precision, recall, f1, _ = precision_recall_fscore_support(
+                        G.flatten(),
+                        M.flatten(),
+                        average="binary",
+                        zero_division=0.0,
+                    )
+
+                    f1s.append(
+                        (
+                            sim_fn,
+                            mode,
+                            use_weights,
+                            filtering,
+                            "smith-waterman",
+                            f1,
+                            precision,
+                            recall,
+                        )
+                    )
+
+                    pbar.update(1)
 
     else:
-        raise ValueError(f"unknown similarity: {args.similarity}")
+        raise ValueError(f"unknow similarity: {args.similarity}")
+
+    df = pd.DataFrame(f1s, columns=columns)
+    dir_name = f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}"
+    print(f"exporting results to {dir_name}...")
+    os.makedirs(dir_name, exist_ok=True)
+    with open(f"{dir_name}/df.pickle", "wb") as f:
+        pickle.dump(df, f)
