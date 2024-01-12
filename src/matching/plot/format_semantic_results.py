@@ -4,7 +4,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -26,7 +25,8 @@ if __name__ == "__main__":
         with open(
             f"{root_dir}/out/matching/plot/{medias}_semantic/df.pickle", "rb"
         ) as f:
-            dfs[medias] = pickle.load(f)
+            df = pickle.load(f)
+            dfs[medias] = df[df["alignment"] == args.alignment]
 
     df_dict = {
         medias: df.loc[:, ["sim_fn", "f1"]].set_index("sim_fn")
@@ -46,6 +46,7 @@ if __name__ == "__main__":
             "f1": "comics-novels",
         }
     )
+    df.index = df.index.rename("similarity")
 
     if args.format == "plain":
         print(df)
@@ -53,7 +54,7 @@ if __name__ == "__main__":
 
     LaTeX_export = (
         df.style.format(lambda v: "{:.2f}".format(v * 100))
-        .highlight_max(props="bfseries: ;", axis=1)
+        .highlight_max(props="bfseries: ;", axis=0)
         .to_latex(hrules=True)
     )
     print(LaTeX_export)
