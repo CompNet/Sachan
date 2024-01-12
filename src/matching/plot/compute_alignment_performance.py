@@ -23,7 +23,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-m",
@@ -52,7 +51,6 @@ if __name__ == "__main__":
     G = load_medias_gold_alignment(args.medias, *delimiters)
 
     if args.similarity == "structural":
-
         first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias, *delimiters
         )
@@ -79,11 +77,8 @@ if __name__ == "__main__":
             * len(use_weights_modes)
             * len(character_filtering_modes)
         ) as pbar:
-
             for sim_mode in sim_modes:
-
                 for use_weights in use_weights_modes:
-
                     for character_filtering in character_filtering_modes:
                         S = graph_similarity_matrix(
                             first_media_graphs,
@@ -180,7 +175,6 @@ if __name__ == "__main__":
             pickle.dump(df, f)
 
     elif args.similarity == "semantic":
-
         first_summaries, second_summaries = load_medias_summaries(
             args.medias, *delimiters
         )
@@ -239,7 +233,6 @@ if __name__ == "__main__":
             f1s.append((similarity_function, "smith-waterman", f1, precision, recall))
 
     elif args.similarity == "combined":
-
         columns = [
             "semantic_sim_fn",
             "structural_sim_mode",
@@ -254,7 +247,6 @@ if __name__ == "__main__":
 
         # sim_fn * mode * use_weights * filtering
         with tqdm(total=2 * 2 * 2 * 4) as pbar:
-
             first_graphs, second_graphs = load_medias_graphs(args.medias, *delimiters)
             G = load_medias_gold_alignment(args.medias, *delimiters)
 
@@ -264,7 +256,6 @@ if __name__ == "__main__":
 
             sim_fn_lst: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
             for sim_fn in sim_fn_lst:
-
                 S_sem = semantic_similarity(
                     first_summaries, second_summaries, sim_fn, silent=True
                 )
@@ -276,7 +267,6 @@ if __name__ == "__main__":
                 for mode, use_weights, filtering in itertools.product(
                     modes, [True, False], filtering_lst
                 ):
-
                     S_struct = graph_similarity_matrix(
                         first_graphs,
                         second_graphs,
@@ -316,9 +306,9 @@ if __name__ == "__main__":
                             use_weights,
                             filtering,
                             "threshold",
-                            "f1",
-                            "precision",
-                            "recall",
+                            f1,
+                            precision,
+                            recall,
                         )
                     )
 
