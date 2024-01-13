@@ -122,11 +122,11 @@ imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
 ranked.chars <- all.char.names[order(imp.moy,decreasing=TRUE)]
 
 # export for later use
-tab <- data.frame(all.char.names,imp.mat,imp.moy)
-tab <- tab[order(imp.moy,decreasing=TRUE),]
-rownames(tab) <- NULL
-colnames(tab) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
-write.csv(x=tab, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
+char.importance <- data.frame(all.char.names,imp.mat,imp.moy)
+char.importance <- char.importance[order(imp.moy,decreasing=TRUE),]
+rownames(char.importance) <- NULL
+colnames(char.importance) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
+write.csv(x=char.importance, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 
 # 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
