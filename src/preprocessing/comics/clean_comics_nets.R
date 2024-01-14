@@ -17,6 +17,12 @@ library("igraph")
 #net.folder <- "in/comics/cumul/scene"
 #net.folder <- "in/comics/instant/chapter"
 net.folder <- "in/comics/instant/scene"
+
+#net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/cumulative/publication/chapter"
+#net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/cumulative/publication/scene"
+#net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/instant/publication/chapter"
+#net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/instant/publication/scene"
+
 files <- list.files(path=net.folder, pattern=".+\\.graphml")
 
 # read the networks
@@ -59,6 +65,8 @@ for(i in 1:length(gs))
 	# change vertex attribute names
 	V(g)$sex <- V(g)$Sex
 	g <- delete_vertex_attr(g, "Sex")
+#V(g)$named <- V(g)$Named
+#g <- delete_vertex_attr(g, "Named")
 	
 	gs[[i]] <- g
 }

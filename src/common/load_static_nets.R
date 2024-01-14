@@ -111,23 +111,27 @@ V(g.tv)$affiliation <- aff
 
 
 ###############################################################################
-# compute a list of characters ranked by importance, using their degree in each network
-all.char.names <- sort(unique(unlist(sapply(gs, function(g) V(g)$name))))
-imp.mat <- matrix(NA, nrow=length(all.char.names), ncol=length(gs))
-rownames(imp.mat) <- all.char.names
-colnames(imp.mat) <- g.names
-for(i in 1:length(gs))
-	imp.mat[match(V(gs[[i]])$name, all.char.names),g.names[i]] <- degree(gs[[i]])/gorder(gs[[i]])
-imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
-ranked.chars <- all.char.names[order(imp.moy,decreasing=TRUE)]
-
-# export for later use
-char.importance <- data.frame(all.char.names,imp.mat,imp.moy)
-char.importance <- char.importance[order(imp.moy,decreasing=TRUE),]
-rownames(char.importance) <- NULL
-colnames(char.importance) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
-write.csv(x=char.importance, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
+## compute a list of characters ranked by importance
+#all.char.names <- sort(unique(unlist(sapply(gs, function(g) V(g)$name))))
+#imp.mat <- matrix(NA, nrow=length(all.char.names), ncol=length(gs))
+#rownames(imp.mat) <- all.char.names
+#colnames(imp.mat) <- g.names
+#for(i in 1:length(gs))
+#	# we use the degree as a proxy for importance
+#	imp.mat[match(V(gs[[i]])$name, all.char.names),g.names[i]] <- degree(gs[[i]])/gorder(gs[[i]])
+#imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
+#ranked.chars <- all.char.names[order(imp.moy,decreasing=TRUE)]
+#
+## export for later use
+#char.importance <- data.frame(all.char.names,imp.mat,imp.moy)
+#char.importance <- char.importance[order(imp.moy,decreasing=TRUE),]
+#rownames(char.importance) <- NULL
+#colnames(char.importance) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
+#write.csv(x=char.importance, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
 
 # 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
 # 5: "Tyrion Lannister" "Jon Snow"      "Arya Stark"    "Jaime Lannister" "Catelyn Stark" "Sansa Stark"
+
+# note: above code obsolete, process now performed in the below script 
+source("src/common/char_importance.R")

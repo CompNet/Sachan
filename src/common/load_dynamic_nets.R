@@ -1,4 +1,4 @@
-# Loads the cumulative dynamic graphs.
+# Loads the cumulative dynamic graphs for the first two books of novels and comics.
 # 
 # Author: Vincent Labatut
 # 08/2023
@@ -108,9 +108,9 @@ for(i in 1:length(files))
 }
 cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 
-# read the episode-based TV Show cumulative graphs 
-# TODO pb: not the same number of time slice as novels and comics
-#gs.tv <- list
+## read the episode-based TV Show cumulative graphs 
+## TODO pb: not the same number of time slices as novels and comics
+#gs.tv <- list()
 #names.tv <- c()
 #files <- sort(list.files(path=file.path("in/tvshow",folder,"episode"), pattern=".+\\.graphml", full.names=TRUE))
 #i <- 1
@@ -119,8 +119,10 @@ cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 #	
 #	# load graph
 #	g.tv <- read.graph(files[i], format="graphml")
-#	g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
-#	E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
+#	if(gorder(g.tv)>0)
+#		g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
+#	if(gsize(g.tv)>0)
+#		E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
 #	
 #	# add affiliation
 #	aff <- aff.map[V(g.tv)$name]
