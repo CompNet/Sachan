@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
+    get_comics_chapter_issue_i,
     load_medias_gold_alignment,
     load_medias_graphs,
     load_medias_summaries,
@@ -12,9 +13,12 @@ from alignment_commons import (
     textual_similarity,
     tune_threshold_other_medias,
     combined_similarities,
+    get_episode_i,
+    threshold_align_blocks,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
+    smith_waterman_align_blocks,
     tune_smith_waterman_params_other_medias,
 )
 
@@ -35,9 +39,21 @@ if __name__ == "__main__":
         "--similarity",
         type=str,
         default="structural",
-        help="one of 'structural', 'textual' 'combined'",
+        help="One of 'structural', 'textual' 'combined'",
+    )
+    parser.add_argument(
+        "-b",
+        "--blocks",
+        action="store_true",
+        help="If specified, will use blocks when performing narrative matching. This can only be used when 'similarity' is 'structural' and 'medias' is 'tvshow-novels' or 'comics-novels'. In the first case, automatically extract blocks from the tvshow to help matching with the novels chapters. In the second case, use comics issues chapters to help matching with the novels chapters.",
     )
     args = parser.parse_args()
+
+    # validate the use of args.blocks, since it is only relevant in
+    # certain configurations
+    if args.blocks:
+        assert args.medias in ("tvhshow-novels", "comics-novels")
+        assert args.similarity == "structural"
 
     if args.medias == "tvshow-novels":
         delimiters = (1, 5, 1, 5)
@@ -52,7 +68,10 @@ if __name__ == "__main__":
 
     if args.similarity == "structural":
         first_media_graphs, second_media_graphs = load_medias_graphs(
-            args.medias, *delimiters
+            args.medias,
+            *delimiters,
+            tvshow_blocks="locations" if args.blocks else None,
+            comics_blocks=bool(args.blocks),
         )
 
         sim_modes: List[Literal["nodes", "edges"]] = ["nodes", "edges"]
@@ -100,7 +119,22 @@ if __name__ == "__main__":
                             structural_filtering=character_filtering,
                             silent=True,
                         )
-                        M = S > t
+                        if args.blocks:
+                            if args.medias == "tvshow-novels":
+                                block_to_narrunit = np.array(
+                                    [get_episode_i(G) for G in first_media_graphs]
+                                )
+                            else:
+                                assert args.medias == "comics-novels"
+                                block_to_narrunit = np.array(
+                                    [
+                                        get_comics_chapter_issue_i(G)
+                                        for G in first_media_graphs
+                                    ]
+                                )
+                            M = threshold_align_blocks(S, t, block_to_narrunit)
+                        else:
+                            M = S > t
 
                         precision, recall, f1, _ = precision_recall_fscore_support(
                             G.flatten(),
@@ -138,12 +172,25 @@ if __name__ == "__main__":
                             structural_filtering=character_filtering,
                             silent=True,
                         )
-                        M, *_ = smith_waterman_align_affine_gap(
-                            S,
-                            gap_start_penalty=gap_start_penalty,
-                            gap_cont_penalty=gap_cont_penalty,
-                            neg_th=neg_th,
-                        )
+                        if args.blocks:
+                            # NOTE: we can 'type: ignore' on
+                            # block_to_narrunit because we are sure it
+                            # is computed when computing threshold
+                            # alignment above if args.blocks is truthy
+                            M = smith_waterman_align_blocks(
+                                S,
+                                block_to_narrunit,  # type: ignore
+                                gap_start_penalty=gap_start_penalty,
+                                gap_cont_penalty=gap_cont_penalty,
+                                neg_th=neg_th,
+                            )
+                        else:
+                            M, *_ = smith_waterman_align_affine_gap(
+                                S,
+                                gap_start_penalty=gap_start_penalty,
+                                gap_cont_penalty=gap_cont_penalty,
+                                neg_th=neg_th,
+                            )
 
                         precision, recall, f1, _ = precision_recall_fscore_support(
                             G.flatten(),

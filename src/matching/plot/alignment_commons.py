@@ -188,6 +188,7 @@ def load_medias_graphs(
     min_delimiter_second_media: Optional[int] = None,
     max_delimiter_second_media: Optional[int] = None,
     tvshow_blocks: Optional[Literal["locations", "similarity"]] = None,
+    comics_blocks: bool = False,
 ) -> Tuple[List[nx.Graph], List[nx.Graph]]:
     """Load the instant graphs for two medias to compare them.
 
@@ -203,7 +204,7 @@ def load_medias_graphs(
                 min_novel=min_delimiter or 1, max_novel=max_delimiter or 5
             )
         elif media == "comics":
-            return load_comics_graphs()
+            return load_comics_graphs("issue" if not comics_blocks else "chapter")
         elif media == "tvshow":
             return load_tvshow_graphs(
                 min_season=min_delimiter or 1,
@@ -297,10 +298,30 @@ def get_episode_i(G: nx.Graph) -> int:
 
     .. note::
 
-        only supports seasons from 1 to 5
+        only supports seasons from 1 to 6
     """
     assert G.graph["season"] < 7
     return (G.graph["season"] - 1) * 10 + G.graph["episode"] - 1
+
+
+def get_comics_chapter_issue_i(G: nx.Graph) -> int:
+    """Get the issue index of ``G``, where ``G`` is a graph from a
+    comics chapter.
+
+    .. note::
+
+        this is a naive implementation.  This function is often called
+        multiple times, and so must open the comics_mapping.csv file
+        every time, causing performance issue.
+    """
+    volume_offsets = {"AGOT": 0, "ACOK": 24}
+    df = pd.read_csv(f"{root_dir}/in/plot_alignment/comics_mapping.csv")
+    chapter_to_issue = dict(zip(df["Rank"], df["Volume"]))  # example: {1: "AGOT01"}
+    chapter_str = G.graph["NarrUnit"]
+    chapter = int(chapter_str.split("_")[1])
+    issue_str = chapter_to_issue[chapter]
+    issue_name = issue_str[:4]
+    return int(issue_str[4:]) + volume_offsets[issue_name]
 
 
 def jaccard_graph_sim(
@@ -567,11 +588,18 @@ def find_best_combined_alignment(
 
 
 def threshold_align_blocks(
-    S: np.ndarray, t: float, block_to_episode: np.ndarray
+    S: np.ndarray, t: float, block_to_narrunit: np.ndarray
 ) -> np.ndarray:
+    """Align two medias using blocks for one media
+
+    :param S: of shape ``(block_media, other_media)``
+    :param block_to_narrunit: of shape ``(block_media,)``
+    """
+    assert S.shape[0] == block_to_narrunit.shape[0]
+
     M_align_blocks = S >= t
 
-    _, uniq_start_i = np.unique(block_to_episode, return_index=True)
+    _, uniq_start_i = np.unique(block_to_narrunit, return_index=True)
     splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
 
     M = []
