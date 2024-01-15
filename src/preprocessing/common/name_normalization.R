@@ -1,5 +1,5 @@
 # Lists the names used in the different media, in order to normalize them.
-# Used only once, to prepare the name conversion maps.
+# Script used only once, to prepare the name conversion maps.
 # 
 # Author: Vincent Labatut
 # 04/2023

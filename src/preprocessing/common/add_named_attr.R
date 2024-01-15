@@ -240,6 +240,10 @@ for(time in c("cumul","instant"))
 		
 		# list all graphml files in the folder
 		net.folder <- file.path("in","comics",time,scale)
+#		net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/cumulative/publication/chapter"
+#		net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/cumulative/publication/scene"
+#		net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/instant/publication/chapter"
+#		net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/instant/publication/scene"
 		files <- list.files(path=net.folder, pattern=".+\\.graphml")
 		
 		# process each one

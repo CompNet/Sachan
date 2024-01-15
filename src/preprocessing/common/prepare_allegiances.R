@@ -1,5 +1,5 @@
 # Check the allegiances, in particular houses and their hierarchical relations.
-# Used only once, to prepare the data.
+# Script used only once, to prepare the data.
 # 
 # Author: Vincent Labatut
 # 04/2023
