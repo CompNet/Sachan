@@ -1,5 +1,6 @@
 # Retrieves attributes for all characters on the Wiki site:
 # https://awoiaf.westeros.org/index.php/List_of_characters
+# Script used only once, to complement the dataset.
 # 
 # Author: Vincent Labatut
 # 04/2023
