@@ -23,7 +23,7 @@ if(all(file.exists(out.files)))
 	
 ###############################################################################
 # loop over numbers of seasons/books
-#if(!all(file.exists(out.files)))
+if(!all(file.exists(out.files)))
 {	# read instant dynamic networks for novels
 	cat("Reading novel networks\n",sep="")
 	gs.nv <- list()
@@ -170,7 +170,7 @@ if(all(file.exists(out.files)))
 				
 		# export for later use
 		char.importance <- data.frame(all.char.names, imp.mat, imp.moy)
-		char.importance <- char.importance[order(imp.moy,decreasing=TRUE),]
+		char.importance <- char.importance[order(majority, imp.moy,decreasing=TRUE),]
 		rownames(char.importance) <- NULL
 		colnames(char.importance) <- if(s<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
 		tab.file <- file.path("in",paste0("ranked_importance_S",s,".csv"))
