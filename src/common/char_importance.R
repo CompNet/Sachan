@@ -4,7 +4,7 @@
 # Author: Vincent Labatut
 # 01/2024
 #
-# setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/common/char_importance.R")
 ###############################################################################
 
@@ -23,7 +23,7 @@ if(all(file.exists(out.files)))
 	
 ###############################################################################
 # loop over numbers of seasons/books
-if(!all(file.exists(out.files)))
+#if(!all(file.exists(out.files)))
 {	# read instant dynamic networks for novels
 	cat("Reading novel networks\n",sep="")
 	gs.nv <- list()
@@ -54,8 +54,9 @@ if(!all(file.exists(out.files)))
 		
 		# load graph
 		g.cx <- read.graph(files[i], format="graphml")
-		g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
-		E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weights
+		g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)	# keep only named characters
+		if(gsize(g.cx)>0)
+			E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
 		g.cx$file <- files[i]
 		
 		# retrieve character names
@@ -164,8 +165,9 @@ if(!all(file.exists(out.files)))
 		imp.mat[match(names(occ.cx), all.char.names), "Comics"] <- occ.cx/max(occ.cx)
 		imp.mat[match(names(occ.tv), all.char.names), "TV Show"] <- occ.tv/max(occ.tv)
 		imp.moy <- apply(imp.mat,1,function(v) mean(v,na.rm=TRUE))
-		ranked.chars <- all.char.names[order(imp.moy,decreasing=TRUE)]
-		
+		majority <- apply(imp.mat,1,function(row) length(which(!is.na(row)))>1)
+		ranked.chars <- all.char.names[order(majority, imp.moy,decreasing=TRUE)]
+				
 		# export for later use
 		char.importance <- data.frame(all.char.names, imp.mat, imp.moy)
 		char.importance <- char.importance[order(imp.moy,decreasing=TRUE),]
@@ -173,6 +175,6 @@ if(!all(file.exists(out.files)))
 		colnames(char.importance) <- if(s<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
 		tab.file <- file.path("in",paste0("ranked_importance_S",s,".csv"))
 		cat("Exporting as \"",tab.file,"\"\n",sep="")
-#		write.csv(x=char.importance, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
+		write.csv(x=char.importance, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 	}
 }

@@ -59,7 +59,7 @@ E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)				# normalize weights
 if(!is.na(file.cx))
 {	g.cx <- read.graph(file.cx, format="graphml")
 	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
-	E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weights
+	E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
 }
 
 # read the episode-based tvshow static graph
@@ -133,5 +133,5 @@ V(g.tv)$affiliation <- aff
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
 # 5: "Tyrion Lannister" "Jon Snow"      "Arya Stark"    "Jaime Lannister" "Catelyn Stark" "Sansa Stark"
 
-# note: above code obsolete, process now performed in the below script 
+# note: above code obsolete, as this processing is now performed in the below script 
 source("src/common/char_importance.R")

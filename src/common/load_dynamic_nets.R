@@ -93,8 +93,9 @@ for(i in 1:length(files))
 	
 	# load graph
 	g.cx <- read.graph(files[i], format="graphml")
-	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
-	E(g.cx)$weight <- E(g.cx)$Occurrences/max(E(g.cx)$Occurrences)	# normalize weights
+	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)		# keep only named characters
+	if(gsize(g.cx)>0)
+		E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
 	
 	# add affiliation
 	aff <- aff.map[V(g.cx)$name]
