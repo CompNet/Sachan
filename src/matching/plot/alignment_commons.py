@@ -165,7 +165,7 @@ def load_medias_gold_alignment(
         if min_delimiter_first_media is None:
             min_delimiter_first_media = 1
         if max_delimiter_first_media is None:
-            max_delimiter_first_media = 6
+            max_delimiter_first_media = 5
         ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_delimiter_first_media - 1)]
         ep_end = TVSHOW_SEASON_LIMITS[max_delimiter_first_media - 1]
 
@@ -207,7 +207,7 @@ def load_medias_graphs(
         elif media == "tvshow":
             return load_tvshow_graphs(
                 min_season=min_delimiter or 1,
-                max_season=max_delimiter or 6,
+                max_season=max_delimiter or 5,
                 blocks=tvshow_blocks,
             )
         else:
@@ -268,7 +268,7 @@ def load_medias_summaries(
             return load_comics_issue_summaries()
         elif media == "tvshow":
             return load_tvshow_episode_summaries(
-                min_season=min_delimiter or 1, max_season=max_delimiter or 6
+                min_season=min_delimiter or 1, max_season=max_delimiter or 5
             )
         else:
             raise ValueError(f"wrong medias specification: {medias}")
@@ -297,7 +297,7 @@ def get_episode_i(G: nx.Graph) -> int:
 
     .. note::
 
-        only supports seasons from 1 to 6
+        only supports seasons from 1 to 5
     """
     assert G.graph["season"] < 7
     return (G.graph["season"] - 1) * 10 + G.graph["episode"] - 1

@@ -40,7 +40,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.medias == "tvshow-novels":
-        delimiters = (1, 6, 1, 5)
+        delimiters = (1, 5, 1, 5)
     elif args.medias == "tvshow-comics":
         delimiters = (1, 2, 1, 2)
     elif args.medias == "comics-novels":
