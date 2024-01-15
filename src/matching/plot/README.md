@@ -8,7 +8,7 @@
 
 # Alignment Performance Computation
 
-`compute_alignment_performance.py` computes the alignment performance of all configuration for a media pair and a similarity computation method (`structural`, `semantic` of `combined`), while `compute_all.sh` use the previous script to compute performance for all media pairs and similarity computation methods. The results are saved as pickled dataframes under `out/matching/plot`.
+`compute_alignment_performance.py` computes the alignment performance of all configuration for a media pair and a similarity computation method (`structural`, `textual` of `combined`), while `compute_all.sh` use the previous script to compute performance for all media pairs and similarity computation methods. The results are saved as pickled dataframes under `out/matching/plot`.
 
 
 # Formatting Results

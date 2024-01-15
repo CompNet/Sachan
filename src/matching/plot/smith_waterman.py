@@ -7,48 +7,9 @@ from alignment_commons import (
     load_medias_graphs,
     load_medias_summaries,
     graph_similarity_matrix,
-    semantic_similarity,
+    textual_similarity,
     combined_similarities,
 )
-
-# tuned semantic parameters found using
-# :func:`tune_smith_waterman_params` for each pair of medias using the
-# two other pairs.
-MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS = {
-    "tvshow-comics": {
-        "tfidf": {"gap_start_penalty": 0.08, "gap_cont_penalty": 0.01, "neg_th": 0.0},
-        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.06, "neg_th": 0.0},
-    },
-    "tvshow-novels": {
-        "tfidf": {"gap_start_penalty": 0.01, "gap_cont_penalty": 0.03, "neg_th": 0.0},
-        "sbert": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.06, "neg_th": 0.0},
-    },
-    "comics-novels": {
-        "tfidf": {"gap_start_penalty": 0.08, "gap_cont_penalty": 0.01, "neg_th": 0.0},
-        "sbert": {"gap_start_penalty": 0.19, "gap_cont_penalty": 0.0, "neg_th": 0.0},
-    },
-}
-
-
-# tuned combined parameters found using
-# :func:`tune_smith_waterman_params` for each pair of medias using the
-# two other pairs.
-# TODO: this was tuned using a specific structural config! This should
-# be adapted to each config!
-MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS = {
-    "tvshow-comics": {
-        "tfidf": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0.0},
-        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.01, "neg_th": 0.0},
-    },
-    "tvshow-novels": {
-        "tfidf": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.02, "neg_th": 0.0},
-        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.0, "neg_th": 0.0},
-    },
-    "comics-novels": {
-        "tfidf": {"gap_start_penalty": 0.01, "gap_cont_penalty": 0.01, "neg_th": 0.0},
-        "sbert": {"gap_start_penalty": 0.0, "gap_cont_penalty": 0.0, "neg_th": 0.0},
-    },
-}
 
 
 def xnp_max(x: np.ndarray) -> Tuple[Tuple[int, ...], float]:
@@ -273,11 +234,11 @@ def tune_smith_waterman_params(
 
 def tune_smith_waterman_params_other_medias(
     media_pair: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
-    sim_mode: Literal["structural", "semantic", "combined"],
+    sim_mode: Literal["structural", "textual", "combined"],
     gap_start_penalty_search_space: np.ndarray,
     gap_cont_penalty_search_space: np.ndarray,
     neg_th_search_space: np.ndarray,
-    semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
+    textual_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
     structural_mode: Literal["nodes", "edges"] = "edges",
     structural_use_weights: bool = True,
     structural_filtering: Literal["none", "common", "named", "common+named"] = "common",
@@ -291,14 +252,14 @@ def tune_smith_waterman_params_other_medias(
     :param media_pair: current media pairs.  Tuning will be performed
         on the two other media pairs.
     :param sim_mode: similarity measure, either ``'structural'`` or
-        ``'semantic'``
+        ``'textual'``
     :param gap_start_penalty_search_space: as in
         :func:`tune_smith_waterman_params`
     :param gap_cont_penalty_search_space: as in
         :func:`tune_smith_waterman_params`
     :param neg_th_search_space: as in
         :func:`tune_smith_waterman_params`
-    :param semantic_sim_fn: if ``sim_mode == 'semantic'``, specifiy
+    :param textual_sim_fn: if ``sim_mode == 'textual'``, specifiy
         the similarity function (either ``'tfidf'`` or ``'sbert'``)
     :param structural_mode:
     :param structural_use_weights:
@@ -327,10 +288,10 @@ def tune_smith_waterman_params_other_medias(
                 structural_filtering,
                 silent=silent,
             )
-        elif sim_mode == "semantic":
+        elif sim_mode == "textual":
             first_summaries, second_summaries = load_medias_summaries(pair)
-            X = semantic_similarity(
-                first_summaries, second_summaries, semantic_sim_fn, silent=silent
+            X = textual_similarity(
+                first_summaries, second_summaries, textual_sim_fn, silent=silent
             )
         elif sim_mode == "combined":
             first_media_graphs, second_media_graphs = load_medias_graphs(pair)
@@ -343,10 +304,10 @@ def tune_smith_waterman_params_other_medias(
                 silent=silent,
             )
             first_summaries, second_summaries = load_medias_summaries(pair)
-            S_semantic = semantic_similarity(
-                first_summaries, second_summaries, semantic_sim_fn, silent=silent
+            S_textual = textual_similarity(
+                first_summaries, second_summaries, textual_sim_fn, silent=silent
             )
-            X = combined_similarities(S_structural, S_semantic)
+            X = combined_similarities(S_structural, S_textual)
         else:
             raise ValueError(f"unknown sim_mode: {sim_mode}")
 

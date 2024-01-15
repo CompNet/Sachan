@@ -23,17 +23,13 @@ from alignment_commons import (
     load_medias_graphs,
     get_episode_i,
     load_medias_summaries,
-    semantic_similarity,
+    textual_similarity,
     threshold_align_blocks,
-    MEDIAS_SEMANTIC_THRESHOLD,
-    MEDIAS_COMBINED_THRESHOLD,
     combined_similarities,
     tune_threshold_other_medias,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
-    MEDIAS_SMITH_WATERMAN_SEMANTIC_PARAMS,
-    MEDIAS_SMITH_WATERMAN_COMBINED_PARAMS,
     tune_smith_waterman_params_other_medias,
 )
 
@@ -54,7 +50,7 @@ if __name__ == "__main__":
         "--similarity",
         type=str,
         default="structural",
-        help="one of 'structural', 'semantic' or 'combined'",
+        help="one of 'structural', 'textual' or 'combined'",
     )
     parser.add_argument(
         "-sf",
@@ -177,7 +173,7 @@ if __name__ == "__main__":
         else:
             plt.show()
 
-    elif args.similarity == "semantic":
+    elif args.similarity == "textual":
         # Load summaries
         # --------------
         first_summaries, second_summaries = load_medias_summaries(
@@ -190,16 +186,16 @@ if __name__ == "__main__":
 
         # Compute similarity
         # ------------------
-        S = semantic_similarity(
+        S = textual_similarity(
             first_summaries, second_summaries, args.similarity_function
         )
 
         if args.alignment == "threshold":
             t = tune_threshold_other_medias(
                 args.medias,
-                "semantic",
+                "textual",
                 np.arange(0.0, 1.0, 0.01),
-                semantic_sim_fn=args.similarity_function,
+                textual_sim_fn=args.similarity_function,
                 silent=True,
             )
             M = S > t
@@ -210,11 +206,11 @@ if __name__ == "__main__":
                 neg_th,
             ) = tune_smith_waterman_params_other_medias(
                 args.medias,
-                "semantic",
+                "textual",
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.1, 0.1),
-                semantic_sim_fn=args.similarity_function,
+                textual_sim_fn=args.similarity_function,
                 silent=True,
             )
             M, *_ = smith_waterman_align_affine_gap(
@@ -275,10 +271,10 @@ if __name__ == "__main__":
         S_structural = graph_similarity_matrix(
             tvshow_graphs, novels_graphs, "edges", True
         )
-        S_semantic = semantic_similarity(
+        S_textual = textual_similarity(
             first_summaries, second_summaries, args.similarity_function
         )
-        S_combined = combined_similarities(S_structural, S_semantic)
+        S_combined = combined_similarities(S_structural, S_textual)
 
         # Combination
         # -----------
@@ -287,7 +283,7 @@ if __name__ == "__main__":
                 args.medias,
                 "combined",
                 np.arange(0.0, 1.0, 0.01),
-                semantic_sim_fn=args.similarity_function,
+                textual_sim_fn=args.similarity_function,
                 structural_mode=args.structural_kwargs["mode"],
                 structural_use_weights=args.structural_kwargs["use_weights"],
                 structural_filtering=args.structural_kwargs["filtering"],
@@ -305,7 +301,7 @@ if __name__ == "__main__":
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.1, 0.1),  # effectively no search
-                semantic_sim_fn=args.similarity_function,
+                textual_sim_fn=args.similarity_function,
                 structural_mode=args.structural_kwargs["mode"],
                 structural_use_weights=args.structural_kwargs["use_weights"],
                 structural_filtering=args.structural_kwargs["filtering"],

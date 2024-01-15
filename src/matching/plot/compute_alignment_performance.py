@@ -9,7 +9,7 @@ from alignment_commons import (
     load_medias_graphs,
     load_medias_summaries,
     graph_similarity_matrix,
-    semantic_similarity,
+    textual_similarity,
     tune_threshold_other_medias,
     combined_similarities,
 )
@@ -35,7 +35,7 @@ if __name__ == "__main__":
         "--similarity",
         type=str,
         default="structural",
-        help="one of 'structural', 'semantic' 'combined'",
+        help="one of 'structural', 'textual' 'combined'",
     )
     args = parser.parse_args()
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         with open(f"{dir_name}/df.pickle", "wb") as f:
             pickle.dump(df, f)
 
-    elif args.similarity == "semantic":
+    elif args.similarity == "textual":
         first_summaries, second_summaries = load_medias_summaries(
             args.medias, *delimiters
         )
@@ -185,7 +185,7 @@ if __name__ == "__main__":
         f1s = []
 
         for similarity_function in tqdm(sim_fns):
-            S = semantic_similarity(
+            S = textual_similarity(
                 first_summaries, second_summaries, similarity_function, silent=True
             )
 
@@ -193,9 +193,9 @@ if __name__ == "__main__":
             # -------------------
             t = tune_threshold_other_medias(
                 args.medias,
-                "semantic",
+                "textual",
                 np.arange(0.0, 1.0, 0.01),
-                semantic_sim_fn=similarity_function,
+                textual_sim_fn=similarity_function,
                 silent=True,
             )
             M = S > t
@@ -213,11 +213,11 @@ if __name__ == "__main__":
                 neg_th,
             ) = tune_smith_waterman_params_other_medias(
                 args.medias,
-                "semantic",
+                "textual",
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.1, 0.1),
-                semantic_sim_fn=similarity_function,
+                textual_sim_fn=similarity_function,
                 silent=True,
             )
             M, *_ = smith_waterman_align_affine_gap(
@@ -234,7 +234,7 @@ if __name__ == "__main__":
 
     elif args.similarity == "combined":
         columns = [
-            "semantic_sim_fn",
+            "textual_sim_fn",
             "structural_sim_mode",
             "structural_use_weights",
             "structural_character_filtering",
@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
             sim_fn_lst: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
             for sim_fn in sim_fn_lst:
-                S_sem = semantic_similarity(
+                S_sem = textual_similarity(
                     first_summaries, second_summaries, sim_fn, silent=True
                 )
 
@@ -284,7 +284,7 @@ if __name__ == "__main__":
                         args.medias,
                         "combined",
                         np.arange(0.0, 1.0, 0.01),
-                        semantic_sim_fn=sim_fn,
+                        textual_sim_fn=sim_fn,
                         structural_mode=mode,
                         structural_use_weights=use_weights,
                         structural_filtering=filtering,

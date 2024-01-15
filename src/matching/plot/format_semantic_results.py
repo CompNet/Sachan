@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
         with open(
-            f"{root_dir}/out/matching/plot/{medias}_semantic/df.pickle", "rb"
+            f"{root_dir}/out/matching/plot/{medias}_textual/df.pickle", "rb"
         ) as f:
             df = pickle.load(f)
             dfs[medias] = df[df["alignment"] == args.alignment]
