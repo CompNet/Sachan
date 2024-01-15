@@ -21,7 +21,7 @@ from matplotlib.ticker import MaxNLocator
 import scienceplots
 from alignment_commons import (
     load_medias_gold_alignment,
-    semantic_similarity,
+    textual_similarity,
     graph_similarity_matrix,
     load_medias_graphs,
     load_novels_chapter_summaries,
@@ -207,7 +207,7 @@ if __name__ == "__main__":
         ax.grid()
 
         for similarity_function in ("tfidf", "sbert"):
-            S = semantic_similarity(
+            S = textual_similarity(
                 episode_summaries, chapter_summaries, similarity_function  # type: ignore
             )
 
@@ -286,7 +286,7 @@ if __name__ == "__main__":
         for similarity_function in ("tfidf", "sbert"):
             # Compute both similarities
             # -------------------------
-            S_semantic = semantic_similarity(
+            S_semantic = textual_similarity(
                 episode_summaries, chapter_summaries, similarity_function
             )
 

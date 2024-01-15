@@ -12,7 +12,6 @@ from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
-from nltk import sent_tokenize
 from graph_utils import cumulative_graph
 
 
@@ -21,25 +20,6 @@ NOVEL_LIMITS = [73, 143, 225, 271, 344]
 
 # the end of each season, in number of episodes
 TVSHOW_SEASON_LIMITS = [10, 20, 30, 40, 50, 60, 67, 73]
-
-# tuned semantic threshold found using :func:`tune_threshold` for each
-# pair of medias using the two other pairs.
-MEDIAS_SEMANTIC_THRESHOLD = {
-    "tvshow-comics": {"tfidf": 0.21, "sbert": 0.68},
-    "tvshow-novels": {"tfidf": 0.16, "sbert": 0.65},
-    "comics-novels": {"tfidf": 0.15, "sbert": 0.63},
-}
-
-# tuned combined threshold found using :func:`tune_threshold` for each
-# pair of medias using the two other pairs.
-# TODO: this was tuned using a specific structural config! This should
-# be adapted to each config!
-MEDIAS_COMBINED_THRESHOLD = {
-    "tvshow-comics": {"tfidf": 0.23, "sbert": 0.39},
-    "tvshow-novels": {"tfidf": 0.23, "sbert": 0.39},
-    "comics-novels": {"tfidf": 0.26, "sbert": 0.4},
-}
-
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
@@ -185,7 +165,7 @@ def load_medias_gold_alignment(
         if min_delimiter_first_media is None:
             min_delimiter_first_media = 1
         if max_delimiter_first_media is None:
-            max_delimiter_first_media = 6
+            max_delimiter_first_media = 5
         ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_delimiter_first_media - 1)]
         ep_end = TVSHOW_SEASON_LIMITS[max_delimiter_first_media - 1]
 
@@ -227,7 +207,7 @@ def load_medias_graphs(
         elif media == "tvshow":
             return load_tvshow_graphs(
                 min_season=min_delimiter or 1,
-                max_season=max_delimiter or 6,
+                max_season=max_delimiter or 5,
                 blocks=tvshow_blocks,
             )
         else:
@@ -288,7 +268,7 @@ def load_medias_summaries(
             return load_comics_issue_summaries()
         elif media == "tvshow":
             return load_tvshow_episode_summaries(
-                min_season=min_delimiter or 1, max_season=max_delimiter or 6
+                min_season=min_delimiter or 1, max_season=max_delimiter or 5
             )
         else:
             raise ValueError(f"wrong medias specification: {medias}")
@@ -317,7 +297,7 @@ def get_episode_i(G: nx.Graph) -> int:
 
     .. note::
 
-        only supports seasons from 1 to 6
+        only supports seasons from 1 to 5
     """
     assert G.graph["season"] < 7
     return (G.graph["season"] - 1) * 10 + G.graph["episode"] - 1
@@ -425,13 +405,13 @@ def graph_similarity_matrix(
     return M
 
 
-def semantic_similarity(
+def textual_similarity(
     first_summaries: List[str],
     second_summaries: List[str],
     sim_fn: Literal["tfidf", "sbert"],
     silent: bool = False,
 ) -> np.ndarray:
-    """Compute a semantic similarity matrix between summaries
+    """Compute a textual similarity matrix between summaries
 
     :return: a numpy array of shape (len(first_summaries), len(second_summaries))
     """
@@ -470,15 +450,15 @@ def semantic_similarity(
 
 
 def combined_similarities(
-    S_structural: np.ndarray, S_semantic: np.ndarray
+    S_structural: np.ndarray, S_textual: np.ndarray
 ) -> np.ndarray:
-    S_semantic = (S_semantic - np.min(S_semantic)) / (
-        np.max(S_semantic) - np.min(S_semantic)
+    S_textual = (S_textual - np.min(S_textual)) / (
+        np.max(S_textual) - np.min(S_textual)
     )
     S_structural = (S_structural - np.min(S_structural)) / (
         np.max(S_structural) - np.min(S_structural)
     )
-    return 0.5 * S_semantic + 0.5 * S_structural
+    return 0.5 * S_textual + 0.5 * S_structural
 
 
 def find_best_alignment(
@@ -547,13 +527,13 @@ def find_best_blocks_alignment(
 
 
 def find_best_combined_alignment(
-    G: np.ndarray, S_semantic: np.ndarray, S_structural: np.ndarray
+    G: np.ndarray, S_textual: np.ndarray, S_structural: np.ndarray
 ) -> Tuple[float, float, float, np.ndarray]:
     """Find the best possible alignment matrix by brute-force
     searching the best possible threshold.
 
     :param G: gold alignment matrix
-    :param S_semantic: semantic similarity matrix
+    :param S_textual: textual similarity matrix
     :param S_structural: structural similarity matrix
     :return: ``(best threshold, best alpha, best f1, best alignment matrix)``
     """
@@ -562,10 +542,10 @@ def find_best_combined_alignment(
     f1s = np.zeros((alphas.shape[0], ts.shape[0]))
 
     # Compute the best combination of both matrices
-    # S_combined = α × S_semantic + (1 - α) × S_structural
+    # S_combined = α × S_textual + (1 - α) × S_structural
     print("searching for α and t...", file=sys.stderr)
     for alpha_i, alpha in tqdm(enumerate(alphas), total=alphas.shape[0]):
-        S = alpha * S_semantic + (1 - alpha) * S_structural
+        S = alpha * S_textual + (1 - alpha) * S_structural
         for t_i, t in enumerate(ts):
             M = S > t
             _, _, f1, _ = precision_recall_fscore_support(
@@ -580,7 +560,7 @@ def find_best_combined_alignment(
     best_f1 = float(np.max(f1s))
     best_alpha = float(best_f1_loc[0] / 100.0)
     best_t = float(best_f1_loc[1] / 100.0)
-    best_S = best_alpha * S_semantic + (1 - best_alpha) * S_structural
+    best_S = best_alpha * S_textual + (1 - best_alpha) * S_structural
     best_M = best_S > best_t
 
     return (best_t, best_alpha, best_f1, best_M)
@@ -635,9 +615,9 @@ def tune_threshold(
 
 def tune_threshold_other_medias(
     media_pair: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
-    sim_mode: Literal["structural", "semantic", "combined"],
+    sim_mode: Literal["structural", "textual", "combined"],
     threshold_search_space: np.ndarray,
-    semantic_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
+    textual_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
     structural_mode: Literal["edges", "nodes"] = "edges",
     structural_use_weights: bool = True,
     structural_filtering: Literal[
@@ -666,10 +646,10 @@ def tune_threshold_other_medias(
                 structural_filtering,
                 silent=silent,
             )
-        elif sim_mode == "semantic":
+        elif sim_mode == "textual":
             first_summaries, second_summaries = load_medias_summaries(pair)
-            X = semantic_similarity(
-                first_summaries, second_summaries, semantic_sim_fn, silent=silent
+            X = textual_similarity(
+                first_summaries, second_summaries, textual_sim_fn, silent=silent
             )
         elif sim_mode == "combined":
             first_media_graphs, second_media_graphs = load_medias_graphs(pair)
@@ -682,10 +662,10 @@ def tune_threshold_other_medias(
                 silent=silent,
             )
             first_summaries, second_summaries = load_medias_summaries(pair)
-            S_semantic = semantic_similarity(
-                first_summaries, second_summaries, semantic_sim_fn, silent=silent
+            S_textual = textual_similarity(
+                first_summaries, second_summaries, textual_sim_fn, silent=silent
             )
-            X = combined_similarities(S_structural, S_semantic)
+            X = combined_similarities(S_structural, S_textual)
         else:
             raise ValueError(f"unknown sim_mode: {sim_mode}")
 
