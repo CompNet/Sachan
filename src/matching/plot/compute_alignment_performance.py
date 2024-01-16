@@ -76,9 +76,11 @@ if __name__ == "__main__":
 
         sim_modes: List[Literal["nodes", "edges"]] = ["nodes", "edges"]
         use_weights_modes = (False, True)
-        character_filtering_modes: List[
-            Literal["none", "common", "named", "common+named"]
-        ] = ["none", "common", "named", "common+named"]
+        character_filtering_modes: List[Literal["named", "common", "top20"]] = [
+            "named",
+            "common",
+            "top20",
+        ]
 
         columns = [
             "sim_mode",
@@ -99,6 +101,17 @@ if __name__ == "__main__":
             for sim_mode in sim_modes:
                 for use_weights in use_weights_modes:
                     for character_filtering in character_filtering_modes:
+
+                        if character_filtering == "top20":
+                            if delimiters == (1, 2, 1, 2):
+                                character_filtering = "top20s2"
+                            elif delimiters == (1, 5, 1, 5):
+                                character_filtering = "top20s5"
+                            else:
+                                raise ValueError(
+                                    f"impossible delimiters/filtering combo ({delimiters}/{character_filtering})"
+                                )
+
                         S = graph_similarity_matrix(
                             first_media_graphs,
                             second_media_graphs,
@@ -308,12 +321,24 @@ if __name__ == "__main__":
                 )
 
                 modes: List[Literal["nodes", "edges"]] = ["nodes", "edges"]
-                filtering_lst: List[
-                    Literal["none", "common", "named", "common+named"]
-                ] = ["none", "common", "named", "common+named"]
+                filtering_lst: List[Literal["named", "common", "top20"]] = [
+                    "named",
+                    "common",
+                    "top20",
+                ]
                 for mode, use_weights, filtering in itertools.product(
                     modes, [True, False], filtering_lst
                 ):
+                    if filtering == "top20":
+                        if delimiters == (1, 2, 1, 2):
+                            filtering = "top20s2"
+                        elif delimiters == (1, 5, 1, 5):
+                            filtering = "top20s5"
+                        else:
+                            raise ValueError(
+                                f"impossible delimiters/filtering combo ({delimiters}/{filtering})"
+                            )
+
                     S_struct = graph_similarity_matrix(
                         first_graphs,
                         second_graphs,

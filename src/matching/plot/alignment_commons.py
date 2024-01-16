@@ -351,7 +351,7 @@ def graph_similarity_matrix(
     H_lst: List[nx.Graph],
     mode: Literal["nodes", "edges"],
     use_weights: bool,
-    character_filtering: Literal["none", "common", "named", "common+named"] = "common",
+    character_filtering: Literal["named", "common", "top20s2", "top20s5"],
     silent: bool = False,
 ) -> np.ndarray:
     """Compute a similarity matrixs between two lists of graph, using
@@ -368,6 +368,8 @@ def graph_similarity_matrix(
 
             - Interactions between characters, if ``mode == "edges"``
 
+    :param character_filtering: The filtering to apply to each network
+
     :param silent: if False, displays a progress bar
 
     :return: a similarity matrix of shape ``(n, m)``
@@ -376,7 +378,7 @@ def graph_similarity_matrix(
     G_chars = set(flatten([G.nodes for G in G_lst]))
     H_chars = set(flatten([H.nodes for H in H_lst]))
 
-    if "named" in character_filtering:
+    if character_filtering == "named":
 
         def is_named(char: str, graphs: List[nx.Graph]) -> bool:
             for J in graphs:
@@ -390,10 +392,26 @@ def graph_similarity_matrix(
         G_lst = [filtered_graph(G, G_unnamed_chars) for G in G_lst]
         H_lst = [filtered_graph(H, H_unnamed_chars) for H in H_lst]
 
-    if "common" in character_filtering:
+    elif character_filtering == "common":
         G_xor_H_chars = G_chars ^ H_chars
         G_lst = [filtered_graph(G, list(G_xor_H_chars)) for G in G_lst]
         H_lst = [filtered_graph(H, list(G_xor_H_chars)) for H in H_lst]
+
+    elif character_filtering.startswith("top20"):
+
+        if character_filtering == "top20s2":
+            df = pd.read_csv(f"{root_dir}/in/ranked_importance_S2.csv")
+        elif character_filtering == "top20s5":
+            df = pd.read_csv(f"{root_dir}/in/ranked_importance_S5.csv")
+        else:
+            raise ValueError(f"unknown value for filtering: {character_filtering}")
+
+        top20 = set([row["Name"] for _, row in df.loc[:19].iterrows()])
+        G_lst = [filtered_graph(G, list(G_chars - top20)) for G in G_lst]
+        H_lst = [filtered_graph(H, list(H_chars - top20)) for H in H_lst]
+
+    else:
+        raise ValueError(f"unknown value for filtering: {character_filtering}")
 
     # Nodes mode
     char_appearances = {}
@@ -648,9 +666,7 @@ def tune_threshold_other_medias(
     textual_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
     structural_mode: Literal["edges", "nodes"] = "edges",
     structural_use_weights: bool = True,
-    structural_filtering: Literal[
-        "none", "common", "named", "common+named"
-    ] = "common+named",
+    structural_filtering: Literal["named", "common", "top20s2", "top20s5"] = "named",
     silent: bool = False,
 ) -> float:
     all_media_pairs = {"tvshow-novels", "comics-novels", "tvshow-comics"}
