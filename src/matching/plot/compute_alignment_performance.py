@@ -306,7 +306,7 @@ if __name__ == "__main__":
         f1s = []
 
         # sim_fn * mode * use_weights * filtering
-        with tqdm(total=2 * 2 * 2 * 4) as pbar:
+        with tqdm(total=2 * 2 * 2 * 3) as pbar:
             first_graphs, second_graphs = load_medias_graphs(args.medias, *delimiters)
             G = load_medias_gold_alignment(args.medias, *delimiters)
 
