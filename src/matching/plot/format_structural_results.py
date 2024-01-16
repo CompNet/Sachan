@@ -46,7 +46,10 @@ if __name__ == "__main__":
     df.columns = df.columns.set_levels(
         df.columns.levels[1].map({True: "yes", False: "no"}), level=1
     )
-    df = df.reindex(["none", "common", "named", "common+named"])
+    if args.medias == "tvshow-novels":
+        df = df.reindex(["named", "common", "top20s5"])
+    else:  # comics are limited to 2 seasons
+        df = df.reindex(["named", "common", "top20s2"])
 
     if args.format == "plain":
         print(df)

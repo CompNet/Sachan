@@ -38,7 +38,9 @@ if __name__ == "__main__":
     FONTSIZE = 10
     COLUMN_WIDTH_IN = 5.166
 
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
     parser.add_argument(
         "-m",
         "--medias",
@@ -63,7 +65,7 @@ if __name__ == "__main__":
         "-sk",
         "--structural_kwargs",
         type=str,
-        default='{"mode": "edges", "use_weights": true, "character_filtering": "common+named"}',
+        default='{"mode": "edges", "use_weights": true, "character_filtering": "named"}',
         help="JSON formatted kwargs for structural alignment",
     )
     parser.add_argument(

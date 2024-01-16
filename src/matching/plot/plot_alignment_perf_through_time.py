@@ -86,7 +86,7 @@ if __name__ == "__main__":
         "--character-filtering",
         type=str,
         default="common",
-        help="How to filter character. One of 'none', 'common', 'named' or 'common+named'.",
+        help="How to filter character. One of 'named', 'common', 'top20s2', 'top20s5'.",
     )
     parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
     parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)

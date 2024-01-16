@@ -241,7 +241,7 @@ def tune_smith_waterman_params_other_medias(
     textual_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
     structural_mode: Literal["nodes", "edges"] = "edges",
     structural_use_weights: bool = True,
-    structural_filtering: Literal["none", "common", "named", "common+named"] = "common",
+    structural_filtering: Literal["named", "common", "top20s2", "top20s5"] = "named",
     silent: bool = False,
 ) -> Tuple[float, float, float]:
     """
