@@ -27,7 +27,7 @@ narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","visualization")
+out.folder <- file.path("out","visualization","top20")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
@@ -65,21 +65,22 @@ for(i in 1:length(gs))
 # setup the common layout
 lay.file <- file.path(out.folder,paste0("layout_S",NARRATIVE_PART,".csv"))
 
-##########
-# this part is done once to initialize the layout
-##########
+###########
+## this part is done once to initialize the layout
+###########
 ## export the graphs, so that the layout can be fine-tuned using Gephi, then imported back here
 #for(i in 1:length(gs))
 #{	graph.file <- file.path(out.folder, paste0(names(gs)[i],".graphml"))
+#	cat("Exporting graph in \"",graph.file,"\"\n",sep="")
 #	write.graph(graph=gs[[i]], file=graph.file, format="graphml")
 #}
-
+#
 ## read the modified graph, get the layout, record as CSV for later use
 #graph.file <- file.path(out.folder, "novels.graphml")
 #g <- read.graph(file=graph.file, format="graphml")
 #layout <- data.frame(Name=V(g)$name, X=V(g)$x, Y=V(g)$y)
 #write.csv(x=layout, file=lay.file, row.names=FALSE, fileEncoding="UTF-8")
-##########
+###########
 
 # read layout and apply to networks
 layout <- read.csv(file=lay.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
@@ -114,7 +115,7 @@ for(i in 1:length(gs))
 	#lcols <- sapply(1:gorder(g), function(v) if(V(g)$importance[v]<0.16) "WHITE" else "BLACK")
 	
 	# set edge width
-	ewidth <- E(g)$weight * 20
+	ewidth <- E(g)$weight/max(E(g)$weight) * 25
 	E(g)$ewidth <- ewidth
 	
 	plot.file <- file.path(out.folder, paste0(names(gs)[i],"_S",NARRATIVE_PART,".pdf"))
@@ -157,15 +158,15 @@ pdf(paste0(plot.file,".pdf"), width=21, height=7, bg="white")
 		par(mar=c(0,0,0,0)+0.35)		# margins Bottom Left Top Right
 		# plot graph
 		plot(g, 
-			vertex.size=20, vertex.color=V(g)$vcols, 
-			vertex.label.color="BLACK", vertex.label.font=2, 
+			vertex.size=30, vertex.color=V(g)$vcols, 
+			vertex.label.color="BLACK", vertex.label.font=2, vertex.label.cex=1.5,
 			edge.color=E(g)$ecols, edge.width=E(g)$ewidth
 		)
 		title(narr.names[names(gs)[i]], line = -1)
 		# add legend
 		width <- 0.1; height <- 0.5
-		x1 <- -1.11; x2 <- x1 + width
-		y2 <- -1.09; y1 <- y2 + height
+		x1 <- -1.14; x2 <- x1 + width
+		y2 <- -1.14; y1 <- y2 + height
 		leg.loc <- cbind(x=c(x1, x2, x2, x1), y=c(y1, y1, y2, y2))
 		legend.gradient(
 			pnts=leg.loc,

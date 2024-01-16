@@ -18,9 +18,9 @@ out.files <- paste0(file.path("in","ranked_importance_S"), narr.units, ".csv")
 if(all(file.exists(out.files)))
 	cat("All the files listing important characters already exist\n")
 
-	
-	
-	
+
+
+
 ###############################################################################
 # loop over numbers of seasons/books
 if(!all(file.exists(out.files)))
