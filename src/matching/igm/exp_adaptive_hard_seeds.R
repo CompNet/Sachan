@@ -19,7 +19,8 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
-ATTR <- "sex"				# attribute used: none sex affiliation both
+COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
+ATTR <- "none"				# attribute used: none sex affiliation both
 TOP_CHAR_NBR <- 20			# number of important characters
 
 
@@ -29,7 +30,12 @@ TOP_CHAR_NBR <- 20			# number of important characters
 # output folder
 out.folder <- file.path("out","matching",paste0("attr_",ATTR))
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
-mode.folder <- "common_raw_adaptive_hard"
+
+{	if(COMMON_CHARS_ONLY)
+		mode.folder <- "common_raw_adaptive_hard"
+	else
+		mode.folder <- "named_raw_adaptive_hard"
+}
 
 
 
@@ -78,11 +84,13 @@ for(i in 1:(length(gs)-1))
 		rownames(tab.exact.matches.top)[r] <- comp.name
 		
 		# focus on characters common to both networks
-		names <- intersect(V(g1)$name,V(g2)$name)
-		idx1 <- which(!(V(g1)$name %in% names))
-		g1 <- delete_vertices(g1,idx1)
-		idx2 <- which(!(V(g2)$name %in% names))
-		g2 <- delete_vertices(g2,idx2)
+		if(COMMON_CHARS_ONLY)
+		{	names <- intersect(V(g1)$name,V(g2)$name)
+			idx1 <- which(!(V(g1)$name %in% names))
+			g1 <- delete_vertices(g1,idx1)
+			idx2 <- which(!(V(g2)$name %in% names))
+			g2 <- delete_vertices(g2,idx2)
+		}
 		
 		# first take all characters, then only top ones
 		for(tc in c(FALSE,TRUE))
