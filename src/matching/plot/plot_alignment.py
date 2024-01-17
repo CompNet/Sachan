@@ -163,11 +163,18 @@ if __name__ == "__main__":
         # ----
         plt.style.use("science")
         fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
-        ax.set_title(f"F1 = {f1:.2f}", fontsize=FONTSIZE)
+        ax.set_title(f"F1 = {f1*100:.2f}", fontsize=FONTSIZE)
         ax.imshow(M, interpolation="none", aspect="auto")
         first_media, second_media = args.medias.split("-")
-        ax.set_xlabel(second_media, fontsize=FONTSIZE)
-        ax.set_ylabel(first_media, fontsize=FONTSIZE)
+        if args.medias == "comics-novels":
+            ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
+            ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
+        elif args.medias == "tvshow-comics":
+            ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+            ax.set_xlabel("Comics Issues", fontsize=FONTSIZE)
+        elif args.medias == "tvshow-novels":
+            ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+            ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
         plt.tight_layout()
         if args.output:
@@ -233,11 +240,17 @@ if __name__ == "__main__":
         # ----
         plt.style.use("science")
         fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
-        ax.set_title(f"F1 = {f1:.2f}", fontsize=FONTSIZE)
+        ax.set_title(f"F1 = {f1*100:.2f}", fontsize=FONTSIZE)
         ax.imshow(M, interpolation="none", aspect="auto")
-        first_media, second_media = args.medias.split("-")
-        ax.set_xlabel(second_media, fontsize=FONTSIZE)
-        ax.set_ylabel(first_media, fontsize=FONTSIZE)
+        if args.medias == "comics-novels":
+            ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
+            ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
+        elif args.medias == "tvshow-comics":
+            ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+            ax.set_xlabel("Comics Issues", fontsize=FONTSIZE)
+        elif args.medias == "tvshow-novels":
+            ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+            ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
         plt.tight_layout()
         if args.output:
@@ -270,8 +283,9 @@ if __name__ == "__main__":
 
         # Compute similarity
         # ------------------
+        structural_kwargs = json.loads(args.structural_kwargs)
         S_structural = graph_similarity_matrix(
-            tvshow_graphs, novels_graphs, "edges", True
+            tvshow_graphs, novels_graphs, **structural_kwargs
         )
         S_textual = textual_similarity(
             first_summaries, second_summaries, args.similarity_function
@@ -286,9 +300,9 @@ if __name__ == "__main__":
                 "combined",
                 np.arange(0.0, 1.0, 0.01),
                 textual_sim_fn=args.similarity_function,
-                structural_mode=args.structural_kwargs["mode"],
-                structural_use_weights=args.structural_kwargs["use_weights"],
-                structural_filtering=args.structural_kwargs["filtering"],
+                structural_mode=structural_kwargs["mode"],
+                structural_use_weights=structural_kwargs["use_weights"],
+                structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
             M = S_combined > t
@@ -304,9 +318,9 @@ if __name__ == "__main__":
                 np.arange(0.0, 0.2, 0.01),
                 np.arange(0.0, 0.1, 0.1),  # effectively no search
                 textual_sim_fn=args.similarity_function,
-                structural_mode=args.structural_kwargs["mode"],
-                structural_use_weights=args.structural_kwargs["use_weights"],
-                structural_filtering=args.structural_kwargs["filtering"],
+                structural_mode=structural_kwargs["mode"],
+                structural_use_weights=structural_kwargs["use_weights"],
+                structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
             M, *_ = smith_waterman_align_affine_gap(
@@ -324,10 +338,17 @@ if __name__ == "__main__":
         # ----
         plt.style.use("science")
         fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
-        ax.set_title(f"F1 = {f1:.2f}", fontsize=FONTSIZE)
+        ax.set_title(f"F1 = {f1*100:.2f}", fontsize=FONTSIZE)
         ax.imshow(M, interpolation="none", aspect="auto")
-        ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
-        ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+        if args.medias == "comics-novels":
+            ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
+            ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
+        elif args.medias == "tvshow-comics":
+            ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+            ax.set_xlabel("Comics Issues", fontsize=FONTSIZE)
+        elif args.medias == "tvshow-novels":
+            ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
+            ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
         plt.tight_layout()
         if args.output:
