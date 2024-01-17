@@ -4,7 +4,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
@@ -50,6 +49,14 @@ if __name__ == "__main__":
         df = df.reindex(["named", "common", "top20s5"])
     else:  # comics are limited to 2 seasons
         df = df.reindex(["named", "common", "top20s2"])
+    df = df.rename(
+        index={
+            "named": "Named",
+            "common": "Common",
+            "top20s2": "Top-20",
+            "top20s5": "Top-20",
+        }
+    )
 
     if args.format == "plain":
         print(df)

@@ -17,11 +17,21 @@ if __name__ == "__main__":
 
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
         with open(
-            f"{root_dir}/out/matching/plot/{medias}_combined/df.pickle", "rb"
+            f"{root_dir}/out/matching/plot/{medias}_structural/df.pickle", "rb"
         ) as f:
-            dfs[medias] = pickle.load(f)
+            df = pickle.load(f)
+            dfs[medias] = df
 
-    df = pd.DataFrame({medias: [df["f1"].max(axis=None)] for medias, df in dfs.items()})
+    df = pd.DataFrame(
+        {
+            medias: [
+                df[df["alignment"] == "threshold"]["f1"].max(axis=None),
+                df[df["alignment"] == "smith-waterman"]["f1"].max(axis=None),
+            ]
+            for medias, df in dfs.items()
+        },
+        index=["threshold", "smith-waterman"],
+    )
 
     if args.format == "plain":
         print(df)
@@ -29,7 +39,7 @@ if __name__ == "__main__":
 
     LaTeX_export = (
         df.style.format(lambda v: "{:.2f}".format(v * 100))
-        .hide(axis="index")
+        .highlight_max(props="bfseries: ;", axis=0)
         .to_latex(hrules=True)
     )
     print(LaTeX_export)
