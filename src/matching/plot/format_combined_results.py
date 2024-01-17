@@ -11,13 +11,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--format", type=str, default="latex", help="either 'plain' or 'latex'"
     )
-    parser.add_argument(
-        "-a",
-        "--alignment",
-        type=str,
-        default="threshold",
-        help="one of 'threshold', 'smith-waterman'",
-    )
     args = parser.parse_args()
 
     dfs = {}
