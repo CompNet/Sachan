@@ -371,3 +371,30 @@ for(att in c("none",ATTR_LIST))
 #		cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
 #	}
 #}
+
+
+
+
+###############################################################################
+# distance in the centrality space as a function of character importance
+if(COMMON_CHARS_ONLY)
+{	for(i in 1:(length(gs)-1))
+	{	g1 <- gs[[i]]
+		nm1 <- V(g1)$name
+		idx1 <- match(nm1, char.importance[,"Name"])
+		imp <- char.importance[idx,"Mean"]
+		
+		for(j in (i+1):length(gs))
+		{	idx1 <- match(nm1, rownames(centr.tabs[[i]]))
+			idx2 <- match(nm1, rownames(centr.tabs[[j]]))
+			
+			dists <- sqrt(rowSums((centr.tabs[[i]][idx1,]*centr.tabs[[j]][idx2,])^2))
+			
+			plot.file <- file.path(out.folder, paste0(g.names[i], "_", g.names[j], "_dist-vs-imprt"))
+			pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
+				par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
+				plot(imp, dists, log="xy", col="RED", xlab="Importance", ylab="Distance")
+			dev.off()
+		}
+	}
+}
