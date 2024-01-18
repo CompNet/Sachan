@@ -231,7 +231,7 @@ print(unnamed.nv)
 
 ###############################################################################
 # the attribute already exists in the comics nets, 
-# but the name is not identical to the others, so it must be changed
+# but its name is not identical to the others, so it must be changed
 for(time in c("cumul","instant"))
 {	cat("Handling time mode '",time,"'\n",sep="")
 	
