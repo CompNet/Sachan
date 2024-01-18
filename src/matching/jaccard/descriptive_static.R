@@ -281,5 +281,13 @@ for(i in 1:(length(gs)-1))
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
 			plot(imp, sim.self, log="x", col="RED", xlab="Importance", ylab="Similarity")
 		dev.off()
+		
+		# plot self-similarity-best alter vs. character importance
+		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
+		plot.file <- file.path(local.folder,paste0("similarity-diff_vs_importance"))
+		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
+			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
+			plot(imp, sim.self-sim.alter, log="x", col="RED", xlab="Importance", ylab="Difference between self and best alter similarities")
+		dev.off()
 	}
 }
