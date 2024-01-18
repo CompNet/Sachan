@@ -15,10 +15,10 @@ library("igraph")
 
 
 ###############################################################################
-#net.folder <- "in/comics/cumul/chapter"
+net.folder <- "in/comics/cumul/chapter"
 #net.folder <- "in/comics/cumul/scene"
 #net.folder <- "in/comics/instant/chapter"
-net.folder <- "in/comics/instant/scene"
+#net.folder <- "in/comics/instant/scene"
 
 #net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/cumulative/publication/chapter"
 #net.folder <- "D:/Users/Vincent/eclipse/workspaces/Networks/NaNet/data/ASOIAF/networks/scenes/implicit/unfiltered/cumulative/publication/scene"
@@ -49,16 +49,25 @@ for(i in 1:length(gs))
 {	cat("Processing graph ",i,"/",length(gs),"\n",sep="")
 	g <- gs[[i]]
 	
+	# check multiple occurrences of the same name
+	tt <- table(V(g)$name)
+	if(any(tt>1))
+	{	cat("ERROR: The same name is used by several vertices:")
+		print(which(tt>1))
+		stop("ERROR")
+	}
+	
 	if(gorder(g)>0)
 	{	# normalize the names in the networks
 		idx <- match(V(g)$name, char.tab[,"ComicsName"])
-		if(is.na(any(idx)))
+		if(any(is.na(idx)))
 		{	idx <- which(is.na(idx))
 			cat("ERROR: Could not find the following names in the map:")
 			print(V(g)$name[idx])
 			stop("ERROR")
 		}
-		V(g)$name <- char.tab[idx,"NormalizedName"]
+		else
+			V(g)$name <- char.tab[idx,"NormalizedName"]
 		
 		# change vertex attribute names
 		V(g)$sex <- V(g)$Sex
