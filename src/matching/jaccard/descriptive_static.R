@@ -16,7 +16,7 @@ library("plot.matrix")
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- FALSE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
+COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 
@@ -219,7 +219,7 @@ for(i in 1:(length(gs)-1))
 		sim.alter2 <- apply(tmp, 2, max)
 		sim.alter <- pmax(sim.alter1, sim.alter2)
 		d1 <- degree(g1,mode="all")
-		d2 <- degree(g1,mode="all")
+		d2 <- degree(g2,mode="all")
 		acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
 		acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
 		acc <- length(which(sim.self>sim.alter))/length(sim.self)
@@ -273,5 +273,13 @@ for(i in 1:(length(gs)-1))
 				)
 			dev.off()
 		}
+		
+		# plot self-similarity vs. character importance
+		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
+		plot.file <- file.path(local.folder,paste0("similarity_vs_importance"))
+		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
+			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
+			plot(imp, sim.self, log="x", col="RED", xlab="Importance", ylab="Similarity")
+		dev.off()
 	}
 }

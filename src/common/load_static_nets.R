@@ -138,3 +138,5 @@ source("src/common/char_importance.R")
 tab.file <- file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv"))
 char.importance <- read.csv(file=tab.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, fileEncoding="UTF-8")
 ranked.chars <- char.importance[,"Name"]
+imp.moy <- char.importance[,"Mean"]
+names(imp.moy) <- char.importance[,"Name"]
