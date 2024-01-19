@@ -52,7 +52,7 @@ if __name__ == "__main__":
     # validate the use of args.blocks, since it is only relevant in
     # certain configurations
     if args.blocks:
-        assert args.medias in ("tvhshow-novels", "comics-novels")
+        assert args.medias in ("tvshow-novels", "comics-novels")
         assert args.similarity == "structural"
 
     if args.medias == "tvshow-novels":
@@ -227,12 +227,6 @@ if __name__ == "__main__":
                         # tqdm update
                         # -----------
                         pbar.update(1)
-
-        df = pd.DataFrame(f1s, columns=columns)
-        dir_name = f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}"
-        os.makedirs(dir_name, exist_ok=True)
-        with open(f"{dir_name}/df.pickle", "wb") as f:
-            pickle.dump(df, f)
 
     elif args.similarity == "textual":
         first_summaries, second_summaries = load_medias_summaries(
@@ -433,7 +427,12 @@ if __name__ == "__main__":
         raise ValueError(f"unknow similarity: {args.similarity}")
 
     df = pd.DataFrame(f1s, columns=columns)
-    dir_name = f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}"
+    if args.blocks:
+        dir_name = (
+            f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}_blocks"
+        )
+    else:
+        dir_name = f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}"
     print(f"exporting results to {dir_name}...")
     os.makedirs(dir_name, exist_ok=True)
     with open(f"{dir_name}/df.pickle", "wb") as f:
