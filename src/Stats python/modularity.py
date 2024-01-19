@@ -13,9 +13,7 @@ def modularity(G: nx.Graph, attribute: str, normalise = True):
     classifier = set(nx.get_node_attributes(G, name = attribute).values())
     Q = 0
     a_rsq = 0
-    m = G.size(weight='weight')
-    if len(classifier) == 0:
-        return 'NaN'
+    m = len(G.edges())
     for i in classifier:
         e_rr = 0
         a_r = 0
@@ -30,10 +28,7 @@ def modularity(G: nx.Graph, attribute: str, normalise = True):
     Q += (e_rr - a_r**2)
     a_rsq += a_r**2
     if normalise == True:
-        try:
-            rho = Q / (1 - a_rsq)
-        except ZeroDivisionError:
-            return 1
+        rho = Q / (1 - a_rsq)
         if Q >= 0:
             return rho
         if Q < 0:
@@ -42,5 +37,5 @@ def modularity(G: nx.Graph, attribute: str, normalise = True):
     else:
         return Q 
 
-#if __name__ == '__main__':
+if __name__ == '__main__':
 #        
