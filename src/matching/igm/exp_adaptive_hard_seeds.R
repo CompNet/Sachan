@@ -19,6 +19,7 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
+NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
 COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 ATTR <- "none"				# attribute used: none sex affiliation both
 TOP_CHAR_NBR <- 20			# number of important characters
@@ -28,7 +29,15 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching",paste0("attr_",ATTR))
+out.folder <- file.path("out", "matching")
+{	if(NARRATIVE_PART==0)
+		out.folder <- file.path(out.folder, "whole_narr")
+	else if(NARRATIVE_PART==2)
+		out.folder <- file.path(out.folder, "first_2")
+	else if(NARRATIVE_PART==5)
+		out.folder <- file.path(out.folder, "first_5")
+}
+out.folder <- file.path(out.folder, paste0("attr_",ATTR))
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)
@@ -41,8 +50,6 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
-# only take the first two narrative units (whole narrative not supported here)
-NARRATIVE_PART <- 2
 # load the static graphs
 source("src/common/load_static_nets.R")
 
@@ -51,7 +58,7 @@ source("src/common/load_static_nets.R")
 
 ###############################################################################
 # identify most important characters (according to novels)
-top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:TOP_CHAR_NBR]
+top.chars <- ranked.chars[1:TOP_CHAR_NBR]
 
 
 

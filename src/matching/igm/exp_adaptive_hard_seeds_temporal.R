@@ -100,9 +100,7 @@ for(i in 1:(length(gs)-1))
 				g2 <- delete_vertices(g2,idx2)
 				
 				# indentify top characters
-				top.chars1 <- V(g1)$name[order(degree(g1),decreasing=TRUE)]
-				top.chars2 <- V(g2)$name[order(degree(g2),decreasing=TRUE)]
-				top.chars <- intersect(top.chars1,top.chars2)
+				top.chars <- setdiff(ranked.chars, setdiff(ranked.chars, union(V(g1)$name,V(g2)$name)))
 				
 				if(method=="indefinite")
 				{	res <- gm(

@@ -128,7 +128,7 @@ V(g.tv)$affiliation <- aff
 #rownames(char.importance) <- NULL
 #colnames(char.importance) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
 #write.csv(x=char.importance, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
-
+#
 # 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
 # 5: "Tyrion Lannister" "Jon Snow"      "Arya Stark"    "Jaime Lannister" "Catelyn Stark" "Sansa Stark"
