@@ -18,8 +18,8 @@ source("src/common/colors.R")
 
 ###############################################################################
 # processing parameters
-NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
-COMMON_CHARS_ONLY <- FALSE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
+NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
+COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plots
@@ -311,6 +311,13 @@ for(i in 1:(length(gs)-1))
 			dev.off()
 		}
 		
+		# define a table to store correlation values
+		rn <- c("Self-sim_vs_Imprt","Sim-diff_vs_Imprt")
+		cn <- c("Pearson","Spearman","Kendall")
+		corr.tab <- matrix(NA,nrow=length(rn), ncol=length(cn))
+		colnames(corr.tab) <- cn
+		rownames(corr.tab) <- rn
+		
 		# set up colors for next plots
 		transp <- 25	# transparency level
 		pal <- get.palette(2)
@@ -320,6 +327,9 @@ for(i in 1:(length(gs)-1))
 		# plot self-similarity vs. character importance
 		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
 		yvals <- sim.self
+		corr.tab["Self-sim_vs_Imprt","Pearson"] <- cor(x=imp, y=yvals, method="pearson")
+		corr.tab["Self-sim_vs_Imprt","Spearman"] <- cor(x=imp, y=yvals, method="spearman")
+		corr.tab["Self-sim_vs_Imprt","Kendall"] <- cor(x=imp, y=yvals, method="kendall")
 		plot.file <- file.path(local.folder,paste0("similarity-self_vs_importance"))
 		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
@@ -344,6 +354,9 @@ for(i in 1:(length(gs)-1))
 		# plot self-similarity-best alter vs. character importance
 		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
 		yvals <- sim.self-sim.alter
+		corr.tab["Sim-diff_vs_Imprt","Pearson"] <- cor(x=imp, y=yvals, method="pearson")
+		corr.tab["Sim-diff_vs_Imprt","Spearman"] <- cor(x=imp, y=yvals, method="spearman")
+		corr.tab["Sim-diff_vs_Imprt","Kendall"] <- cor(x=imp, y=yvals, method="kendall")
 		plot.file <- file.path(local.folder,paste0("similarity-diff_vs_importance"))
 		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
@@ -365,5 +378,10 @@ for(i in 1:(length(gs)-1))
 				fill=pal
 			)
 		dev.off()
+		
+		# record correlation matrix
+		cat("Correlation matrix:\n"); print(corr.tab)
+		tab.file <- file.path(local.folder,"sim-imprt_corr.csv")
+		write.csv(x=corr.tab, file=tab.file, row.names=TRUE, fileEncoding="UTF-8")
 	}
 }
