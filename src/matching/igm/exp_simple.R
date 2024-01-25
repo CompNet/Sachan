@@ -22,7 +22,7 @@ NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
 COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
 CENTER_GRAPHS <- FALSE		# whether to perform the centering preprocessing step
 USE_SEEDS <- FALSE			# whether to use seeds to bootstrap the matching process
-USE_SEEDS_NBR <- 5			# number of seeds used (if any)
+USE_SEEDS_NBR <- 15			# number of seeds used (if any)
 ATTR <- "both"				# attribute used during matching: none sex affiliation both
 TOP_CHAR_NBR <- 20			# number of important characters 
 

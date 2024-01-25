@@ -19,7 +19,7 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
-NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
+NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
 COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 ATTR <- "none"				# attribute used: none sex affiliation both
 TOP_CHAR_NBR <- 20			# number of important characters
