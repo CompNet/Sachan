@@ -32,7 +32,7 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching",MEAS)
+out.folder <- file.path("out","matching","first_2",MEAS)
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)
@@ -337,5 +337,8 @@ for(i in 1:(length(gs)-1))
 		# record perfs
 		write.csv(x=perf.tab, file=file.path(local.folder,paste0(file.pref,"series_perf.csv")), row.names=FALSE, fileEncoding="UTF-8")
 		cat("Performance when matching to the most similar character over the whole series:\n",sep="");print(perf.tab)
+		
+		# NOTE: not possible to produce the same plots as for the static method,
+		#       as we don't have an overall similarity matrix, in this case
 	}
 }

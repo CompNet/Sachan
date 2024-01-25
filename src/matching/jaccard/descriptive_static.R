@@ -11,12 +11,15 @@ library("igraph")
 library("viridis")
 library("plot.matrix")
 
+source("src/common/colors.R")
+
 
 
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
+NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
+COMMON_CHARS_ONLY <- FALSE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plots
@@ -27,7 +30,15 @@ narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching",MEAS)
+out.folder <- file.path("out", "matching")
+{	if(NARRATIVE_PART==0)
+		out.folder <- file.path(out.folder, "whole_narr")
+	else if(NARRATIVE_PART==2)
+		out.folder <- file.path(out.folder, "first_2")
+	else if(NARRATIVE_PART==5)
+		out.folder <- file.path(out.folder, "first_5")
+}
+out.folder <- file.path(out.folder, MEAS)
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)
@@ -40,8 +51,6 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
-# only take the first two narrative units (whole narrative not supported here)
-NARRATIVE_PART <- 2
 # load the static graphs and rank the characters by importance
 source("src/common/load_static_nets.R")
 
@@ -60,7 +69,7 @@ for(i in 1:(length(gs)-1))
 		
 		# init local folder
 		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
-		comp.title <- paste0(narr.names[g.names[i]], " vs.", narr.names[g.names[j]])
+		comp.title <- paste0(narr.names[g.names[i]], " vs. ", narr.names[g.names[j]])
 		local.folder <- file.path(out.folder, mode.folder, comp.name)
 		dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
 		
@@ -203,7 +212,7 @@ for(i in 1:(length(gs)-1))
 		ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
 		idx <- match(ranked.names, names)
 		
-		# plot matrix
+		# plot similarity matrix
 		plot.file <- file.path(local.folder,"sim_matrix_all")
 		if(PLOT_CHAR_NAMES)
 		{	pdf(paste0(plot.file,".pdf"), bg="white", width=30, height=30)
@@ -302,20 +311,59 @@ for(i in 1:(length(gs)-1))
 			dev.off()
 		}
 		
+		# set up colors for next plots
+		transp <- 25	# transparency level
+		pal <- get.palette(2)
+		cols <- rep(make.color.transparent(pal[2],transp), gorder(g1))
+		cols[which(V(g1)$name %in% ranked.chars[1:TOP_CHAR_NBR])] <- make.color.transparent(pal[1],transp)
+		
 		# plot self-similarity vs. character importance
 		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
-		plot.file <- file.path(local.folder,paste0("similarity_vs_importance"))
+		yvals <- sim.self
+		plot.file <- file.path(local.folder,paste0("similarity-self_vs_importance"))
 		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
-			plot(imp, sim.self, log="x", col="RED", xlab="Importance", ylab="Similarity")
+			plot(
+				NULL,
+				log="x", col=cols, 
+				main=comp.title, xlab="Importance", ylab="Self-similarity",
+				xlim=range(imp), ylim=range(yvals)
+			)
+			points(
+				imp, yvals,
+				pch=16, col=cols, 
+			)
+			legend(
+				x="topright",
+				title="Characters",
+				legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
+				fill=pal
+			)
 		dev.off()
 		
 		# plot self-similarity-best alter vs. character importance
 		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
+		yvals <- sim.self-sim.alter
 		plot.file <- file.path(local.folder,paste0("similarity-diff_vs_importance"))
 		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
-			plot(imp, sim.self-sim.alter, log="x", col="RED", xlab="Importance", ylab="Difference between self and best alter similarities")
+			plot(
+				NULL, 
+				log="x", 
+				main=comp.title, xlab="Importance", ylab="Difference between self and best alter similarities",
+				xlim=range(imp), ylim=range(yvals)
+			)
+			abline(h=0, lty=2)
+			points(
+				imp, yvals,
+				pch=16, col=cols, 
+			)
+			legend(
+				x="bottomright",
+				title="Characters",
+				legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
+				fill=pal
+			)
 		dev.off()
 	}
 }
