@@ -6,7 +6,7 @@
 # Author: Vincent Labatut
 # 08/2023
 # 
-# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/centrality/char_centrality.R")
 ###############################################################################
 library("igraph")
@@ -27,10 +27,10 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE			# whether to standardize (z-score) the centrality scores
-COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
-NARRATIVE_PART <- 2			# take the whole narrative (0) or only the first two (2) or five (5) narrative units
-TOP_CHAR_NBR <- 20			# number of important characters
-ATTR_LIST <- c("Sex")		# vertex attributes to consider when plotting: Named Sex Affiliation
+COMMON_CHARS_ONLY <- TRUE		# all named characters, or only those common to both compared graphs
+NARRATIVE_PART <- 2				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
+TOP_CHAR_NBR <- 20				# number of important characters
+ATTR_LIST <- c("Sex")	# vertex attributes to consider when plotting: named Sex Affiliation
 narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
@@ -382,18 +382,43 @@ if(COMMON_CHARS_ONLY)
 	{	g1 <- gs[[i]]
 		nm1 <- V(g1)$name
 		idx1 <- match(nm1, char.importance[,"Name"])
-		imp <- char.importance[idx,"Mean"]
+		imp <- char.importance[idx1,"Mean"]
 		
 		for(j in (i+1):length(gs))
-		{	idx1 <- match(nm1, rownames(centr.tabs[[i]]))
+		{	comp.title <- paste0(narr.names[g.names[i]], " vs. ", narr.names[g.names[j]])
+			
+			idx1 <- match(nm1, rownames(centr.tabs[[i]]))
 			idx2 <- match(nm1, rownames(centr.tabs[[j]]))
 			
 			dists <- sqrt(rowSums((centr.tabs[[i]][idx1,]*centr.tabs[[j]][idx2,])^2))
 			
+			# set up colors for next plots	
+			transp <- 25	# transparency level
+			pal <- get.palette(2)
+			cols <- rep(make.color.transparent(pal[2],transp), gorder(g1))
+			cols[which(nm1 %in% ranked.chars[1:TOP_CHAR_NBR])] <- make.color.transparent(pal[1],transp)
+			
+			# produce plot file
+			yvals <- dists
 			plot.file <- file.path(out.folder, paste0(g.names[i], "_", g.names[j], "_dist-vs-imprt"))
 			pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 				par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
-				plot(imp, dists, log="xy", col="RED", xlab="Importance", ylab="Distance")
+				plot(
+					NULL,
+					log="xy", col=cols, 
+					main=comp.title, xlab="Importance", ylab="Centrality Distance",
+					xlim=range(imp[imp>0]), ylim=range(yvals[yvals>0])
+				)
+				points(
+					imp, yvals,
+					pch=16, col=cols, 
+				)
+				legend(
+					x="topleft",
+					title="Characters",
+					legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
+					fill=pal
+				)
 			dev.off()
 		}
 	}
