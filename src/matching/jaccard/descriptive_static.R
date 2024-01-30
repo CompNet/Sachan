@@ -4,7 +4,7 @@
 # Author: Vincent Labatut
 # 08/2023
 # 
-# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/matching/jaccard/descriptive_static.R")
 ###############################################################################
 library("igraph")
@@ -313,7 +313,7 @@ for(i in 1:(length(gs)-1))
 		
 		# define a table to store correlation values
 		rn <- c("Self-sim_vs_Imprt","Sim-diff_vs_Imprt")
-		cn <- c("Pearson","Spearman","Kendall")
+		cn <- c("PearsonCoef","PearsonPval","SpearmanCoef","SpearmanPval","KendallCoef","KendallPval")
 		corr.tab <- matrix(NA,nrow=length(rn), ncol=length(cn))
 		colnames(corr.tab) <- cn
 		rownames(corr.tab) <- rn
@@ -327,9 +327,15 @@ for(i in 1:(length(gs)-1))
 		# plot self-similarity vs. character importance
 		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
 		yvals <- sim.self
-		corr.tab["Self-sim_vs_Imprt","Pearson"] <- cor(x=imp, y=yvals, method="pearson")
-		corr.tab["Self-sim_vs_Imprt","Spearman"] <- cor(x=imp, y=yvals, method="spearman")
-		corr.tab["Self-sim_vs_Imprt","Kendall"] <- cor(x=imp, y=yvals, method="kendall")
+		res <- cor.test(x=imp, y=yvals, method="pearson")
+		corr.tab["Self-sim_vs_Imprt","PearsonCoef"] <- res$estimate
+		corr.tab["Self-sim_vs_Imprt","PearsonPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="spearman")
+		corr.tab["Self-sim_vs_Imprt","SpearmanCoef"] <- res$estimate
+		corr.tab["Self-sim_vs_Imprt","SpearmanPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="kendall")
+		corr.tab["Self-sim_vs_Imprt","KendallCoef"] <- res$estimate
+		corr.tab["Self-sim_vs_Imprt","KendallPval"] <- res$p.value
 		plot.file <- file.path(local.folder,paste0("similarity-self_vs_importance"))
 		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
@@ -354,9 +360,15 @@ for(i in 1:(length(gs)-1))
 		# plot self-similarity-best alter vs. character importance
 		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
 		yvals <- sim.self-sim.alter
-		corr.tab["Sim-diff_vs_Imprt","Pearson"] <- cor(x=imp, y=yvals, method="pearson")
-		corr.tab["Sim-diff_vs_Imprt","Spearman"] <- cor(x=imp, y=yvals, method="spearman")
-		corr.tab["Sim-diff_vs_Imprt","Kendall"] <- cor(x=imp, y=yvals, method="kendall")
+		res <- cor.test(x=imp, y=yvals, method="pearson")
+		corr.tab["Sim-diff_vs_Imprt","PearsonCoef"] <- res$estimate
+		corr.tab["Sim-diff_vs_Imprt","PearsonPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="spearman")
+		corr.tab["Sim-diff_vs_Imprt","SpearmanCoef"] <- res$estimate
+		corr.tab["Sim-diff_vs_Imprt","SpearmanPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="kendall")
+		corr.tab["Sim-diff_vs_Imprt","KendallCoef"] <- res$estimate
+		corr.tab["Sim-diff_vs_Imprt","KendallPval"] <- res$p.value
 		plot.file <- file.path(local.folder,paste0("similarity-diff_vs_importance"))
 		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
@@ -383,5 +395,9 @@ for(i in 1:(length(gs)-1))
 		cat("Correlation matrix:\n"); print(corr.tab)
 		tab.file <- file.path(local.folder,"sim-imprt_corr.csv")
 		write.csv(x=corr.tab, file=tab.file, row.names=TRUE, fileEncoding="UTF-8")
+		
+		# note: correlation test
+		# 	h_0: no linear relationship between the two variables
+		#	p<alpha => reject the null hypothesis, i.e. there is a relationship
 	}
 }

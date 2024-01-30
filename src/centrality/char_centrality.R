@@ -6,7 +6,7 @@
 # Author: Vincent Labatut
 # 08/2023
 # 
-# setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/centrality/char_centrality.R")
 ###############################################################################
 library("igraph")
@@ -27,7 +27,7 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE				# whether to standardize (z-score) the centrality scores
-COMMON_CHARS_ONLY <- FALSE		# all named characters, or only those common to both compared graphs
+COMMON_CHARS_ONLY <- TRUE		# all named characters, or only those common to both compared graphs
 NARRATIVE_PART <- 2				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
 TOP_CHAR_NBR <- 20				# number of important characters
 ATTR_LIST <- c("Sex")			# vertex attributes to consider when plotting: named Sex Affiliation
@@ -152,7 +152,7 @@ for(i in 1:length(gs))
 		plot.file <- file.path(local.folder,paste0("corrmat_all_",cm))
 		pdf(paste0(plot.file,".pdf"), width=8, height=7, bg="white")
 			par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
-			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.1,1,0.1))
+			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.0,1,0.1))
 			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
 		dev.off()
 		
@@ -163,7 +163,7 @@ for(i in 1:length(gs))
 		plot.file <- file.path(local.folder,paste0("corrmat_top",TOP_CHAR_NBR,"_",cm))
 		pdf(paste0(plot.file,".pdf"), width=8, height=7, bg="white")
 			par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
-			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.1,1,0.1))
+			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.0,1,0.1))
 			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
 		dev.off()
 	}
@@ -346,31 +346,40 @@ for(att in c("none",ATTR_LIST))
 
 ###############################################################################
 # plots used in the report
-#if(STANDARDIZE && NARRATIVE_PART==2)
-#{	for(i in 1:length(gs))
-#	{	cat("Processing graph ",g.names[i],"\n")
-#		
-#		g <- gs[[i]]
-#		local.folder <- file.path(out.folder, g.names[i])
-#		
-#		if(COMMON_CHARS_ONLY)
-#			fchar <- "common"
-#		else
-#			fchar <- "named"
-#		
-#		# all characters
-#		src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
-#		tgt.file <- file.path(out.folder,paste0(fchar,"_S",NARRATIVE_PART,"_corrmat_all_spearman_",g.names[i],".pdf"))
-#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-#		cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
-#		
-#		# only top 20 characters
-#		src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
-#		tgt.file <- file.path(out.folder,paste0(fchar,"_S",NARRATIVE_PART,"_corrmat_top20_spearman_",g.names[i],".pdf"))
-#		file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-#		cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
-#	}
-#}
+gen.folder <- file.path("out", "centrality")
+if(STANDARDIZE)
+{	for(i in 1:length(gs))
+	{	if(NARRATIVE_PART>0 || g.names[i]=="tvshow")
+		{	cat("Processing graph ",g.names[i],"\n")
+			
+			narr.part <- NARRATIVE_PART
+			if(NARRATIVE_PART==0)
+				narr.part <- 8
+			
+			g <- gs[[i]]
+			local.folder <- file.path(out.folder, g.names[i])
+			
+			if(COMMON_CHARS_ONLY)
+				fchar <- "common"
+			else
+				fchar <- "named"
+			
+			# all characters
+			src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
+			tgt.file <- file.path(gen.folder,paste0(fchar,"_S",narr.part,"_corrmat_spearman_",g.names[i],".pdf"))
+			file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+			cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
+			
+			# only top 20 characters
+			if(COMMON_CHARS_ONLY)
+			{	src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
+				tgt.file <- file.path(gen.folder,paste0("top20_S",narr.part,"_corrmat_spearman_",g.names[i],".pdf"))
+				file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
+				cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
+			}
+		}
+	}
+}
 
 
 
@@ -394,7 +403,7 @@ if(COMMON_CHARS_ONLY)
 			
 			# define a table to store correlation values
 			rn <- c("Centr-Dist_vs_Imprt")
-			cn <- c("Pearson","Spearman","Kendall")
+			cn <- c("PearsonCoef","PearsonPval","SpearmanCoef","SpearmanPval","KendallCoef","KendallPval")
 			corr.tab <- matrix(NA,nrow=length(rn), ncol=length(cn))
 			colnames(corr.tab) <- cn
 			rownames(corr.tab) <- rn
@@ -407,9 +416,15 @@ if(COMMON_CHARS_ONLY)
 			
 			# produce plot file
 			yvals <- dists
-			corr.tab["Centr-Dist_vs_Imprt","Pearson"] <- cor(x=imp, y=yvals, method="pearson")
-			corr.tab["Centr-Dist_vs_Imprt","Spearman"] <- cor(x=imp, y=yvals, method="spearman")
-			corr.tab["Centr-Dist_vs_Imprt","Kendall"] <- cor(x=imp, y=yvals, method="kendall")
+			res <- cor.test(x=imp, y=yvals, method="pearson")
+			corr.tab["Centr-Dist_vs_Imprt","PearsonCoef"] <- res$estimate
+			corr.tab["Centr-Dist_vs_Imprt","PearsonPval"] <- res$p.value
+			res <- cor.test(x=imp, y=yvals, method="spearman")
+			corr.tab["Centr-Dist_vs_Imprt","SpearmanCoef"] <- res$estimate
+			corr.tab["Centr-Dist_vs_Imprt","SpearmanPval"] <- res$p.value
+			res <- cor.test(x=imp, y=yvals, method="kendall")
+			corr.tab["Centr-Dist_vs_Imprt","KendallCoef"] <- res$estimate
+			corr.tab["Centr-Dist_vs_Imprt","KendallPval"] <- res$p.value
 			plot.file <- file.path(out.folder, paste0(g.names[i], "_", g.names[j], "_dist-vs-imprt"))
 			pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
 				par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
@@ -435,6 +450,10 @@ if(COMMON_CHARS_ONLY)
 			cat("Correlation matrix:\n"); print(corr.tab)
 			tab.file <- file.path(out.folder, paste0(g.names[i], "_", g.names[j], "_dist-imprt_corr.csv"))
 			write.csv(x=corr.tab, file=tab.file, row.names=TRUE, fileEncoding="UTF-8")
+			
+			# note: correlation test
+			# 	h_0: no linear relationship between the two variables
+			#	p<alpha => reject the null hypothesis, i.e. there is a relationship
 		}
 	}
 }
