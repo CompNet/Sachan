@@ -19,7 +19,7 @@ source("src/common/colors.R")
 ###############################################################################
 # processing parameters
 NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
-COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
+COMMON_CHARS_ONLY <- FALSE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plots
@@ -209,10 +209,9 @@ for(i in 1:(length(gs)-1))
 			}
 		}
 		
+		# plot similarity matrix
 		ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
 		idx <- match(ranked.names, names)
-		
-		# plot similarity matrix
 		plot.file <- file.path(local.folder,"sim_matrix_all")
 		if(PLOT_CHAR_NAMES)
 		{	pdf(paste0(plot.file,".pdf"), bg="white", width=30, height=30)
