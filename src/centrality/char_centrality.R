@@ -35,10 +35,6 @@ narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
 
-COMMON_CHARS_ONLY <- TRUE		# all named characters, or only those common to both compared graphs
-
-
-
 
 ###############################################################################
 # output folder
