@@ -6,7 +6,7 @@
 # Author: Vincent Labatut
 # 08/2023
 # 
-# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/centrality/char_centrality.R")
 ###############################################################################
 library("igraph")
@@ -27,9 +27,9 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE				# whether to standardize (z-score) the centrality scores
-CHARSET <- "top"				# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
+CHARSET <- "common"				# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
 TOP_CHAR_NBR <- 20				# number of important characters
-NARRATIVE_PART <- 0				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
+NARRATIVE_PART <- 5				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
 ATTR_LIST <- c("Sex")			# vertex attributes to consider when plotting: named Sex Affiliation
 narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
@@ -371,7 +371,7 @@ if(STANDARDIZE)
 			g <- gs[[i]]
 			local.folder <- file.path(out.folder, g.names[i])
 			
-			src.file <- file.path(local.folder,"corrmat_spearman.pdf")
+			src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
 			tgt.file <- file.path(gen.folder,paste0(comm.folder,"_S",narr.part,"_corrmat_spearman_",g.names[i],".pdf"))
 			file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
 			cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")

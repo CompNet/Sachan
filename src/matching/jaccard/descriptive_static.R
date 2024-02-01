@@ -131,67 +131,6 @@ for(i in 1:(length(gs)-1))
 		rownames(perf.tab) <- rn
 		colnames(perf.tab) <- cn
 		
-# older, much slower version		
-#		# build the vertex similarity matrix
-#		sim.mat <- outer(X=1:gorder(g1), Y=1:gorder(g2), FUN=function(vv1,vv2)
-#		{	sapply(1:length(vv1),function(idx)
-#			{	v1 <- vv1[idx]
-#				v2 <- vv2[idx]
-#				#print(v1);print(v2)
-#				n1 <- neighbors(graph=g1,v=v1,mode="all")$name
-#				w1 <- E(g1)[V(g1)[v1] %--% n1]$weight
-#				w1 <- w1 / sum(w1)
-#				n2 <- neighbors(graph=g2,v=v2,mode="all")$name
-#				w2 <- E(g2)[V(g2)[v2] %--% n2]$weight
-#				w2 <- w2 / sum(w2)
-#				if(MEAS=="jaccard")
-#				{	if(length(n1)==0 || length(n2)==0)
-#						sim <- 0
-#					else
-#					{	all <- union(n1,n2)
-#						j1 <- rep(0,length(all))
-#						j2 <- rep(0,length(all))
-#						j1[match(n1,all)] <- w1
-#						j2[match(n2,all)] <- w2
-#						j.min <- apply(cbind(j1,j2), 1, min)
-#						j.max <- apply(cbind(j1,j2), 1, max)
-#						sim <- sum(j.min)/sum(j.max)
-#					}
-#				}
-#				#print(sim)
-#				return(sim)
-#			})
-#		})
-# alt version (as slow)
-#		sim.mat <- matrix(NA, nrow=gorder(g1), ncol=gorder(g2))
-#		for(v1 in 1:gorder(g1))
-#		{	print(v1)
-#			for(v2 in 1:gorder(g2)) 
-#			{	n1 <- neighbors(graph=g1,v=v1,mode="all")$name
-#				w1 <- E(g1)[V(g1)[v1] %--% n1]$weight
-#				w1 <- w1 / sum(w1)
-#				n2 <- neighbors(graph=g2,v=v2,mode="all")$name
-#				w2 <- E(g2)[V(g2)[v2] %--% n2]$weight
-#				w2 <- w2 / sum(w2)
-#				if(MEAS=="jaccard")
-#				{	if(length(n1)==0 || length(n2)==0)
-#						sim <- 0
-#					else
-#					{	all <- union(n1,n2)
-#						j1 <- rep(0,length(all))
-#						j2 <- rep(0,length(all))
-#						j1[match(n1,all)] <- w1
-#						j2[match(n2,all)] <- w2
-#						j.min <- apply(cbind(j1,j2), 1, min)
-#						j.max <- apply(cbind(j1,j2), 1, max)
-#						sim <- sum(j.min)/sum(j.max)
-#					}
-#				}
-#				#print(sim)
-#				sim.mat[v1,v2] <- sim
-#			}
-#		}
-		
 		# compute and normalize adjacency matrices
 		a1 <- as_adjacency_matrix(graph=g1, type="both", attr="weight", sparse=FALSE)
 		a1 <- t(apply(a1, 1, function(row) if(sum(row)==0) rep(0,length(row)) else row/sum(row)))
@@ -201,17 +140,6 @@ for(i in 1:(length(gs)-1))
 		
 		if(MEAS=="jaccard")
 		{	# compute jaccard (weighted) similarity
-#			sim.mat <- outer(X=1:nrow(a1), Y=1:nrow(a2), FUN=function(vv1,vv2)
-#			{	sapply(1:length(vv1),function(idx)
-#				{	#print(v1)
-#					v1 <- vv1[idx]
-#					v2 <- vv2[idx]
-#					w.min <- pmin(a1[v1,], a2[v2,])
-#					w.max <- pmax(a1[v1,], a2[v2,])
-#					sum(w.min)/sum(w.max)
-#				})
-#			})
-			# alt version (seems faster)
 			sim.mat <- matrix(NA, nrow=nrow(a1), ncol=nrow(a2))
 			rownames(sim.mat) <- names
 			colnames(sim.mat) <- names
@@ -228,6 +156,7 @@ for(i in 1:(length(gs)-1))
 					sim.mat[v1,v2] <- sim
 				}
 			}
+			write.csv(x=sim.mat, file=file.path(local.folder,"sim_matrix_all.csv"), row.names=TRUE, fileEncoding="UTF-8")
 		}
 		
 		# plot similarity matrix
