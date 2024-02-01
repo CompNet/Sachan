@@ -19,11 +19,11 @@ library("iGraphMatch")
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
 NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
-COMMON_CHARS_ONLY <- FALSE	# all named characters, or only those common to both compared graphs
-CENTER_GRAPHS <- FALSE		# whether to perform the centering preprocessing step
+COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
+CENTER_GRAPHS <- TRUE		# whether to perform the centering preprocessing step
 USE_SEEDS <- FALSE			# whether to use seeds to bootstrap the matching process
 USE_SEEDS_NBR <- 15			# number of seeds used (if any)
-ATTR <- "both"				# attribute used during matching: none sex affiliation both
+ATTR <- "sex"				# attribute used during matching: none sex affiliation both
 TOP_CHAR_NBR <- 20			# number of important characters 
 
 
@@ -160,7 +160,7 @@ for(i in 1:(length(gs)-1))
 			# loop over matching methods
 			for(m in 1:length(methods))
 			{	method <- methods[m]
-				if(!(tc && USE_SEEDS && USE_SEEDS_NBR==15))		# this case bugs, for some reason
+				#if(!(tc && USE_SEEDS && USE_SEEDS_NBR==15))		# this case bugs, for some reason
 				{	cat("......Applying method ",method," (top=",tc,")\n",sep="")
 					local.folder <- file.path(out.folder, mode.folder, comp.name, method)
 					dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
