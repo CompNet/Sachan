@@ -27,21 +27,25 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE				# whether to standardize (z-score) the centrality scores
-COMMON_CHARS_ONLY <- TRUE		# all named characters, or only those common to both compared graphs
-NARRATIVE_PART <- 2				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
+CHARSET <- "top"				# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
 TOP_CHAR_NBR <- 20				# number of important characters
+NARRATIVE_PART <- 0				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
 ATTR_LIST <- c("Sex")			# vertex attributes to consider when plotting: named Sex Affiliation
 narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
+
+
+
+COMMON_CHARS_ONLY <- TRUE		# all named characters, or only those common to both compared graphs
 
 
 
 
 ###############################################################################
 # output folder
-{	if(COMMON_CHARS_ONLY)
-		comm.folder <- "common"
+{	if(CHARSET=="top")
+		comm.folder <- paste0(CHARSET,TOP_CHAR_NBR)
 	else
-		comm.folder <- "named"
+		comm.folder <- CHARSET
 	if(NARRATIVE_PART==0)
 		narr.folder <- "whole_narr"
 	else if(NARRATIVE_PART==2)
@@ -63,20 +67,30 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 ###############################################################################
 # load the static graphs
 source("src/common/load_static_nets.R")
-# possibly keep only common characters
-if(COMMON_CHARS_ONLY)
-{	for(i in 1:length(gs))
-	{	nm <- V(gs[[i]])$name
-		if(i==1)
-			common.names <- nm
-		else
-			common.names <- intersect(common.names, nm)
+{	# possibly keep only common characters
+	if(CHARSET=="common")
+	{	for(i in 1:length(gs))
+		{	nm <- V(gs[[i]])$name
+			if(i==1)
+				common.names <- nm
+			else
+				common.names <- intersect(common.names, nm)
+		}
+		for(i in 1:length(gs))
+		{	g <- gs[[i]]
+			nm <- V(g)$name
+			g <- delete_vertices(graph=g, v=which(!(nm %in% common.names)))
+			gs[[i]] <- g
+		}
 	}
-	for(i in 1:length(gs))
-	{	g <- gs[[i]]
-		nm <- V(g)$name
-		g <- delete_vertices(graph=g, v=which(!(nm %in% common.names)))
-		gs[[i]] <- g
+	# or possibly keep only top20 characters
+	else if(CHARSET=="top")
+	{	for(i in 1:length(gs))
+		{	g <- gs[[i]]
+			nm <- V(g)$name
+			g <- delete_vertices(graph=g, v=which(!(nm %in% ranked.chars[1:TOP_CHAR_NBR])))
+			gs[[i]] <- g
+		}
 	}
 }
 
@@ -138,7 +152,7 @@ for(i in 1:length(gs))
 	write.csv(x=centr.tab, file=file.path(local.folder,"centrality_values.csv"), row.names=TRUE, fileEncoding="UTF-8")
 	centr.tabs[[i]] <- centr.tab
 	
-	# order the characters by importance (better looking plots)
+	# order the characters by importance (better looking radar plots)
 	chars <- setdiff(ranked.chars, setdiff(ranked.chars,V(g)$name))
 	idx <- match(chars, V(g)$name)
 	mm <- rbind(apply(centr.tab,2,max),apply(centr.tab,2,min))
@@ -157,15 +171,17 @@ for(i in 1:length(gs))
 		dev.off()
 		
 		# only most important characters
-		cor.mat <- cor(x=centr.tab[idx[1:TOP_CHAR_NBR],], method=cm)
-		rownames(cor.mat) <- short.names[rownames(cor.mat)]
-		colnames(cor.mat) <- short.names[colnames(cor.mat)]
-		plot.file <- file.path(local.folder,paste0("corrmat_top",TOP_CHAR_NBR,"_",cm))
-		pdf(paste0(plot.file,".pdf"), width=8, height=7, bg="white")
-			par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
-			plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.0,1,0.1))
-			#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
-		dev.off()
+		if(CHARSET!="top")
+		{	cor.mat <- cor(x=centr.tab[idx[1:TOP_CHAR_NBR],], method=cm)
+			rownames(cor.mat) <- short.names[rownames(cor.mat)]
+			colnames(cor.mat) <- short.names[colnames(cor.mat)]
+			plot.file <- file.path(local.folder,paste0("corrmat_top",TOP_CHAR_NBR,"_",cm))
+			pdf(paste0(plot.file,".pdf"), width=8, height=7, bg="white")
+				par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
+				plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=narr.names[g.names[i]], cex.axis=1.0, breaks=seq(0.0,1,0.1))
+				#plot(cor.mat, border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=g.names[i], cex.axis=0.7, breaks=seq(-1,1,0.1))
+			dev.off()
+		}
 	}
 	
 	# radar plots with main characters
@@ -359,24 +375,10 @@ if(STANDARDIZE)
 			g <- gs[[i]]
 			local.folder <- file.path(out.folder, g.names[i])
 			
-			if(COMMON_CHARS_ONLY)
-				fchar <- "common"
-			else
-				fchar <- "named"
-			
-			# all characters
-			src.file <- file.path(local.folder,"corrmat_all_spearman.pdf")
-			tgt.file <- file.path(gen.folder,paste0(fchar,"_S",narr.part,"_corrmat_spearman_",g.names[i],".pdf"))
+			src.file <- file.path(local.folder,"corrmat_spearman.pdf")
+			tgt.file <- file.path(gen.folder,paste0(comm.folder,"_S",narr.part,"_corrmat_spearman_",g.names[i],".pdf"))
 			file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
 			cat("  Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
-			
-			# only top 20 characters
-			if(COMMON_CHARS_ONLY)
-			{	src.file <- file.path(local.folder,"corrmat_top20_spearman.pdf")
-				tgt.file <- file.path(gen.folder,paste0("top20_S",narr.part,"_corrmat_spearman_",g.names[i],".pdf"))
-				file.copy(from=src.file, to=tgt.file, overwrite=TRUE)
-				cat("..Copying file \"",src.file,"\" >> \"",tgt.file,"\"\n")
-			}
 		}
 	}
 }
@@ -386,7 +388,7 @@ if(STANDARDIZE)
 
 ###############################################################################
 # distance in the centrality space as a function of character importance
-if(COMMON_CHARS_ONLY)
+if(CHARSET=="common")
 {	for(i in 1:(length(gs)-1))
 	{	g1 <- gs[[i]]
 		nm1 <- V(g1)$name
@@ -395,6 +397,7 @@ if(COMMON_CHARS_ONLY)
 		
 		for(j in (i+1):length(gs))
 		{	g2 <- gs[[j]]
+			comp.name <- paste0(g.names[i], "_vs_", g.names[j])
 			comp.title <- paste0(narr.names[g.names[i]], " vs. ", narr.names[g.names[j]])
 			
 			idx1 <- match(nm1, rownames(centr.tabs[[i]]))
