@@ -18,12 +18,12 @@ library("iGraphMatch")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
-NARRATIVE_PART <- 5			# take the first two (2) or five (5) narrative units
+NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
 COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
-CENTER_GRAPHS <- TRUE		# whether to perform the centering preprocessing step
-USE_SEEDS <- FALSE			# whether to use seeds to bootstrap the matching process
+CENTER_GRAPHS <- FALSE		# whether to perform the centering preprocessing step
+USE_SEEDS <- TRUE			# whether to use seeds to bootstrap the matching process
 USE_SEEDS_NBR <- 15			# number of seeds used (if any)
-ATTR <- "sex"				# attribute used during matching: none sex affiliation both
+ATTR <- "none"				# attribute used during matching: none sex affiliation both
 TOP_CHAR_NBR <- 20			# number of important characters 
 
 
@@ -69,6 +69,7 @@ source("src/common/load_static_nets.R")
 
 
 ###############################################################################
+if(!USE_SEEDS) USE_SEEDS_NBR <- 0
 # identify most important characters (according to novels)
 top.chars <- ranked.chars[1:TOP_CHAR_NBR]
 char.seeds <- top.chars[1:USE_SEEDS_NBR]
@@ -245,11 +246,11 @@ for(i in 1:(length(gs)-1))
 					# number of perfect matches
 					idx.exact.matches <- which(V(g1)$name[res$corr_A]==V(g2)$name[res$corr_B])
 					nbr.exact.matches <- length(idx.exact.matches)
-					tab.exact.matches[r,method] <- nbr.exact.matches
-					cat("Number of perfect matches:",nbr.exact.matches,"\n")
+					tab.exact.matches[r,method] <- nbr.exact.matches - USE_SEEDS_NBR
+					cat("Number of perfect matches: ",nbr.exact.matches," (",nbr.exact.matches-USE_SEEDS_NBR,")\n",sep="")
 					sink()
 					print(summary(res, dg1, dg2, true_label=gt))
-					cat("Number of perfect matches:",nbr.exact.matches,"\n")
+					cat("Number of perfect matches: ",nbr.exact.matches," (",nbr.exact.matches-USE_SEEDS_NBR,")\n",sep="")
 					
 					# list perfect matches
 					if(nbr.exact.matches>0)
@@ -302,13 +303,13 @@ for(i in 1:(length(gs)-1))
 cat("Overall results for all characters:\n")
 print(tab.exact.matches.all)
 write.csv(x=tab.exact.matches.all, file=file.path(out.folder,mode.folder,"exact_matches_comparison_all_counts.csv"), row.names=TRUE, fileEncoding="UTF-8")
-tab.exact.matches.all.prop <- t(apply(tab.exact.matches.all, 1, function(row) row[1:(length(row)-1)]/row[length(row)]))
+tab.exact.matches.all.prop <- t(apply(tab.exact.matches.all, 1, function(row) row[1:(length(row)-1)]/(row[length(row)]-USE_SEEDS_NBR)))
 print(tab.exact.matches.all.prop)
 write.csv(x=tab.exact.matches.all.prop, file=file.path(out.folder,mode.folder,"exact_matches_comparison_all_prop.csv"), row.names=TRUE, fileEncoding="UTF-8")
 #
 cat("Overall results for top characters:\n")
 print(tab.exact.matches.top)
 write.csv(x=tab.exact.matches.top, file=file.path(out.folder,mode.folder,"exact_matches_comparison_top_counts.csv"), row.names=TRUE, fileEncoding="UTF-8")
-tab.exact.matches.top.prop <- t(apply(tab.exact.matches.top, 1, function(row) row[1:(length(row)-1)]/row[length(row)]))
+tab.exact.matches.top.prop <- t(apply(tab.exact.matches.top, 1, function(row) row[1:(length(row)-1)]/(row[length(row)]-USE_SEEDS_NBR)))
 print(tab.exact.matches.top.prop)
 write.csv(x=tab.exact.matches.top.prop, file=file.path(out.folder,mode.folder,"exact_matches_comparison_top_prop.csv"), row.names=TRUE, fileEncoding="UTF-8")
