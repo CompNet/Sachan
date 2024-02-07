@@ -15,7 +15,7 @@ data <- matrix(c(5,0,2,0,5,3),ncol=3)
 colnames(data) <- c(expression(italic(Novels)),"Comics","TV Show")
 cols <- c(rgb(77,175,74,maxColorValue=255), rgb(255,127,0,maxColorValue=255))
 
-plot.file <- "out/visualization/narratives/narr_overlap.pdf"
+plot.file <- "out/visualization/narratives/narr_overlap"
 pdf(paste0(plot.file,".pdf"), width=15, height=4, bg="white")
 	par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
 	barplot(
