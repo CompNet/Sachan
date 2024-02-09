@@ -45,6 +45,18 @@ source("src/common/load_dynamic_nets.R")
 
 
 ###############################################################################
+## compute a list of characters ranked by importance
+source("src/common/char_importance.R")
+tab.file <- file.path("in",paste0("ranked_importance_S",2,".csv"))
+char.importance <- read.csv(file=tab.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, fileEncoding="UTF-8")
+ranked.chars <- char.importance[,"Name"]
+imp.moy <- char.importance[,"Mean"]
+names(imp.moy) <- char.importance[,"Name"]
+
+
+
+
+###############################################################################
 # adaptive hard seeding
 gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
@@ -299,6 +311,7 @@ colors <- brewer_pal(type="qual", palette=2)(length(methods))
 for(i in 1:(length(gs)-1))
 {	for(j in (i+1):length(gs))
 	{	comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+		comp.title <- bquote(bolditalic(.(narr.names[g.names[i]]))~bold(" vs. ")~bolditalic(.(narr.names[g.names[j]])))
 		local.folder <- file.path(out.folder, mode.folder, comp.name)
 		sss <- min(length(gs[[i]]), length(gs[[j]]))
 		
@@ -321,10 +334,10 @@ for(i in 1:(length(gs)-1))
 		
 		### create performance plot
 		plot.file <- file.path(local.folder,"exact_matches_evolution")
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
 		plot(
 			NULL, 
-			main=paste0(g.names[i], " vs ", g.names[j]),
+			main=comp.title,
 			xlab="Time", ylab="Exact matches",
 			xlim=c(1,nrow(all.evol)), ylim=range(c(all.evol))
 		)
@@ -342,10 +355,10 @@ for(i in 1:(length(gs)-1))
 		
 		### create seed number plot
 		plot.file <- file.path(local.folder,"seed_number_evolution")
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
 		plot(
 			NULL, 
-			main=paste0(g.names[i], " vs ", g.names[j]),
+			main=comp.title,
 			xlab="Time", ylab="Seed number",
 			xlim=c(1,nrow(all.sn)), ylim=range(c(all.sn))
 		)

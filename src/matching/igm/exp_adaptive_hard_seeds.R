@@ -337,6 +337,7 @@ for(tc in c(FALSE,TRUE))
 	for(i in 1:(length(gs)-1))
 	{	for(j in (i+1):length(gs))
 		{	comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+			comp.title <- bquote(bolditalic(.(narr.names[g.names[i]]))~bold(" vs. ")~bolditalic(.(narr.names[g.names[j]])))
 			local.folder <- file.path(out.folder, mode.folder, comp.name)
 			
 			# loop over matching methods
@@ -355,10 +356,10 @@ for(tc in c(FALSE,TRUE))
 			
 			# create plot
 			plot.file <- file.path(local.folder,paste0("exact_matches_evolution",suffx))
-			pdf(paste0(plot.file,".pdf"), bg="white")
+			pdf(paste0(plot.file,".pdf"))	# bg="white"
 				plot(
 					NULL, 
-					main=paste0(g.names[i], " vs ", g.names[j]),
+					main=comp.title,
 					xlab="Adaptive hard seeds", ylab="Exact matches",
 					xlim=range(sn), ylim=range(c(all.evol),na.rm=TRUE)
 				)
