@@ -52,19 +52,25 @@
 
 # read the chapter-based novel static graph
 g.nv <- read.graph(file.nv, format="graphml")
+cat("Number of characters in the novels:",gorder(g.nv),"\n")
 g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)		# keep only named characters
+cat("Number of named characters in the novels:",gorder(g.nv),"\n")
 E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)		# normalize weights
 
 # read the scene-based comics static graph
 if(!is.na(file.cx))
 {	g.cx <- read.graph(file.cx, format="graphml")
+	cat("Number of characters in the comics:",gorder(g.cx),"\n")
 	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)	# keep only named characters
+	cat("Number of named characters in the comics:",gorder(g.cx),"\n")
 	E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
 }
 
 # read the episode-based tvshow static graph
 g.tv <- read.graph(file.tv, format="graphml")
+cat("Number of characters in the tv show:",gorder(g.tv),"\n")
 g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)		# keep only named characters
+cat("Number of named characters in the tv show:",gorder(g.tv),"\n")
 E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)		# normalize weights
 
 
