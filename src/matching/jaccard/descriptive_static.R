@@ -19,7 +19,7 @@ source("src/common/colors.R")
 ###############################################################################
 # processing parameters
 NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
-CHARSET <- "named"			# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
+CHARSET <- "common"			# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plots
@@ -69,7 +69,8 @@ for(i in 1:(length(gs)-1))
 		
 		# init local folder
 		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
-		comp.title <- paste0(narr.names[g.names[i]], " vs. ", narr.names[g.names[j]])
+		#comp.title <- paste0(narr.names[g.names[i]], " vs. ", narr.names[g.names[j]])
+		comp.title <- bquote(bolditalic(.(narr.names[g.names[i]]))~bold(" vs. ")~bolditalic(.(narr.names[g.names[j]])))
 		local.folder <- file.path(out.folder, mode.folder, comp.name)
 		dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
 		
@@ -164,38 +165,44 @@ for(i in 1:(length(gs)-1))
 		idx <- match(ranked.names, names)
 		plot.file <- file.path(local.folder,"sim_matrix_all")
 		if(PLOT_CHAR_NAMES)
-		{	pdf(paste0(plot.file,".pdf"), bg="white", width=30, height=30)
+		{	pdf(paste0(plot.file,".pdf"), width=30, height=30)	# bg="white"
 				par(mar=c(5,4,4,2)+0.1)	# margins Bottom Left Top Right
 				plot(
 					sim.mat[idx,idx], 
-					border=NA, col=viridis, 
+					border=NA, col=viridis, breaks=seq(0.0,1,0.1), 
 					las=2, 
-					xlab=narr.names[g.names[i]], ylab=narr.names[g.names[j]], main=NA, 
+					xlab=bquote(italic(.(narr.names[g.names[i]]))), ylab=bquote(italic(.(narr.names[g.names[j]]))), main=NA, 
 					cex.axis=0.2,
 					key=NULL
 				)
-				title(comp.title,  line=0.5)
+				title(comp.title,  line=1)
 			dev.off()
 		}
 		else
-		{	pdf(paste0(plot.file,".pdf"), bg="white", width=7, height=7)
+		{	pdf(paste0(plot.file,".pdf"), width=7, height=7)	# bg="white"
 				par(mar=c(3,2,2,0.5)+0.1)	# margins Bottom Left Top Right
 				plot(
 					sim.mat[idx,idx], 
-					border=NA, col=viridis, 
+					border=NA, col=viridis, breaks=seq(0.0,1,0.1), 
 					las=2, 
-					xlab=narr.names[g.names[i]], ylab=narr.names[g.names[j]], main=NA, 
+					xlab=bquote(italic(.(narr.names[g.names[i]]))), ylab=bquote(italic(.(narr.names[g.names[j]]))), main=NA, 
 					axis.col=NULL, axis.row=NULL, mgp=c(1,1,0),
 					key=NULL
 				)
-				title(comp.title,  line=0.5)
+				title(comp.title,  line=1)
 			dev.off()
 		}
 		# plot only top characters
 		plot.file <- file.path(local.folder,paste0("sim_matrix_top",TOP_CHAR_NBR))
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
 			par(mar=c(5.5,4.75,4.5,2)+0.1)	# margins Bottom Left Top Right
-			plot(sim.mat[idx[1:TOP_CHAR_NBR],idx[1:TOP_CHAR_NBR]], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.title, cex.axis=0.5, fmt.key="%.2f")
+			plot(
+				sim.mat[idx[1:TOP_CHAR_NBR],idx[1:TOP_CHAR_NBR]], 
+				border=NA, col=viridis, breaks=seq(0.0,1,0.1), 
+				las=2, 
+				xlab=NA, ylab=NA, main=comp.title, 
+				cex.axis=0.5, fmt.key="%.2f"
+			)
 		dev.off()
 		
 		# compute some sort of performance by considering the most similar alters vs. self
@@ -239,7 +246,7 @@ for(i in 1:(length(gs)-1))
 			{	idx <- cols==pal[s]
 				plot.file <- file.path(local.folder,paste0("sim_self_vs_bestalter_s",fprobs[s]))
 			}
-			pdf(paste0(plot.file,".pdf"), bg="white")
+			pdf(paste0(plot.file,".pdf"))	# bg="white"
 				plot(
 					NULL, 
 					main=comp.title, xlab="Self-similarity", ylab="Best alter-similarity",
@@ -285,7 +292,7 @@ for(i in 1:(length(gs)-1))
 		corr.tab["Self-sim_vs_Imprt","KendallCoef"] <- res$estimate
 		corr.tab["Self-sim_vs_Imprt","KendallPval"] <- res$p.value
 		plot.file <- file.path(local.folder,paste0("similarity-self_vs_importance"))
-		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
+		pdf(paste0(plot.file,".pdf"), width=7, height=7)	# bg="white"
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
 			plot(
 				NULL,
@@ -318,7 +325,7 @@ for(i in 1:(length(gs)-1))
 		corr.tab["Sim-diff_vs_Imprt","KendallCoef"] <- res$estimate
 		corr.tab["Sim-diff_vs_Imprt","KendallPval"] <- res$p.value
 		plot.file <- file.path(local.folder,paste0("similarity-diff_vs_importance"))
-		pdf(paste0(plot.file,".pdf"), width=7, height=7, bg="white")
+		pdf(paste0(plot.file,".pdf"), width=7, height=7)	# bg="white"
 			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
 			plot(
 				NULL, 
