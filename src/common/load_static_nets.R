@@ -112,6 +112,7 @@ V(g.tv)$affiliation <- aff
 		gs <- list("novels"=g.nv, "tvshow"=g.tv)
 	g.names <- names(gs)
 }
+narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
 

@@ -6,7 +6,7 @@
 # Author: Vincent Labatut
 # 08/2023
 # 
-# setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
+# setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
 # source("src/centrality/char_centrality.R")
 ###############################################################################
 library("igraph")
@@ -27,16 +27,17 @@ source("src/common/colors.R")
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
 short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE				# whether to standardize (z-score) the centrality scores
-CHARSET <- "common"				# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
+CHARSET <- "named"				# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
 TOP_CHAR_NBR <- 20				# number of important characters
 NARRATIVE_PART <- 2				# take the whole narrative (0) or only the first two (2) or five (5) narrative units
-ATTR_LIST <- c("Sex")			# vertex attributes to consider when plotting: named Sex Affiliation
-narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
 
 
 ###############################################################################
+# plot parameter
+ATTR_LIST <- c("Sex")			# vertex attributes to consider when plotting: named Sex Affiliation
+
 # output folder
 {	if(CHARSET=="top")
 		comm.folder <- paste0(CHARSET,TOP_CHAR_NBR)
@@ -160,6 +161,9 @@ for(i in 1:length(gs))
 		cor.mat <- cor(x=centr.tab, method=cm)
 		rownames(cor.mat) <- short.names[rownames(cor.mat)]
 		colnames(cor.mat) <- short.names[colnames(cor.mat)]
+#dsd <- which(cor.mat<0,arr.ind=TRUE)
+#if(nrow(dsd)>0) for(r in 1:nrow(dsd)) cor.mat[dsd[r,1],dsd[r,2]] <- 0
+	
 		plot.file <- file.path(local.folder,paste0("corrmat_all_",cm))
 		pdf(paste0(plot.file,".pdf"), width=8, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
@@ -580,31 +584,33 @@ if(CHARSET=="common")
 
 ################################################################################
 # compare the best clusters
-for(metric in c("nmi","ari"))
-{	# parameter of the function used to compute the metric
-	param <- metric
-	if(metric=="ari")
-		param <- "adjusted.rand"
-	
-	# init matrix to store results
-	comp.clstrs <- matrix(NA, nrow=length(gs), ncol=length(gs))
-	rownames(comp.clstrs) <- names(gs)
-	colnames(comp.clstrs) <- names(gs)
-	
-	# loop over pairs of networks
-	for(i in 1:(length(gs)-1))
-	{	for(j in (i+1):length(gs))
-		{	# align the characters
-			idx <- match(names(best.clusters[[i]]), names(best.clusters[[j]]))
-			
-			# compute the score
-			score <- compare(comm1=best.clusters[[i]], comm2=best.clusters[[j]][idx], method=param)
-			cat("Similarity (",metric,") between ",names(gs)[i]," and ",names(gs)[j],": ",score,"\n",sep="")
-			comp.clstrs[names(gs)[i],names(gs)[j]] <- comp.clstrs[names(gs)[j],names(gs)[i]] <- score
+if(CHARSET!="named")
+{	for(metric in c("nmi","ari"))
+	{	# parameter of the function used to compute the metric
+		param <- metric
+		if(metric=="ari")
+			param <- "adjusted.rand"
+		
+		# init matrix to store results
+		comp.clstrs <- matrix(NA, nrow=length(gs), ncol=length(gs))
+		rownames(comp.clstrs) <- names(gs)
+		colnames(comp.clstrs) <- names(gs)
+		
+		# loop over pairs of networks
+		for(i in 1:(length(gs)-1))
+		{	for(j in (i+1):length(gs))
+			{	# align the characters
+				idx <- match(names(best.clusters[[i]]), names(best.clusters[[j]]))
+				
+				# compute the score
+				score <- compare(comm1=best.clusters[[i]], comm2=best.clusters[[j]][idx], method=param)
+				cat("Similarity (",metric,") between ",names(gs)[i]," and ",names(gs)[j],": ",score,"\n",sep="")
+				comp.clstrs[names(gs)[i],names(gs)[j]] <- comp.clstrs[names(gs)[j],names(gs)[i]] <- score
+			}
 		}
+		
+		print(comp.clstrs)
+		tab.file <- file.path(out.folder, paste0("cluster_comparison_",metric,".csv"))
+		write.csv(x=comp.clstrs, file=tab.file, row.names=TRUE, fileEncoding="UTF-8")
 	}
-	
-	print(comp.clstrs)
-	tab.file <- file.path(out.folder, paste0("cluster_comparison_",metric,".csv"))
-	write.csv(x=comp.clstrs, file=tab.file, row.names=TRUE, fileEncoding="UTF-8")
 }

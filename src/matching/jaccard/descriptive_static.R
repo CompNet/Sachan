@@ -23,7 +23,6 @@ CHARSET <- "common"			# all named characters (named), or only those common to bo
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plots
-narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
 

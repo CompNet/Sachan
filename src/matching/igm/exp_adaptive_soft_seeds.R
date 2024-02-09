@@ -64,6 +64,7 @@ top.chars <- ranked.chars[1:TOP_CHAR_NBR]
 ###############################################################################
 # adaptive soft seeding
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama", "IsoRank")
+m.names <- c("convex"="Convex", "indefinite"="Indefinite", "PATH"="Concave", "percolation"="Percolation", "Umeyama"="Umeyama", "IsoRank"="IsoRank")
 
 tab.exact.matches.all <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
 colnames(tab.exact.matches.all) <- c(methods,"CharNbr")
@@ -363,7 +364,7 @@ for(tc in c(FALSE,TRUE))
 			# add legend
 			legend(
 				x="topleft",
-				legend=methods,
+				legend=m.names[methods],
 				fill=colors
 			)
 			

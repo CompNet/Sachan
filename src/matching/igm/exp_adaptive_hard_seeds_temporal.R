@@ -28,7 +28,7 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching","attr_none")
+out.folder <- file.path("out","matching","first_2","attr_none")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 mode.folder <- "common_raw_adaptive_hard_temporal"
 
@@ -61,7 +61,7 @@ names(imp.moy) <- char.importance[,"Name"]
 gs <- list(gs.nv, gs.cx)			# gs.tv
 g.names <- c("novels","comics")		# "tvshow"
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
-
+m.names <- c("convex"="Convex", "indefinite"="Indefinite", "PATH"="Concave", "percolation"="Percolation", "Umeyama"="Umeyama", "IsoRank"="IsoRank")
 
 tab.exact.matches <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
 colnames(tab.exact.matches) <- c(methods,"CharNbr")
@@ -335,42 +335,42 @@ for(i in 1:(length(gs)-1))
 		### create performance plot
 		plot.file <- file.path(local.folder,"exact_matches_evolution")
 		pdf(paste0(plot.file,".pdf"))	# bg="white"
-		plot(
-			NULL, 
-			main=comp.title,
-			xlab="Time", ylab="Exact matches",
-			xlim=c(1,nrow(all.evol)), ylim=range(c(all.evol))
-		)
-		# loop over matching methods and plot each as a series
-		for(m in 1:length(methods))
-			lines(x=1:nrow(all.evol), y=all.evol[,m], col=colors[m], lwd=2)
-		# add legend
-		legend(
-			x="topleft",
-			legend=methods,
-			fill=colors
-		)
+			plot(
+				NULL, 
+				main=comp.title,
+				xlab="Time", ylab="Exact matches",
+				xlim=c(1,nrow(all.evol)), ylim=range(c(all.evol))
+			)
+			# loop over matching methods and plot each as a series
+			for(m in 1:length(methods))
+				lines(x=1:nrow(all.evol), y=all.evol[,m], col=colors[m], lwd=2)
+			# add legend
+			legend(
+				x="topleft",
+				legend=m.names[methods],
+				fill=colors
+			)
 		# close plot
 		dev.off()
 		
 		### create seed number plot
 		plot.file <- file.path(local.folder,"seed_number_evolution")
 		pdf(paste0(plot.file,".pdf"))	# bg="white"
-		plot(
-			NULL, 
-			main=comp.title,
-			xlab="Time", ylab="Seed number",
-			xlim=c(1,nrow(all.sn)), ylim=range(c(all.sn))
-		)
-		# loop over matching methods and plot each as a series
-		for(m in 1:length(methods))
-			lines(x=1:nrow(all.sn), y=all.sn[,m], col=colors[m], lwd=2)
-		# add legend
-		legend(
-			x="topleft",
-			legend=methods,
-			fill=colors
-		)
+			plot(
+				NULL, 
+				main=comp.title,
+				xlab="Time", ylab="Seed number",
+				xlim=c(1,nrow(all.sn)), ylim=range(c(all.sn))
+			)
+			# loop over matching methods and plot each as a series
+			for(m in 1:length(methods))
+				lines(x=1:nrow(all.sn), y=all.sn[,m], col=colors[m], lwd=2)
+			# add legend
+			legend(
+				x="topleft",
+				legend=m.names[methods],
+				fill=colors
+			)
 		# close plot
 		dev.off()
 	}

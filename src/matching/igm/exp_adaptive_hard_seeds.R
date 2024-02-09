@@ -66,6 +66,7 @@ top.chars <- ranked.chars[1:TOP_CHAR_NBR]
 ###############################################################################
 # adaptive hard seeding
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama")	# "IsoRank" requires a vertex similarity matrix
+m.names <- c("convex"="Convex", "indefinite"="Indefinite", "PATH"="Concave", "percolation"="Percolation", "Umeyama"="Umeyama", "IsoRank"="IsoRank")
 
 tab.exact.matches.all <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
 colnames(tab.exact.matches.all) <- c(methods,"CharNbr")
@@ -368,13 +369,12 @@ for(tc in c(FALSE,TRUE))
 				for(m in 1:length(methods))
 					lines(x=sn, y=all.evol[,m], col=colors[m], lwd=2)
 			
-			# add legend
-			legend(
-				x="topleft",
-				legend=methods,
-				fill=colors
-			)
-			
+				# add legend
+				legend(
+					x="topleft",
+					legend=m.names[methods],
+					fill=colors
+				)
 			# close plot
 			dev.off()
 		}
