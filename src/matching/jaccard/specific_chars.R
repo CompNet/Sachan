@@ -20,16 +20,26 @@ TOP_CHAR_NBR <- 20			# number of important characters (fixed)
 
 ###############################################################################
 merged.chars <- matrix(c(
-#	"Lyn Corbray","Lucas Corbray",			# ERROR: Lucas is actually missing from our novels annotations
-	"Harrion Karstark","Arnolf Karstark", 
-	"Benerro","Moqorro",
-	"Meribald","Elder Brother"
+	# keep character
+	"Dirk","Clubfoot Karl",
+	"Gendry", "Edric Storm"
+#	"Orell", "Varamyr",						# ERROR: Varamy (cf. below) absent from the TV Show annotations
+	# new character
+#	"Lyn Corbray","Lucas Corbray",			# ERROR: Lucas Corbray is missing from our novels annotations
+#	"Harrion Karstark","Arnolf Karstark",	# ERROR: Harald Karstark (cf. below) appears in the TV show after season 5
+#	"Benerro","Moqorro",					# ERROR: Kinvara (cf. below) appears in the TV show after season 5
+#	"Meribald","Elder Brother"				# ERROR: Ray (cf. below) appears in the TV show after season 5
 ),ncol=2,byrow=TRUE)
 rownames(merged.chars) <- c(
-#	"Vance Corbray",
-	"Harald Karstark",
-	"Kinvara",
-	"Ray"
+	# keep character
+	"Clubfoot Karl",
+	"Gendry"
+#	"Varamyr",								# ERROR: absent from the TV Show annotations (even when using all 8 seasons)
+	# new character
+#	"Vance Corbray",						# ERROR: Lucas Corbray (cf. above) is missing from our novels annotations
+#	"Harald Karstark",						# ERROR: this character appears after season 5
+#	"Kinvara",								# ERROR: this character appears after season 5
+#	"Ray"									# ERROR: this character appears after season 5
 )
 #
 subs.chars <- c(
@@ -54,6 +64,7 @@ for(NARRATIVE_PART in c(2,5))
 	
 	# load the csv file
 	tab.file <- file.path("out", "matching", paste0("first_",NARRATIVE_PART), "jaccard", "named", "novels_vs_tvshow", "sim_matrix_all.csv")
+	cat("..Reading similarity matrix in \"",tab.file,"\"\n",sep="")
 	sim.mat <- read.csv(file=tab.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, row.names=1)
 	
 	# look for substituted chars
@@ -61,7 +72,7 @@ for(NARRATIVE_PART in c(2,5))
 	for(i in 1:length(subs.chars))
 	{	old.char <- names(subs.chars)[i]
 		if(old.char %in% rownames(sim.mat))
-		{	cat("......First character:",old.char,"\n")
+		{	cat("....First character:",old.char,"\n")
 			
 			new.char <- subs.chars[i]
 			if(new.char %in% colnames(sim.mat))
@@ -84,7 +95,7 @@ for(NARRATIVE_PART in c(2,5))
 				cat("......Could not find second character \"",new.char,"\"\n",sep="")
 		}
 		else
-			cat("..Could not find first character \"",old.char,"\"\n",sep="")
+			cat("....Could not find first character \"",old.char,"\"\n",sep="")
 	}
 	cat("\n")
 	
@@ -99,23 +110,23 @@ for(NARRATIVE_PART in c(2,5))
 			for(j in 1:length(orig.chars))
 			{	orig.char <- orig.chars[j]
 				if(orig.char %in% rownames(sim.mat))
-				{	cat("......Original character:",orig.char,"\n")
+				{	cat("........Original character:",orig.char,"\n")
 					
 					self.sim <- sim.mat[orig.char,merged.char]
-					cat("........Self-similarity:",self.sim,"\n")
+					cat("..........Self-similarity:",self.sim,"\n")
 					#
 					ba1 <- which.max(sim.mat[-which(rownames(sim.mat)==orig.char), merged.char])
 					best.alter1 <- sim.mat[ba1,merged.char]
-					cat("........Alter similarity 1: ",best.alter1," (",rownames(sim.mat)[ba1],")\n",sep="")
+					cat("..........Alter similarity 1: ",best.alter1," (",rownames(sim.mat)[ba1],")\n",sep="")
 					#
 					ba2 <- which.max(sim.mat[orig.char, -which(colnames(sim.mat)==merged.char)])
 					best.alter2 <- sim.mat[orig.char,ba2]
-					cat("........Alter similarity 2: ",best.alter2," (",colnames(sim.mat)[ba2],")\n",sep="")
+					cat("..........Alter similarity 2: ",best.alter2," (",colnames(sim.mat)[ba2],")\n",sep="")
 					#
-					cat("......>> Self",if(self.sim>best.alter1 && self.sim>best.alter2) "BETTER" else "worse","than both alters\n")
+					cat("........>> Self",if(self.sim>best.alter1 && self.sim>best.alter2) "BETTER" else "worse","than both alters\n")
 				}
 				else
-					cat("......Could not find original character \"",orig.char,"\"\n",sep="")
+					cat("..........Could not find original character \"",orig.char,"\"\n",sep="")
 			}
 		}
 		else
@@ -129,14 +140,25 @@ for(NARRATIVE_PART in c(2,5))
 
 ###############################################################################
 # second approach: working directly with the networks
+charsets <- c("named","common","top")
 for(NARRATIVE_PART in c(2,5))
 {	cat(">>>>>>>>>> Processing narrative part = ",NARRATIVE_PART," <<<<<<<<<<\n",sep="")
 	
+	# result table for substituted characters
+	res.subs <- data.frame(names(subs.chars), subs.chars, matrix(NA, nrow=length(subs.chars), ncol=length(charsets)))
+	rownames(res.subs) <- NULL
+	colnames(res.subs) <- c("Novel", "TVshow", charsets)
+	
+	# result table for merged characters
+	res.merged <- data.frame(merged.chars, rownames(merged.chars), matrix(NA, nrow=nrow(merged.chars), ncol=length(charsets)))
+	rownames(res.merged) <- NULL
+	colnames(res.merged) <- c("Novel1", "Novel2", "TVshow", charsets)
+		
 	# load the static graphs and rank the characters by importance
 	source("src/common/load_static_nets.R")
 	
 	# loop over character sets
-	for(CHARSET in c("named","common","top"))
+	for(CHARSET in charsets)
 	{	cat("....Processing character set ",CHARSET,"\n",sep="")
 		
 		# look for substituted chars
@@ -147,7 +169,7 @@ for(NARRATIVE_PART in c(2,5))
 			
 			old.char <- names(subs.chars)[i]
 			if(old.char %in% V(g1)$name)
-			{	cat("..........First character:",old.char,"\n")
+			{	cat("........First character:",old.char,"\n")
 				
 				new.char <- subs.chars[i]
 				if(new.char %in% V(g2)$name)
@@ -240,17 +262,18 @@ for(NARRATIVE_PART in c(2,5))
 					cat("............Alter similarity 2: ",best.alter2," (",names[ba2],")\n",sep="")
 					#
 					cat("..........>> Self",if(self.sim>best.alter1 && self.sim>best.alter2) "BETTER" else "worse","than both alters\n")
+					res.subs[i,CHARSET] <- self.sim - max(best.alter1, best.alter2)
 				}
 				else
 					cat("..........Could not find second character \"",new.char,"\"\n",sep="")
 			}
 			else
-				cat("......Could not find first character \"",old.char,"\"\n",sep="")
+				cat("........Could not find first character \"",old.char,"\"\n",sep="")
 		}
+		print(res.subs)
 		cat("\n")
 		
 		# look for merged chars
-		# TODO could not test this part: too many characters are missing from the networks, esp. TV show S5 (they appear in later seasons)
 		cat("......Dealing with the merged characters\n")
 		for(i in 1:nrow(merged.chars))
 		{	g1 <- gs[["novels"]]
@@ -258,11 +281,11 @@ for(NARRATIVE_PART in c(2,5))
 			
 			merged.char <- rownames(merged.chars)[i]
 			if(merged.char %in% V(g2)$name)
-			{	cat("......Merged character:",merged.char,"\n")
+			{	cat("........Merged character:",merged.char,"\n")
 				
 				orig.chars <- merged.chars[i,]
 				if(all(orig.chars %in% V(g1)$name))
-				{	cat("..........Original characters:",paste0(orig.chars,collapse=","),"\n")
+				{	cat("..........Original characters:",paste0(orig.chars,collapse=", "),"\n")
 					
 					# prepare the graphs
 					g1 <- gs[["novels"]]
@@ -271,9 +294,11 @@ for(NARRATIVE_PART in c(2,5))
 					idx <- which(V(g1)$name %in% orig.chars)
 					map <- 1:gorder(g1)
 					map[idx] <- min(idx)
-					map[map>idx] <- map[map>idx] - length(idx)
-					orig.char <- V(g1)$name[idx[1]]
-					g1 <- contract(graph=g1, mapping=map)
+					orig.char <- V(g1)$name[min(idx)]
+					idx <- idx[-which.min(idx)]
+					for(z in idx)
+						map[map>z] <- map[map>z] - 1
+					g1 <- contract(graph=g1, mapping=map, list(name="first", "ignore"))
 					g1 <- simplify(graph=g1, edge.attr.comb=list(weight="mean", "ignore"))
 					# handle top char nets
 					if(CHARSET=="top")
@@ -357,18 +382,20 @@ for(NARRATIVE_PART in c(2,5))
 					best.alter1 <- sims.v1[ba1]
 					cat("............Alter similarity 1: ",best.alter1," (",names[ba1],")\n",sep="")
 					#
-					ba2 <- which.max(sims.v1[-idx2])
+					ba2 <- which.max(sims.v2[-idx2])
 					best.alter2 <- sims.v2[ba2]
 					cat("............Alter similarity 2: ",best.alter2," (",names[ba2],")\n",sep="")
 					#
 					cat("..........>> Self",if(self.sim>best.alter1 && self.sim>best.alter2) "BETTER" else "worse","than both alters\n")
+					res.merged[i,CHARSET] <- self.sim - max(best.alter1,best.alter2)
 				}
 				else
 					cat("..........Could not find at least one of the original characters\n",sep="")
 			}
 			else
-				cat("......Could not find merged character \"",merged.char,"\"\n",sep="")
+				cat("........Could not find merged character \"",merged.char,"\"\n",sep="")
 		}
+		print(res.merged)
 		cat("\n\n")
 	}
 }
