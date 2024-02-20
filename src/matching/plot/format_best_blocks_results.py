@@ -32,6 +32,13 @@ if __name__ == "__main__":
         },
         index=["threshold", "smith-waterman"],
     )
+    df = df.rename(
+        columns={
+            "tvshow-novels": "Novels vs. TV Show",
+            "comics-novels": "Novels vs. Comics",
+        }
+    )
+    df = df[["Novels vs. Comics", "Novels vs. TV Show"]]
 
     if args.format == "plain":
         print(df)
@@ -39,7 +46,8 @@ if __name__ == "__main__":
 
     LaTeX_export = (
         df.style.format(lambda v: "{:.2f}".format(v * 100))
+        .map_index(lambda v: "itshape: ;", axis="columns")
         .highlight_max(props="bfseries: ;", axis=0)
-        .to_latex(hrules=True)
+        .to_latex(hrules=True, column_format="lcc")
     )
     print(LaTeX_export)
