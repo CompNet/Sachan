@@ -9,6 +9,7 @@ from alignment_commons import (
     graph_similarity_matrix,
     textual_similarity,
     combined_similarities,
+    tune_alignment_params,
 )
 
 
@@ -56,6 +57,7 @@ def _smith_waterman_compute_matrices(
     for i in range(1, n + 1):
         for j in range(1, m + 1):
             match_score = S[i - 1][j - 1]
+
             M_scores = [
                 (("M", i - 1, j - 1), match_score + M[i - 1][j - 1]),
                 (("X", i - 1, j - 1), match_score + X[i - 1][j - 1]),
@@ -199,37 +201,25 @@ def tune_smith_waterman_params(
 
     :return: ``(gap_start_penalty, gat_cont_penalty, neg_th)``
     """
-    best_gap_start_penalty = 0.0
-    best_gap_cont_penalty = 0.0
-    best_neg_th = 0.0
-    best_f1 = 0.0
 
-    progress = tqdm(gap_start_penalty_search_space, disable=silent)
+    def f1_fn(M: np.ndarray, G: np.ndarray) -> float:
+        return precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )[2]
 
-    for gap_start_penalty in progress:
-        for gap_cont_penalty in gap_cont_penalty_search_space:
-            for neg_th in neg_th_search_space:
-                f1_list = []
-                for X, G in zip(X_tune, G_tune):
-                    A, *_ = smith_waterman_align_affine_gap(
-                        X, gap_start_penalty, gap_cont_penalty, neg_th
-                    )
-                    f1 = precision_recall_fscore_support(
-                        G.flatten(), A.flatten(), average="binary", zero_division=0.0
-                    )[2]
-                    f1_list.append(f1)
-
-                f1_mean = sum(f1_list) / len(f1_list)
-                progress.set_description(
-                    f"tuning ({gap_start_penalty:.2f}, {gap_cont_penalty:.2f}, {neg_th:.2f}, {f1_mean:.3f})"
-                )
-                if f1_mean > best_f1:
-                    best_gap_start_penalty = gap_start_penalty
-                    best_gap_cont_penalty = gap_cont_penalty
-                    best_neg_th = neg_th
-                    best_f1 = f1_mean
-
-    return best_gap_start_penalty, best_gap_cont_penalty, best_neg_th
+    gap_start_penalty, gap_cont_penalty, neg_th, *_ = tune_alignment_params(
+        X_tune,
+        G_tune,
+        [
+            gap_start_penalty_search_space,
+            gap_cont_penalty_search_space,
+            neg_th_search_space,
+        ],
+        lambda S, *args: smith_waterman_align_affine_gap(S, *args)[0],
+        f1_fn,
+        silent=silent,
+    )
+    return gap_start_penalty, gap_cont_penalty, neg_th
 
 
 def tune_smith_waterman_params_other_medias(
@@ -293,21 +283,6 @@ def tune_smith_waterman_params_other_medias(
             X = textual_similarity(
                 first_summaries, second_summaries, textual_sim_fn, silent=silent
             )
-        elif sim_mode == "combined":
-            first_media_graphs, second_media_graphs = load_medias_graphs(pair)
-            S_structural = graph_similarity_matrix(
-                first_media_graphs,
-                second_media_graphs,
-                structural_mode,
-                structural_use_weights,
-                structural_filtering,
-                silent=silent,
-            )
-            first_summaries, second_summaries = load_medias_summaries(pair)
-            S_textual = textual_similarity(
-                first_summaries, second_summaries, textual_sim_fn, silent=silent
-            )
-            X = combined_similarities(S_structural, S_textual)
         else:
             raise ValueError(f"unknown sim_mode: {sim_mode}")
 

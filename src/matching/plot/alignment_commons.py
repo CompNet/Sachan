@@ -2,8 +2,8 @@
 #
 # Author: Arthur Amalvy
 from collections import defaultdict
-from typing import Optional, Literal, List, Tuple, cast
-import copy, os, sys, glob, pickle
+from typing import Dict, Optional, Literal, List, Tuple, cast, Callable
+import copy, os, sys, glob, pickle, itertools, functools
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -488,8 +488,131 @@ def textual_similarity(
     return S
 
 
+def tune_alignment_params(
+    S_tune: List[np.ndarray],
+    G_tune: List[np.ndarray],
+    search_space: List[np.ndarray],
+    tuned_fn: Callable[..., np.ndarray],
+    metrics_fn: Callable[[np.ndarray, np.ndarray], float],
+    silent: bool = False,
+) -> Tuple[float, ...]:
+    """Tune alignment params, generically.
+
+    :param S_tune: similarity matrices
+    :param G_tune: gold alignment matrices
+    :param search_space: search space for each parameter
+    :param tuned_fn: the function to tune.  Takes as input the
+        similarity matrix, and all params from ``search_space`` in
+        order.
+    :param metrics_fn: metrics function.  Takes as input the alignment
+        matrix and the gold alignment matrix, returns a metrics.
+        Higher is better.
+
+    :return: a tuple of each best param from ``search_space``
+    """
+    assert len(S_tune) == len(G_tune)
+
+    best_params = None
+    best_metric = 0
+
+    progress = tqdm(
+        itertools.product(*search_space),
+        total=functools.reduce(lambda x, y: x * y, [s.shape[0] for s in search_space]),
+        # disable=silent,
+    )
+
+    for params in progress:
+
+        metrics_list = []
+
+        for S, G in zip(S_tune, G_tune):
+            M = tuned_fn(S, *params)
+            metric = metrics_fn(M, G)
+            metrics_list.append(metric)
+
+        mean_metric = sum(metrics_list) / len(metrics_list)
+
+        if mean_metric > best_metric:
+            best_metric = mean_metric
+            best_params = params
+
+        params_desc = ", ".join([f"{p:.2f}" for p in params])
+        progress.set_description(f"tuning ({params_desc}, {mean_metric:.2f})")
+
+    assert isinstance(best_params, tuple)
+    return best_params
+
+
+def tune_alpha(
+    S_struct_tune: List[np.ndarray],
+    S_text_tune: List[np.ndarray],
+    G_tune: List[np.ndarray],
+    alignment: Literal["threshold", "smith-waterman"],
+    alpha_search_space: np.ndarray,
+    search_space: List[np.ndarray],
+    silent: bool = False,
+) -> Tuple[float, ...]:
+    """Tune the alpha combination parameter, that controls the
+    influence of structural and textual similarity in the combined
+    similarity.  At the same time, tune parameters for the specified
+    alignment.
+
+    S_combined = α S^*_struct + (1 - α) S^*_text
+
+    :return: a tuple with content (alpha, other params...)
+    """
+
+    def f1_fn(M: np.ndarray, G: np.ndarray) -> float:
+        f_M = M.flatten().astype("bool")
+        f_G = G.flatten().astype("bool")
+        hits = (f_G & f_M).sum()
+        predicted = f_M.sum()
+        precision = (hits / predicted) if predicted > 0 else 0
+        to_predict = f_G.sum()
+        recall = (hits / to_predict) if to_predict > 0 else 0
+        if precision + recall == 0:
+            return 0
+        return (2 * precision * recall) / (precision + recall)
+
+    if alignment == "threshold":
+
+        def tuned_fn(
+            both_S: Tuple[np.ndarray, np.ndarray], alpha: float, t: float
+        ) -> np.ndarray:
+            S_struct, S_text = both_S
+            S_combined = combined_similarities(S_struct, S_text, alpha)
+            return S_combined > t
+
+    elif alignment == "smith-waterman":
+
+        def tuned_fn(
+            both_S: Tuple[np.ndarray, np.ndarray], alpha: float, *args
+        ) -> np.ndarray:
+            from smith_waterman import smith_waterman_align_affine_gap
+
+            S_struct, S_text = both_S
+            S_combined = combined_similarities(S_struct, S_text, alpha)
+            return smith_waterman_align_affine_gap(S_combined, *args)[0]
+
+    else:
+        raise ValueError(f"unknown alignment: {alignment}")
+
+    # HACK: S_tune is supposed to be a list of pre-computed similarity
+    # functions. However, we want to combine S_combined given alpha at
+    # tuned_fn run time. Therefore, we disrespect the type of the
+    # S_tune argument, and pass in a tuple with S_struct and S_text.
+    return tune_alignment_params(
+        [(S_struct, S_text) for S_struct, S_text in zip(S_struct_tune, S_text_tune)],  # type: ignore
+        G_tune,
+        [alpha_search_space] + search_space,
+        tuned_fn,  # type: ignore
+        f1_fn,
+        silent=silent,
+    )
+
+
 def combined_similarities(
-    S_structural: np.ndarray, S_textual: np.ndarray
+    S_structural: np.ndarray, S_textual: np.ndarray, alpha: float
 ) -> np.ndarray:
     S_textual = (S_textual - np.min(S_textual)) / (
         np.max(S_textual) - np.min(S_textual)
@@ -497,7 +620,71 @@ def combined_similarities(
     S_structural = (S_structural - np.min(S_structural)) / (
         np.max(S_structural) - np.min(S_structural)
     )
-    return 0.5 * S_textual + 0.5 * S_structural
+    return alpha * S_structural + (1 - alpha) * S_textual
+
+
+def tune_alpha_other_medias(
+    media_pair: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    alignment: Literal["threshold", "smith-waterman"],
+    alpha_search_space: np.ndarray,
+    search_space: List[np.ndarray],
+    textual_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
+    structural_mode: Literal["edges", "nodes"] = "edges",
+    structural_use_weights: bool = True,
+    structural_filtering: Literal["named", "common", "top20s2", "top20s5"] = "named",
+    silent: bool = False,
+) -> Tuple[float, ...]:
+    """Tune the alpha combination parameter, that controls the
+    influence of structural and textual similarity in the combined
+    similarity.
+
+    S_combined = α S^*_struct + (1 - α) S^*_text
+
+    :param search_space: param search space for the specified
+        alignment
+    """
+    all_media_pairs = {"tvshow-novels", "comics-novels", "tvshow-comics"}
+    other_media_pairs = all_media_pairs - {media_pair}
+
+    S_struct_tune = []
+    S_text_tune = []
+    G_tune = []
+
+    for pair in other_media_pairs:
+        pair = cast(Literal["tvshow-novels", "comics-novels", "tvshow-comics"], pair)
+
+        G = load_medias_gold_alignment(pair)
+
+        first_media_graphs, second_media_graphs = load_medias_graphs(pair)
+        S_struct = graph_similarity_matrix(
+            first_media_graphs,
+            second_media_graphs,
+            structural_mode,
+            structural_use_weights,
+            structural_filtering,
+            silent=silent,
+        )
+        S_struct = S_struct[: G.shape[0], : G.shape[1]]
+
+        first_summaries, second_summaries = load_medias_summaries(pair)
+        S_text = textual_similarity(
+            first_summaries, second_summaries, textual_sim_fn, silent=silent
+        )
+        S_text = S_text[: G.shape[0], : G.shape[1]]
+
+        S_struct_tune.append(S_struct)
+        S_text_tune.append(S_text)
+        G_tune.append(G)
+
+    return tune_alpha(
+        S_struct_tune,
+        S_text_tune,
+        G_tune,
+        alignment,
+        alpha_search_space,
+        search_space,
+        silent=silent,
+    )
 
 
 def find_best_alignment(
@@ -635,33 +822,22 @@ def tune_threshold(
     threshold_search_space: np.ndarray,
     silent: bool = False,
 ) -> float:
-    best_t = threshold_search_space[0]
-    best_f1 = 0
+    def tuned_fn(S: np.ndarray, t: float) -> np.ndarray:
+        return S > t
 
-    progress = tqdm(threshold_search_space, disable=silent)
+    def f1_fn(M: np.ndarray, G: np.ndarray) -> float:
+        return precision_recall_fscore_support(
+            G.flatten(), M.flatten(), average="binary", zero_division=0.0
+        )[2]
 
-    for t in progress:
-        f1_list = []
-
-        for X, G in zip(X_tune, G_tune):
-            M = X > t
-            f1 = precision_recall_fscore_support(
-                G.flatten(), M.flatten(), average="binary", zero_division=0.0
-            )[2]
-            f1_list.append(f1)
-
-        mean_f1 = sum(f1_list) / len(f1_list)
-        progress.set_description(f"tuning ({t:.2f}, {mean_f1:.2f})")
-        if mean_f1 > best_f1:
-            best_t = t
-            best_f1 = mean_f1
-
-    return best_t
+    return tune_alignment_params(
+        X_tune, G_tune, [threshold_search_space], tuned_fn, f1_fn, silent=silent
+    )[0]
 
 
 def tune_threshold_other_medias(
     media_pair: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
-    sim_mode: Literal["structural", "textual", "combined"],
+    sim_mode: Literal["structural", "textual"],
     threshold_search_space: np.ndarray,
     textual_sim_fn: Literal["tfidf", "sbert"] = "tfidf",
     structural_mode: Literal["edges", "nodes"] = "edges",
@@ -695,21 +871,6 @@ def tune_threshold_other_medias(
             X = textual_similarity(
                 first_summaries, second_summaries, textual_sim_fn, silent=silent
             )
-        elif sim_mode == "combined":
-            first_media_graphs, second_media_graphs = load_medias_graphs(pair)
-            S_structural = graph_similarity_matrix(
-                first_media_graphs,
-                second_media_graphs,
-                structural_mode,
-                structural_use_weights,
-                structural_filtering,
-                silent=silent,
-            )
-            first_summaries, second_summaries = load_medias_summaries(pair)
-            S_textual = textual_similarity(
-                first_summaries, second_summaries, textual_sim_fn, silent=silent
-            )
-            X = combined_similarities(S_structural, S_textual)
         else:
             raise ValueError(f"unknown sim_mode: {sim_mode}")
 

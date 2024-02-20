@@ -11,35 +11,45 @@ library("igraph")
 library("viridis")
 library("plot.matrix")
 
+source("src/common/colors.R")
+
 
 
 
 ###############################################################################
 # processing parameters
-COMMON_CHARS_ONLY <- FALSE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
+NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
+CHARSET <- "common"			# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters (fixed)
+PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plots
 
 
 
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching",MEAS)
+out.folder <- file.path("out", "matching")
+{	if(NARRATIVE_PART==0)
+		out.folder <- file.path(out.folder, "whole_narr")
+	else if(NARRATIVE_PART==2)
+		out.folder <- file.path(out.folder, "first_2")
+	else if(NARRATIVE_PART==5)
+		out.folder <- file.path(out.folder, "first_5")
+}
+out.folder <- file.path(out.folder, MEAS)
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
-{	if(COMMON_CHARS_ONLY)
-		mode.folder <- "common"
+{	if(CHARSET=="top")
+		mode.folder <- paste0(CHARSET,TOP_CHAR_NBR)
 	else
-		mode.folder <- "named"
+		mode.folder <- CHARSET
 }
 
 
 
 
 ###############################################################################
-# only take the first two narrative units (whole narrative not supported here)
-NARRATIVE_PART <- 2
 # load the static graphs and rank the characters by importance
 source("src/common/load_static_nets.R")
 
@@ -58,11 +68,27 @@ for(i in 1:(length(gs)-1))
 		
 		# init local folder
 		comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+		#comp.title <- paste0(narr.names[g.names[i]], " vs. ", narr.names[g.names[j]])
+		comp.title <- bquote(bolditalic(.(narr.names[g.names[i]]))~bold(" vs. ")~bolditalic(.(narr.names[g.names[j]])))
 		local.folder <- file.path(out.folder, mode.folder, comp.name)
 		dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
 		
-		# focus on characters common to both networks
-		if(COMMON_CHARS_ONLY)
+		# focus on the most important characters
+		if(CHARSET=="top")
+		{	# remove non-important chars
+			names <- ranked.chars[1:TOP_CHAR_NBR]
+			idx1 <- which(!(V(g1)$name %in% names))
+			g1 <- delete_vertices(g1,idx1)
+			idx2 <- which(!(V(g2)$name %in% names))
+			g2 <- delete_vertices(g2,idx2)
+			# set the same character order in both graphs
+			idx1 <- match(V(g1)$name, names)
+			idx2 <- match(V(g2)$name, names)
+			g1 <- permute(graph=g1, permutation=idx1)
+			g2 <- permute(graph=g2, permutation=idx2)
+		}
+		# or focus on characters common to both networks
+		else if(CHARSET=="common")
 		{	# remove chars that are not common
 			names <- intersect(V(g1)$name,V(g2)$name)
 			idx1 <- which(!(V(g1)$name %in% names))
@@ -98,66 +124,12 @@ for(i in 1:(length(gs)-1))
 			g2 <- permute(graph=g2, permutation=idx2)
 		}
 		
-# older, much slower version		
-#		# build the vertex similarity matrix
-#		sim.mat <- outer(X=1:gorder(g1), Y=1:gorder(g2), FUN=function(vv1,vv2)
-#		{	sapply(1:length(vv1),function(idx)
-#			{	v1 <- vv1[idx]
-#				v2 <- vv2[idx]
-#				#print(v1);print(v2)
-#				n1 <- neighbors(graph=g1,v=v1,mode="all")$name
-#				w1 <- E(g1)[V(g1)[v1] %--% n1]$weight
-#				w1 <- w1 / sum(w1)
-#				n2 <- neighbors(graph=g2,v=v2,mode="all")$name
-#				w2 <- E(g2)[V(g2)[v2] %--% n2]$weight
-#				w2 <- w2 / sum(w2)
-#				if(MEAS=="jaccard")
-#				{	if(length(n1)==0 || length(n2)==0)
-#						sim <- 0
-#					else
-#					{	all <- union(n1,n2)
-#						j1 <- rep(0,length(all))
-#						j2 <- rep(0,length(all))
-#						j1[match(n1,all)] <- w1
-#						j2[match(n2,all)] <- w2
-#						j.min <- apply(cbind(j1,j2), 1, min)
-#						j.max <- apply(cbind(j1,j2), 1, max)
-#						sim <- sum(j.min)/sum(j.max)
-#					}
-#				}
-#				#print(sim)
-#				return(sim)
-#			})
-#		})
-# alt version (as slow)
-#		sim.mat <- matrix(NA, nrow=gorder(g1), ncol=gorder(g2))
-#		for(v1 in 1:gorder(g1))
-#		{	print(v1)
-#			for(v2 in 1:gorder(g2)) 
-#			{	n1 <- neighbors(graph=g1,v=v1,mode="all")$name
-#				w1 <- E(g1)[V(g1)[v1] %--% n1]$weight
-#				w1 <- w1 / sum(w1)
-#				n2 <- neighbors(graph=g2,v=v2,mode="all")$name
-#				w2 <- E(g2)[V(g2)[v2] %--% n2]$weight
-#				w2 <- w2 / sum(w2)
-#				if(MEAS=="jaccard")
-#				{	if(length(n1)==0 || length(n2)==0)
-#						sim <- 0
-#					else
-#					{	all <- union(n1,n2)
-#						j1 <- rep(0,length(all))
-#						j2 <- rep(0,length(all))
-#						j1[match(n1,all)] <- w1
-#						j2[match(n2,all)] <- w2
-#						j.min <- apply(cbind(j1,j2), 1, min)
-#						j.max <- apply(cbind(j1,j2), 1, max)
-#						sim <- sum(j.min)/sum(j.max)
-#					}
-#				}
-#				#print(sim)
-#				sim.mat[v1,v2] <- sim
-#			}
-#		}
+		# init matching performance matrix
+		rn <- c("All","Top-20")
+		cn <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]),"overall")
+		perf.tab <- matrix(NA, nrow=length(rn), ncol=length(cn))
+		rownames(perf.tab) <- rn
+		colnames(perf.tab) <- cn
 		
 		# compute and normalize adjacency matrices
 		a1 <- as_adjacency_matrix(graph=g1, type="both", attr="weight", sparse=FALSE)
@@ -168,17 +140,6 @@ for(i in 1:(length(gs)-1))
 		
 		if(MEAS=="jaccard")
 		{	# compute jaccard (weighted) similarity
-#			sim.mat <- outer(X=1:nrow(a1), Y=1:nrow(a2), FUN=function(vv1,vv2)
-#			{	sapply(1:length(vv1),function(idx)
-#				{	#print(v1)
-#					v1 <- vv1[idx]
-#					v2 <- vv2[idx]
-#					w.min <- pmin(a1[v1,], a2[v2,])
-#					w.max <- pmax(a1[v1,], a2[v2,])
-#					sum(w.min)/sum(w.max)
-#				})
-#			})
-			# alt version (seems faster)
 			sim.mat <- matrix(NA, nrow=nrow(a1), ncol=nrow(a2))
 			rownames(sim.mat) <- names
 			colnames(sim.mat) <- names
@@ -195,21 +156,52 @@ for(i in 1:(length(gs)-1))
 					sim.mat[v1,v2] <- sim
 				}
 			}
+			write.csv(x=sim.mat, file=file.path(local.folder,"sim_matrix_all.csv"), row.names=TRUE, fileEncoding="UTF-8")
 		}
 		
+		# plot similarity matrix
 		ranked.names <- setdiff(ranked.chars, setdiff(ranked.chars, names))
 		idx <- match(ranked.names, names)
-		
-		# plot matrix
 		plot.file <- file.path(local.folder,"sim_matrix_all")
-		pdf(paste0(plot.file,".pdf"), bg="white", width=30, height=30)
-			plot(sim.mat[idx,idx], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.2)
-		dev.off()
+		if(PLOT_CHAR_NAMES)
+		{	pdf(paste0(plot.file,".pdf"), width=30, height=30)	# bg="white"
+				par(mar=c(5,4,4,2)+0.1)	# margins Bottom Left Top Right
+				plot(
+					sim.mat[idx,idx], 
+					border=NA, col=viridis, breaks=seq(0.0,1,0.1), 
+					las=2, 
+					xlab=bquote(italic(.(narr.names[g.names[i]]))), ylab=bquote(italic(.(narr.names[g.names[j]]))), main=NA, 
+					cex.axis=0.2,
+					key=NULL
+				)
+				title(comp.title,  line=1)
+			dev.off()
+		}
+		else
+		{	pdf(paste0(plot.file,".pdf"), width=7, height=7)	# bg="white"
+				par(mar=c(3,2,2,0.5)+0.1)	# margins Bottom Left Top Right
+				plot(
+					sim.mat[idx,idx], 
+					border=NA, col=viridis, breaks=seq(0.0,1,0.1), 
+					las=2, 
+					xlab=bquote(italic(.(narr.names[g.names[i]]))), ylab=bquote(italic(.(narr.names[g.names[j]]))), main=NA, 
+					axis.col=NULL, axis.row=NULL, mgp=c(1,1,0),
+					key=NULL
+				)
+				title(comp.title,  line=1)
+			dev.off()
+		}
 		# plot only top characters
 		plot.file <- file.path(local.folder,paste0("sim_matrix_top",TOP_CHAR_NBR))
-		pdf(paste0(plot.file,".pdf"), bg="white")
-			#par(mar=c(4,4,0,0)+0.1)	# remove the title space Bottom Left Top Right
-			plot(sim.mat[idx[1:TOP_CHAR_NBR],idx[1:TOP_CHAR_NBR]], border=NA, col=viridis, las=2, xlab=NA, ylab=NA, main=comp.name, cex.axis=0.5)
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
+			par(mar=c(5.5,4.75,4.5,2)+0.1)	# margins Bottom Left Top Right
+			plot(
+				sim.mat[idx[1:TOP_CHAR_NBR],idx[1:TOP_CHAR_NBR]], 
+				border=NA, col=viridis, breaks=seq(0.0,1,0.1), 
+				las=2, 
+				xlab=NA, ylab=NA, main=comp.title, 
+				cex.axis=0.5, fmt.key="%.2f"
+			)
 		dev.off()
 		
 		# compute some sort of performance by considering the most similar alters vs. self
@@ -219,22 +211,21 @@ for(i in 1:(length(gs)-1))
 		sim.alter2 <- apply(tmp, 2, max)
 		sim.alter <- pmax(sim.alter1, sim.alter2)
 		d1 <- degree(g1,mode="all")
-		d2 <- degree(g1,mode="all")
+		d2 <- degree(g2,mode="all")
 		acc1 <- length(which(sim.self>sim.alter2))/length(d1>0)
 		acc2 <- length(which(sim.self>sim.alter1))/length(d2>0)
 		acc <- length(which(sim.self>sim.alter))/length(sim.self)
 		cat("  Number of characters used to compute the perf:",length(sim.self),"\n")
-		perf.tab <- c(acc1,acc2,acc)
+		perf.tab["All",] <- c(acc1,acc2,acc)
 		# focus only on most important characters
 		idx <- idx[1:TOP_CHAR_NBR]
 		acc1 <- length(which(sim.self[idx]>sim.alter2[idx]))/length(d1[idx]>0)
 		acc2 <- length(which(sim.self[idx]>sim.alter1[idx]))/length(d2[idx]>0)
 		acc <- length(which(sim.self[idx]>sim.alter[idx]))/length(sim.self[idx])
-		perf.tab <- rbind(perf.tab, c(acc1,acc2,acc))
+		perf.tab["Top-20",] <- c(acc1,acc2,acc)
+		# record
 		cat("  Number of characters used to compute the top-20 perf:",length(idx),"\n")
-		rownames(perf.tab) <- c("All","Top-20")
-		colnames(perf.tab) <- c(comp.name,paste0(g.names[j], "_vs_", g.names[i]),"overall")
-		write.csv(x=perf.tab, file=file.path(local.folder,"sim_perf.csv"), row.names=FALSE, fileEncoding="UTF-8")
+		write.csv(x=perf.tab, file=file.path(local.folder,"sim_perf.csv"), row.names=TRUE, fileEncoding="UTF-8")
 		cat("Performance when matching to the most similar character:\n",sep="");print(perf.tab)
 		
 		# plot self vs. best alter
@@ -254,10 +245,10 @@ for(i in 1:(length(gs)-1))
 			{	idx <- cols==pal[s]
 				plot.file <- file.path(local.folder,paste0("sim_self_vs_bestalter_s",fprobs[s]))
 			}
-			pdf(paste0(plot.file,".pdf"), bg="white")
+			pdf(paste0(plot.file,".pdf"))	# bg="white"
 				plot(
 					NULL, 
-					main=comp.name, xlab="Self-similarity", ylab="Best alter-similarity",
+					main=comp.title, xlab="Self-similarity", ylab="Best alter-similarity",
 					xlim=0:1, ylim=0:1
 				)
 				abline(a=0,b=1,col="BLACK",lty=3)
@@ -273,5 +264,94 @@ for(i in 1:(length(gs)-1))
 				)
 			dev.off()
 		}
+		
+		# define a table to store correlation values
+		rn <- c("Self-sim_vs_Imprt","Sim-diff_vs_Imprt")
+		cn <- c("PearsonCoef","PearsonPval","SpearmanCoef","SpearmanPval","KendallCoef","KendallPval")
+		corr.tab <- matrix(NA,nrow=length(rn), ncol=length(cn))
+		colnames(corr.tab) <- cn
+		rownames(corr.tab) <- rn
+		
+		# set up colors for next plots
+		transp <- 25	# transparency level
+		pal <- get.palette(2)
+		cols <- rep(make.color.transparent(pal[2],transp), gorder(g1))
+		cols[which(V(g1)$name %in% ranked.chars[1:TOP_CHAR_NBR])] <- make.color.transparent(pal[1],transp)
+		
+		# plot self-similarity vs. character importance
+		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
+		yvals <- sim.self
+		res <- cor.test(x=imp, y=yvals, method="pearson")
+		corr.tab["Self-sim_vs_Imprt","PearsonCoef"] <- res$estimate
+		corr.tab["Self-sim_vs_Imprt","PearsonPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="spearman")
+		corr.tab["Self-sim_vs_Imprt","SpearmanCoef"] <- res$estimate
+		corr.tab["Self-sim_vs_Imprt","SpearmanPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="kendall")
+		corr.tab["Self-sim_vs_Imprt","KendallCoef"] <- res$estimate
+		corr.tab["Self-sim_vs_Imprt","KendallPval"] <- res$p.value
+		plot.file <- file.path(local.folder,paste0("similarity-self_vs_importance"))
+		pdf(paste0(plot.file,".pdf"), width=7, height=7)	# bg="white"
+			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
+			plot(
+				NULL,
+				log="x", col=cols, 
+				main=comp.title, xlab="Importance", ylab="Self-similarity",
+				xlim=range(imp), ylim=range(yvals)
+			)
+			points(
+				imp, yvals,
+				pch=16, col=cols, 
+			)
+			legend(
+				x="topright",
+				title="Characters",
+				legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
+				fill=pal
+			)
+		dev.off()
+		
+		# plot self-similarity-best alter vs. character importance
+		imp <- char.importance[match(V(g1)$name,char.importance[,"Name"]),"Mean"]
+		yvals <- sim.self-sim.alter
+		res <- cor.test(x=imp, y=yvals, method="pearson")
+		corr.tab["Sim-diff_vs_Imprt","PearsonCoef"] <- res$estimate
+		corr.tab["Sim-diff_vs_Imprt","PearsonPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="spearman")
+		corr.tab["Sim-diff_vs_Imprt","SpearmanCoef"] <- res$estimate
+		corr.tab["Sim-diff_vs_Imprt","SpearmanPval"] <- res$p.value
+		res <- cor.test(x=imp, y=yvals, method="kendall")
+		corr.tab["Sim-diff_vs_Imprt","KendallCoef"] <- res$estimate
+		corr.tab["Sim-diff_vs_Imprt","KendallPval"] <- res$p.value
+		plot.file <- file.path(local.folder,paste0("similarity-diff_vs_importance"))
+		pdf(paste0(plot.file,".pdf"), width=7, height=7)	# bg="white"
+			par(mar=c(5, 4, 4, 2)+0.1)	# margins Bottom Left Top Right
+			plot(
+				NULL, 
+				log="x", 
+				main=comp.title, xlab="Importance", ylab="Difference between self and best alter similarities",
+				xlim=range(imp), ylim=range(yvals)
+			)
+			abline(h=0, lty=2)
+			points(
+				imp, yvals,
+				pch=16, col=cols, 
+			)
+			legend(
+				x="bottomright",
+				title="Characters",
+				legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
+				fill=pal
+			)
+		dev.off()
+		
+		# record correlation matrix
+		cat("Correlation matrix:\n"); print(corr.tab)
+		tab.file <- file.path(local.folder,"sim-imprt_corr.csv")
+		write.csv(x=corr.tab, file=tab.file, row.names=TRUE, fileEncoding="UTF-8")
+		
+		# note: correlation test
+		# 	h_0: no linear relationship between the two variables
+		#	p<alpha => reject the null hypothesis, i.e. there is a relationship
 	}
 }

@@ -11,6 +11,7 @@ from alignment_commons import (
     load_medias_summaries,
     graph_similarity_matrix,
     textual_similarity,
+    tune_alpha_other_medias,
     tune_threshold_other_medias,
     combined_similarities,
     get_episode_i,
@@ -91,7 +92,7 @@ if __name__ == "__main__":
             "precision",
             "recall",
         ]
-        f1s = []
+        metrics_lst = []
 
         with tqdm(
             total=len(sim_modes)
@@ -101,7 +102,6 @@ if __name__ == "__main__":
             for sim_mode in sim_modes:
                 for use_weights in use_weights_modes:
                     for character_filtering in character_filtering_modes:
-
                         if character_filtering == "top20":
                             if delimiters == (1, 2, 1, 2):
                                 character_filtering = "top20s2"
@@ -156,7 +156,7 @@ if __name__ == "__main__":
                             zero_division=0.0,
                         )
 
-                        f1s.append(
+                        metrics_lst.append(
                             (
                                 sim_mode,
                                 use_weights,
@@ -212,7 +212,7 @@ if __name__ == "__main__":
                             zero_division=0.0,
                         )
 
-                        f1s.append(
+                        metrics_lst.append(
                             (
                                 sim_mode,
                                 use_weights,
@@ -236,7 +236,7 @@ if __name__ == "__main__":
         sim_fns: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
 
         columns = ["sim_fn", "alignment", "f1", "precision", "recall"]
-        f1s = []
+        metrics_lst = []
 
         for similarity_function in tqdm(sim_fns):
             S = textual_similarity(
@@ -257,7 +257,9 @@ if __name__ == "__main__":
             precision, recall, f1, _ = precision_recall_fscore_support(
                 G.flatten(), M.flatten(), average="binary", zero_division=0.0
             )
-            f1s.append((similarity_function, "threshold", f1, precision, recall))
+            metrics_lst.append(
+                (similarity_function, "threshold", f1, precision, recall)
+            )
 
             # SW alignment
             # ------------
@@ -284,7 +286,9 @@ if __name__ == "__main__":
             precision, recall, f1, _ = precision_recall_fscore_support(
                 G.flatten(), M.flatten(), average="binary", zero_division=0.0
             )
-            f1s.append((similarity_function, "smith-waterman", f1, precision, recall))
+            metrics_lst.append(
+                (similarity_function, "smith-waterman", f1, precision, recall)
+            )
 
     elif args.similarity == "combined":
         columns = [
@@ -296,8 +300,9 @@ if __name__ == "__main__":
             "f1",
             "precision",
             "recall",
+            "alpha",
         ]
-        f1s = []
+        metrics_lst = []
 
         # sim_fn * mode * use_weights * filtering
         with tqdm(total=2 * 2 * 2 * 3) as pbar:
@@ -310,7 +315,7 @@ if __name__ == "__main__":
 
             sim_fn_lst: List[Literal["tfidf", "sbert"]] = ["tfidf", "sbert"]
             for sim_fn in sim_fn_lst:
-                S_sem = textual_similarity(
+                S_text = textual_similarity(
                     first_summaries, second_summaries, sim_fn, silent=True
                 )
 
@@ -342,20 +347,20 @@ if __name__ == "__main__":
                         silent=True,
                     )
 
-                    S_combined = combined_similarities(S_struct, S_sem)
-
                     # threshold alignment
                     # -------------------
-                    t = tune_threshold_other_medias(
+                    alpha, t = tune_alpha_other_medias(
                         args.medias,
-                        "combined",
-                        np.arange(0.0, 1.0, 0.01),
-                        textual_sim_fn=sim_fn,
-                        structural_mode=mode,
-                        structural_use_weights=use_weights,
-                        structural_filtering=filtering,
+                        "threshold",
+                        np.arange(0.0, 1.0, 0.01),  # alpha
+                        [np.arange(0.0, 1.0, 0.01)],  # threshold
+                        sim_fn,
+                        mode,
+                        use_weights,
+                        filtering,
                         silent=True,
                     )
+                    S_combined = combined_similarities(S_struct, S_text, alpha)
                     M = S_combined > t
 
                     precision, recall, f1, _ = precision_recall_fscore_support(
@@ -365,7 +370,7 @@ if __name__ == "__main__":
                         zero_division=0.0,
                     )
 
-                    f1s.append(
+                    metrics_lst.append(
                         (
                             sim_fn,
                             mode,
@@ -381,21 +386,26 @@ if __name__ == "__main__":
                     # SW alignment
                     # ------------
                     (
+                        alpha,
                         gap_start_penalty,
                         gap_cont_penalty,
                         neg_th,
-                    ) = tune_smith_waterman_params_other_medias(
+                    ) = tune_alpha_other_medias(
                         args.medias,
-                        "combined",
-                        np.arange(0.0, 0.2, 0.01),
-                        np.arange(0.0, 0.2, 0.01),
-                        np.arange(0.0, 0.1, 0.1),  # effectively no search
+                        "smith-waterman",
+                        np.arange(0.1, 0.9, 0.05),  # alpha
+                        [
+                            np.arange(0.0, 0.2, 0.01),  # gap_start_penalty
+                            np.arange(0.0, 0.2, 0.01),  # gap_cont_penalty
+                            np.arange(0.0, 0.1, 0.1),  # neg_th
+                        ],
                         sim_fn,
                         mode,
                         use_weights,
                         filtering,
                         silent=True,
                     )
+                    S_combined = combined_similarities(S_struct, S_text, alpha)
 
                     M, *_ = smith_waterman_align_affine_gap(
                         S_combined, gap_start_penalty, gap_cont_penalty, neg_th
@@ -408,7 +418,7 @@ if __name__ == "__main__":
                         zero_division=0.0,
                     )
 
-                    f1s.append(
+                    metrics_lst.append(
                         (
                             sim_fn,
                             mode,
@@ -418,6 +428,7 @@ if __name__ == "__main__":
                             f1,
                             precision,
                             recall,
+                            alpha,
                         )
                     )
 
@@ -426,7 +437,7 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"unknow similarity: {args.similarity}")
 
-    df = pd.DataFrame(f1s, columns=columns)
+    df = pd.DataFrame(metrics_lst, columns=columns)
     if args.blocks:
         dir_name = (
             f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}_blocks"

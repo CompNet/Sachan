@@ -32,7 +32,7 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching",MEAS)
+out.folder <- file.path("out","matching","first_2",MEAS)
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)
@@ -239,7 +239,7 @@ for(i in 1:(length(gs)-1))
 		colors <- brewer_pal(type="qual", palette=2)(ncol(perf.tab.all))
 		xs <- 1:nrow(perf.tab.all)
 		plot.file <- file.path(local.folder,paste0(file.pref,"perf_all"))
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
 			plot(
 				NULL,
 				xlim=range(xs), ylim=c(0,1),
@@ -257,7 +257,7 @@ for(i in 1:(length(gs)-1))
 		dev.off()
 		# focus on top 20 characters
 		plot.file <- file.path(local.folder,paste0(file.pref,"perf_top20"))
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
 			plot(
 				NULL,
 				xlim=range(xs), ylim=c(0,1),
@@ -276,7 +276,7 @@ for(i in 1:(length(gs)-1))
 		selected.chars <- 1:5
 		colors <- brewer_pal(type="qual", palette=2)(length(selected.chars))
 		plot.file <- file.path(local.folder,paste0(file.pref,"simdiff"))
-		pdf(paste0(plot.file,".pdf"), bg="white")
+		pdf(paste0(plot.file,".pdf"))	# bg="white"
 			plot(
 				NULL,
 				xlim=range(xs), ylim=c(-1,1),
@@ -337,5 +337,8 @@ for(i in 1:(length(gs)-1))
 		# record perfs
 		write.csv(x=perf.tab, file=file.path(local.folder,paste0(file.pref,"series_perf.csv")), row.names=FALSE, fileEncoding="UTF-8")
 		cat("Performance when matching to the most similar character over the whole series:\n",sep="");print(perf.tab)
+		
+		# NOTE: not possible to produce the same plots as for the static method,
+		#       as we don't have an overall similarity matrix, in this case
 	}
 }

@@ -142,6 +142,13 @@ cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 
 
 ###############################################################################
+# names of the narratives (for plots)
+narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
+
+
+
+
+###############################################################################
 # load the chapter mapping file
 tab <- read.csv(file="in/comics/chapters.csv", header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
 chap.map <- tab[,"Rank"]

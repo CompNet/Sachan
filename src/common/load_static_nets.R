@@ -52,20 +52,26 @@
 
 # read the chapter-based novel static graph
 g.nv <- read.graph(file.nv, format="graphml")
-g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)				# keep only named characters
-E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)				# normalize weights
+cat("Number of characters in the novels:",gorder(g.nv),"\n")
+g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)		# keep only named characters
+cat("Number of named characters in the novels:",gorder(g.nv),"\n")
+E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)		# normalize weights
 
 # read the scene-based comics static graph
 if(!is.na(file.cx))
 {	g.cx <- read.graph(file.cx, format="graphml")
-	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)			# keep only named characters
+	cat("Number of characters in the comics:",gorder(g.cx),"\n")
+	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)	# keep only named characters
+	cat("Number of named characters in the comics:",gorder(g.cx),"\n")
 	E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
 }
 
 # read the episode-based tvshow static graph
 g.tv <- read.graph(file.tv, format="graphml")
-g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)				# keep only named characters
-E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)				# normalize weights
+cat("Number of characters in the tv show:",gorder(g.tv),"\n")
+g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)		# keep only named characters
+cat("Number of named characters in the tv show:",gorder(g.tv),"\n")
+E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)		# normalize weights
 
 
 
@@ -106,6 +112,7 @@ V(g.tv)$affiliation <- aff
 		gs <- list("novels"=g.nv, "tvshow"=g.tv)
 	g.names <- names(gs)
 }
+narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
 
 
 
@@ -128,7 +135,7 @@ V(g.tv)$affiliation <- aff
 #rownames(char.importance) <- NULL
 #colnames(char.importance) <- if(NARRATIVE_PART<5) c("Name","Novels","Comics","TVshow","Mean") else c("Name","Novels","TVshow","Mean")
 #write.csv(x=char.importance, file=file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv")), row.names=FALSE, fileEncoding="UTF-8")
-
+#
 # 0: "Tyrion Lannister" "Jon Snow"	    "Theon Greyjoy" "Arya Stark"      "Sansa Stark"   "Catelyn Stark"
 # 2: "Tyrion Lannister" "Catelyn Stark" "Theon Greyjoy" "Eddard Stark"    "Arya Stark"    "Joffrey Baratheon"
 # 5: "Tyrion Lannister" "Jon Snow"      "Arya Stark"    "Jaime Lannister" "Catelyn Stark" "Sansa Stark"
@@ -138,3 +145,5 @@ source("src/common/char_importance.R")
 tab.file <- file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv"))
 char.importance <- read.csv(file=tab.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, fileEncoding="UTF-8")
 ranked.chars <- char.importance[,"Name"]
+imp.moy <- char.importance[,"Mean"]
+names(imp.moy) <- char.importance[,"Name"]

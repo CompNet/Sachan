@@ -18,6 +18,7 @@ library("scales")
 ###############################################################################
 # processing parameters
 MAX_ITER <- 200				# limit on the number of iterations during matching
+NARRATIVE_PART <- 2			# take the first two (2) or five (5) narrative units
 COMMON_CHARS_ONLY <- TRUE	# all named characters (FALSE), or only those common to both compared graphs (TRUE)
 TOP_CHAR_NBR <- 20			# number of important characters
 
@@ -26,7 +27,15 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching","attr_none")
+out.folder <- file.path("out", "matching")
+{	if(NARRATIVE_PART==0)
+		out.folder <- file.path(out.folder, "whole_narr")
+	else if(NARRATIVE_PART==2)
+		out.folder <- file.path(out.folder, "first_2")
+	else if(NARRATIVE_PART==5)
+		out.folder <- file.path(out.folder, "first_5")
+}
+out.folder <- file.path(out.folder, "attr_none")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)
@@ -39,8 +48,6 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 
 ###############################################################################
-# only take the first two narrative units (whole narrative not supported here)
-NARRATIVE_PART <- 2
 # load the static graphs
 source("src/common/load_static_nets.R")
 
@@ -49,7 +56,7 @@ source("src/common/load_static_nets.R")
 
 ###############################################################################
 # identify most important characters (according to novels)
-top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:TOP_CHAR_NBR]
+top.chars <- ranked.chars[1:TOP_CHAR_NBR]
 
 
 
@@ -57,6 +64,7 @@ top.chars <- V(g.nv)$name[order(degree(g.nv),decreasing=TRUE)][1:TOP_CHAR_NBR]
 ###############################################################################
 # adaptive soft seeding
 methods <- c("convex", "indefinite", "PATH", "percolation", "Umeyama", "IsoRank")
+m.names <- c("convex"="Convex", "indefinite"="Indefinite", "PATH"="Concave", "percolation"="Percolation", "Umeyama"="Umeyama", "IsoRank"="IsoRank")
 
 tab.exact.matches.all <- matrix(NA,nrow=length(g.names)*(length(g.names)-1)/2,ncol=length(methods)+1)
 colnames(tab.exact.matches.all) <- c(methods,"CharNbr")
@@ -322,6 +330,7 @@ for(tc in c(FALSE,TRUE))
 	for(i in 1:(length(gs)-1))
 	{	for(j in (i+1):length(gs))
 		{	comp.name <- paste0(g.names[i], "_vs_", g.names[j])
+			comp.title <- bquote(bolditalic(.(narr.names[g.names[i]]))~bold(" vs. ")~bolditalic(.(narr.names[g.names[j]])))
 			local.folder <- file.path(out.folder, mode.folder, comp.name)
 			
 			# loop over matching methods
@@ -340,10 +349,10 @@ for(tc in c(FALSE,TRUE))
 			
 			# create plot
 			plot.file <- file.path(local.folder,paste0("exact_matches_evolution",suffx))
-			pdf(paste0(plot.file,".pdf"), bg="white")
+			pdf(paste0(plot.file,".pdf"))	# bg="white"
 				plot(
 					NULL, 
-					main=paste0(g.names[i], " vs ", g.names[j]),
+					main=comp.title,
 					xlab="Adaptive soft seeds", ylab="Exact matches",
 					xlim=range(sn), ylim=range(c(all.evol),na.rm=TRUE)
 				)
@@ -355,7 +364,7 @@ for(tc in c(FALSE,TRUE))
 			# add legend
 			legend(
 				x="topleft",
-				legend=methods,
+				legend=m.names[methods],
 				fill=colors
 			)
 			
