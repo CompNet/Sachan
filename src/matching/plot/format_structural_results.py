@@ -10,61 +10,72 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--format", type=str, default="latex", help="either 'plain' or 'latex'"
     )
-    parser.add_argument(
-        "-m",
-        "--medias",
-        type=str,
-        help="Either 'comics-novels', 'tvshow-comics' or 'tvshow-novels'",
-    )
-    parser.add_argument(
-        "-a",
-        "--alignment",
-        type=str,
-        default="threshold",
-        help="one of 'threshold', 'smith-waterman'",
-    )
     args = parser.parse_args()
 
-    with open(
-        f"{root_dir}/out/matching/plot/{args.medias}_structural/df.pickle", "rb"
-    ) as f:
-        df = pickle.load(f)
+    dfs_dict = {}
+    for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
+        with open(
+            f"{root_dir}/out/matching/plot/{medias}_structural/df.pickle", "rb"
+        ) as f:
+            df = pickle.load(f)
+            df = df.loc[
+                :, ["sim_mode", "use_weights", "character_filtering", "alignment", "f1"]
+            ]
+            c_filtering_remap = {
+                "named": "named",
+                "common": "common",
+                "top20s5": "top-20",
+                "top20s2": "top-20",
+            }
+            df["character_filtering"] = df["character_filtering"].apply(
+                c_filtering_remap.get
+            )
+            weighted_remap = {True: "yes", False: "no"}
+            df["use_weights"] = df["use_weights"].apply(weighted_remap.get)
+            dfs_dict[medias] = df
 
-    # select
-    df = df[df["alignment"] == args.alignment]
-
-    # rearrange
-    df = df.loc[:, ["f1", "sim_mode", "use_weights", "character_filtering"]]
-    df = df.set_index(["sim_mode", "use_weights", "character_filtering"])
-    df = df["f1"].unstack(["sim_mode", "use_weights"])
-
-    # esthetic changes
-    df.columns.names = ["Jaccard index", "weighted"]
-    df.index.name = "character filtering"
-    # level 1 here representends the "weighted" index
-    df.columns = df.columns.set_levels(
-        df.columns.levels[1].map({True: "yes", False: "no"}), level=1
+    indexs = ["sim_mode", "use_weights", "character_filtering", "alignment"]
+    # output cols: sim_fn, f1_x, f1_y
+    df = dfs_dict["tvshow-novels"].merge(
+        dfs_dict["tvshow-comics"], how="inner", on=indexs
     )
-    if args.medias == "tvshow-novels":
-        df = df.reindex(["named", "common", "top20s5"])
-    else:  # comics are limited to 2 seasons
-        df = df.reindex(["named", "common", "top20s2"])
+    # output cols: sim_fn, f1_x, f1_y, f1
+    df = df.merge(dfs_dict["comics-novels"], how="inner", on=indexs)
     df = df.rename(
-        index={
-            "named": "Named",
-            "common": "Common",
-            "top20s2": "Top-20",
-            "top20s5": "Top-20",
+        columns={
+            "sim_mode": "Jaccard index",
+            "use_weights": "weighted",
+            "character_filtering": "character filtering",
+            "f1_x": "Novels vs. TV Show",
+            "f1_y": "Comics vs. TV Show",
+            "f1": "Novels vs. Comics",
         }
     )
+    df = df.set_index(["Jaccard index", "weighted", "character filtering", "alignment"])
+    # put the "character filtering" level in the column
+    df = df.unstack(2)
 
     if args.format == "plain":
         print(df)
         exit(0)
 
+    def format_index(value: str):
+        # character filtering sets: monospace style
+        if value in ["common", "named", "top-20"]:
+            return "ttfamily: ;"
+        # media pairs: italic style
+        else:
+            return "itshape: ;"
+
     LaTeX_export = (
         df.style.format(lambda v: "{:.2f}".format(v * 100))
-        .highlight_max(props="bfseries: ;", axis=None)
-        .to_latex(hrules=True, sparse_index=False, multicol_align="c")
+        .map_index(format_index, axis="columns")
+        .highlight_max(props="bfseries: ;", axis=0)
+        .to_latex(
+            hrules=True,
+            sparse_index=False,
+            multicol_align="c",
+            column_format="lllccccccccc",
+        )
     )
     print(LaTeX_export)
