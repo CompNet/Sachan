@@ -23,7 +23,6 @@ from smith_waterman import (
     tune_smith_waterman_params_other_medias,
 )
 
-
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 
@@ -34,6 +33,13 @@ if __name__ == "__main__":
         "--medias",
         type=str,
         help="Medias on which to compute alignment. Either 'comics-novels', 'tvshow-comics' or 'tvshow-novels'",
+    )
+    parser.add_argument(
+        "-p",
+        "--period",
+        type=str,
+        default=None,
+        help="either unspecified (default for media pair) or one of U2, U5",
     )
     parser.add_argument(
         "-s",
@@ -56,14 +62,23 @@ if __name__ == "__main__":
         assert args.medias in ("tvshow-novels", "comics-novels")
         assert args.similarity == "structural"
 
-    if args.medias == "tvshow-novels":
-        delimiters = (1, 5, 1, 5)
-    elif args.medias == "tvshow-comics":
-        delimiters = (1, 2, 1, 2)
-    elif args.medias == "comics-novels":
-        delimiters = (1, 2, 1, 2)
+    if not args.period is None:
+        if args.period == "U2":
+            delimiters = (1, 2, 1, 2)
+        elif args.period == "U5":
+            delimiter = (1, 5, 1, 5)
+        else:
+            raise ValueError(
+                f"unknown period: {args.period}. Use no period, or one of U2, U5."
+            )
     else:
-        raise ValueError(f"unknown media pair: {args.medias}")
+        if args.medias == "tvshow-novels":
+            delimiters = (1, 5, 1, 5)
+        elif args.medias in ["tvshow-comics", "comics-novels"]:
+            delimiters = (1, 2, 1, 2)
+        else:
+            raise ValueError(f"unknown media pair: {args.medias}")
+    assert delimiters  # type: ignore
 
     G = load_medias_gold_alignment(args.medias, *delimiters)
 
@@ -204,7 +219,6 @@ if __name__ == "__main__":
                                 gap_cont_penalty=gap_cont_penalty,
                                 neg_th=neg_th,
                             )
-
                         precision, recall, f1, _ = precision_recall_fscore_support(
                             G.flatten(),
                             M.flatten(),
@@ -438,13 +452,13 @@ if __name__ == "__main__":
         raise ValueError(f"unknow similarity: {args.similarity}")
 
     df = pd.DataFrame(metrics_lst, columns=columns)
+    dir_name = f"{args.medias}_{args.similarity}"
     if args.blocks:
-        dir_name = (
-            f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}_blocks"
-        )
-    else:
-        dir_name = f"{root_dir}/out/matching/plot/{args.medias}_{args.similarity}"
-    print(f"exporting results to {dir_name}...")
-    os.makedirs(dir_name, exist_ok=True)
-    with open(f"{dir_name}/df.pickle", "wb") as f:
+        dir_name += "_blocks"
+    if args.medias == "tvshow-novels" and args.period == "U2":
+        dir_name += "_U2"
+    dir_path = f"{root_dir}/out/matching/plot/{dir_name}"
+    print(f"exporting results to {dir_path}...")
+    os.makedirs(dir_path, exist_ok=True)
+    with open(f"{dir_path}/df.pickle", "wb") as f:
         pickle.dump(df, f)
