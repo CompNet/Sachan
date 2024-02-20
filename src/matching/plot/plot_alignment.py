@@ -26,12 +26,47 @@ from alignment_commons import (
     textual_similarity,
     threshold_align_blocks,
     combined_similarities,
+    tune_alpha_other_medias,
     tune_threshold_other_medias,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
     tune_smith_waterman_params_other_medias,
 )
+
+
+def to_error_matrix(G: np.ndarray, M: np.ndarray) -> np.ndarray:
+    """
+    :param G: gold alignment of shape (n, m)
+    :param M: predicted alignment of shape (n, m)
+    :return: a colored error matrix of shape (n, m, 3)
+    """
+
+    TN = 0
+    TP = 1
+    FN = 2
+    FP = 3
+
+    ERROR_COLORS = np.array(
+        [
+            [68, 1, 84],
+            [85, 198, 103],
+            [253, 231, 37],
+            [192, 58, 131],
+        ]
+    )
+
+    E = np.zeros(G.shape, dtype="int")
+    for i in range(G.shape[0]):
+        for j in range(G.shape[1]):
+            truth = G[i][j]
+            pred = M[i][j]
+            if truth == 0:
+                E[i][j] = TN if pred == truth else FP
+            else:
+                E[i][j] = TP if pred == truth else FN
+
+    return ERROR_COLORS[E]
 
 
 if __name__ == "__main__":
@@ -56,14 +91,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-sf",
-        "--similarity_function",
+        "--similarity-function",
         type=str,
         default="tfidf",
         help="One of 'tfidf', 'sbert'.",
     )
     parser.add_argument(
         "-sk",
-        "--structural_kwargs",
+        "--structural-kwargs",
         type=str,
         default='{"mode": "edges", "use_weights": true, "character_filtering": "named"}',
         help="JSON formatted kwargs for structural alignment",
@@ -162,9 +197,10 @@ if __name__ == "__main__":
         # Plot
         # ----
         plt.style.use("science")
+        E = to_error_matrix(G, M)
         fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
         ax.set_title(f"F1 = {f1*100:.2f}", fontsize=FONTSIZE)
-        ax.imshow(M, interpolation="none", aspect="auto")
+        ax.imshow(E, interpolation="none", aspect="auto")
         first_media, second_media = args.medias.split("-")
         if args.medias == "comics-novels":
             ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
@@ -239,9 +275,10 @@ if __name__ == "__main__":
         # Plot
         # ----
         plt.style.use("science")
+        E = to_error_matrix(G, M)
         fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
         ax.set_title(f"F1 = {f1*100:.2f}", fontsize=FONTSIZE)
-        ax.imshow(M, interpolation="none", aspect="auto")
+        ax.imshow(E, interpolation="none", aspect="auto")
         if args.medias == "comics-novels":
             ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
             ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
@@ -290,39 +327,45 @@ if __name__ == "__main__":
         S_textual = textual_similarity(
             first_summaries, second_summaries, args.similarity_function
         )
-        S_combined = combined_similarities(S_structural, S_textual)
 
         # Combination
         # -----------
         if args.alignment == "threshold":
-            t = tune_threshold_other_medias(
+            alpha, t = tune_alpha_other_medias(
                 args.medias,
-                "combined",
-                np.arange(0.0, 1.0, 0.01),
+                "threshold",
+                np.arange(0.0, 1.0, 0.01),  # alpha
+                [np.arange(0.0, 1.0, 0.01)],  # threshold
                 textual_sim_fn=args.similarity_function,
                 structural_mode=structural_kwargs["mode"],
                 structural_use_weights=structural_kwargs["use_weights"],
                 structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
+            S_combined = combined_similarities(S_structural, S_textual, alpha)
             M = S_combined > t
         elif args.alignment == "smith-waterman":
             (
+                alpha,
                 gap_start_penalty,
                 gap_cont_penalty,
                 neg_th,
-            ) = tune_smith_waterman_params_other_medias(
+            ) = tune_alpha_other_medias(
                 args.medias,
-                "combined",
-                np.arange(0.0, 0.2, 0.01),
-                np.arange(0.0, 0.2, 0.01),
-                np.arange(0.0, 0.1, 0.1),  # effectively no search
+                "smith-waterman",
+                np.arange(0.1, 0.9, 0.05),  # alpha
+                [
+                    np.arange(0.0, 0.2, 0.01),  # gap_start_penalty
+                    np.arange(0.0, 0.2, 0.01),  # gap_cont_penalty
+                    np.arange(0.0, 0.1, 0.1),  # neg_th
+                ],
                 textual_sim_fn=args.similarity_function,
                 structural_mode=structural_kwargs["mode"],
                 structural_use_weights=structural_kwargs["use_weights"],
                 structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
+            S_combined = combined_similarities(S_structural, S_textual, alpha)
             M, *_ = smith_waterman_align_affine_gap(
                 S_combined, gap_start_penalty, gap_cont_penalty, neg_th
             )
@@ -336,10 +379,11 @@ if __name__ == "__main__":
 
         # Plot
         # ----
+        E = to_error_matrix(G, M)
         plt.style.use("science")
         fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.3))
         ax.set_title(f"F1 = {f1*100:.2f}", fontsize=FONTSIZE)
-        ax.imshow(M, interpolation="none", aspect="auto")
+        ax.imshow(E, interpolation="none", aspect="auto")
         if args.medias == "comics-novels":
             ax.set_ylabel("Comics Issues", fontsize=FONTSIZE)
             ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
