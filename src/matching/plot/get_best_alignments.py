@@ -14,9 +14,26 @@ if __name__ == "__main__":
             ) as f:
                 df = pickle.load(f)
                 best_row = df.iloc[df["f1"].idxmax()]
-                best_rows.append(
-                    pd.concat([pd.Series([similarity], index=["similarity"]), best_row])
+                additional_datas = pd.Series(
+                    [similarity, False], index=["similarity", "blocks"]
                 )
+                best_rows.append(pd.concat([additional_datas, best_row]))
+
+            # blocks
+            if similarity == "structural" and medias in [
+                "tvshow-novels",
+                "comics-novels",
+            ]:
+                with open(
+                    f"{root_dir}/out/matching/plot/{medias}_{similarity}_blocks/df.pickle",
+                    "rb",
+                ) as f:
+                    df = pickle.load(f)
+                    best_row = df.iloc[df["f1"].idxmax()]
+                    additional_datas = pd.Series(
+                        [similarity, True], index=["similarity", "blocks"]
+                    )
+                    best_rows.append(pd.concat([additional_datas, best_row]))
 
         overall_best_row = max(best_rows, key=lambda r: r["f1"])
         print(f"best configuration for {medias}: ")

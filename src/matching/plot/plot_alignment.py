@@ -18,6 +18,7 @@ import scienceplots
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
+    get_comics_chapter_issue_i,
     graph_similarity_matrix,
     load_medias_gold_alignment,
     load_medias_graphs,
@@ -31,6 +32,7 @@ from alignment_commons import (
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
+    smith_waterman_align_blocks,
     tune_smith_waterman_params_other_medias,
 )
 
@@ -136,6 +138,7 @@ if __name__ == "__main__":
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
             "locations" if args.blocks else None,
+            comics_blocks=bool(args.blocks),
         )
 
         # Compute similarity
@@ -181,10 +184,26 @@ if __name__ == "__main__":
             )
             print(f"found {gap_start_penalty=} {gap_cont_penalty=} {neg_th=}")
             if args.blocks:
-                raise NotImplementedError
-            M, *_ = smith_waterman_align_affine_gap(
-                S, gap_start_penalty, gap_cont_penalty, neg_th
-            )
+                if args.medias == "tvshow-novels":
+                    block_to_narrunit = np.array(
+                        [get_episode_i(G) for G in first_media_graphs]
+                    )
+                else:
+                    assert args.medias == "comics-novels"
+                    block_to_narrunit = np.array(
+                        [get_comics_chapter_issue_i(G) for G in first_media_graphs]
+                    )
+                M = smith_waterman_align_blocks(
+                    S,
+                    block_to_narrunit,
+                    gap_start_penalty=gap_start_penalty,
+                    gap_cont_penalty=gap_cont_penalty,
+                    neg_th=neg_th,
+                )
+            else:
+                M, *_ = smith_waterman_align_affine_gap(
+                    S, gap_start_penalty, gap_cont_penalty, neg_th
+                )
 
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
