@@ -15,12 +15,18 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
+    for medias, period in [
+        ("tvshow-novels", ""),
+        ("tvshow-novels", "_U2"),
+        ("tvshow-comics", ""),
+        ("comics-novels", ""),
+    ]:
         best_rows = []
 
         for similarity in ["structural", "textual", "combined"]:
             with open(
-                f"{root_dir}/out/matching/plot/{medias}_{similarity}/df.pickle", "rb"
+                f"{root_dir}/out/matching/plot/{medias}_{similarity}{period}/df.pickle",
+                "rb",
             ) as f:
                 df = pickle.load(f)
                 best_row = df.iloc[df["f1"].idxmax()]
@@ -49,5 +55,5 @@ if __name__ == "__main__":
                     best_rows.append(pd.concat([additional_datas, best_row]))
 
         overall_best_row = max(best_rows, key=lambda r: r["f1"])
-        print(f"best configuration for {medias}: ")
+        print(f"best configuration for {medias}{period}: ")
         print(overall_best_row, end="\n\n")
