@@ -1,10 +1,20 @@
-import os, pickle
+import os, pickle, argparse
 import pandas as pd
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "-n",
+        "--no-blocks",
+        action="store_true",
+        help="if specified, does not include blocks results.",
+    )
+    args = parser.parse_args()
+
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
         best_rows = []
 
@@ -18,6 +28,9 @@ if __name__ == "__main__":
                     [similarity, False], index=["similarity", "blocks"]
                 )
                 best_rows.append(pd.concat([additional_datas, best_row]))
+
+            if args.no_blocks:
+                continue
 
             # blocks
             if similarity == "structural" and medias in [
