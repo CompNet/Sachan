@@ -17,30 +17,31 @@ if __name__ == "__main__":
     with open(
         f"{root_dir}/out/matching/plot/tvshow-novels_structural_U2/df.pickle", "rb"
     ) as f:
-        struct_df = pickle.load(f)
-        best_struct_f1 = struct_df["f1"].max()
+        df = pickle.load(f)
+        best_struct_f1 = df["f1"].max()
 
     with open(
-        f"{root_dir}/out/matching/plot/tvshow-novels_structural_U2/df.pickle", "rb"
+        f"{root_dir}/out/matching/plot/tvshow-novels_structural_blocks_U2/df.pickle",
+        "rb",
     ) as f:
-        struct_df = pickle.load(f)
-        best_struct_blocks_f1 = struct_df["f1"].max()
+        df = pickle.load(f)
+        best_struct_blocks_f1 = df["f1"].max()
 
     with open(
         f"{root_dir}/out/matching/plot/tvshow-novels_textual_U2/df.pickle", "rb"
     ) as f:
-        text_df = pickle.load(f)
-        best_text_f1 = text_df["f1"].max()
+        df = pickle.load(f)
+        best_text_f1 = df["f1"].max()
 
     with open(
         f"{root_dir}/out/matching/plot/tvshow-novels_combined_U2/df.pickle", "rb"
     ) as f:
-        combined_df = pickle.load(f)
-        best_combined_f1 = combined_df["f1"].max()
+        df = pickle.load(f)
+        best_combined_f1 = df["f1"].max()
 
     df = pd.DataFrame(
         [[best_struct_f1, best_struct_blocks_f1, best_text_f1, best_combined_f1]],
-        columns=["structural", "structural (+sub-units)" "textual", "combined"],
+        columns=["structural", "structural (+sub-units)", "textual", "combined"],
     )
 
     if args.format == "plain":
@@ -51,6 +52,6 @@ if __name__ == "__main__":
         df.style.format(lambda v: "{:.2f}".format(v * 100))
         .highlight_max(props="bfseries: ;", axis=1)
         .hide(axis="index")
-        .to_latex(hrules=True, sparse_index=False, column_format="ccc")
+        .to_latex(hrules=True, sparse_index=False, column_format="cccc")
     )
     print(LaTeX_export)

@@ -44,7 +44,7 @@ if __name__ == "__main__":
                 "comics-novels",
             ]:
                 with open(
-                    f"{root_dir}/out/matching/plot/{medias}_{similarity}_blocks/df.pickle",
+                    f"{root_dir}/out/matching/plot/{medias}_{similarity}_blocks{period}/df.pickle",
                     "rb",
                 ) as f:
                     df = pickle.load(f)
