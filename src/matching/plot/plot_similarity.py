@@ -26,9 +26,9 @@ from alignment_commons import (
 
 
 if __name__ == "__main__":
-    FONTSIZE = 8
+    FONTSIZE = 6
     COLUMN_WIDTH_IN = 5.166
-    H_W_RATIO = 0.2
+    H_W_RATIO = 0.25
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -106,6 +106,8 @@ if __name__ == "__main__":
             ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
             ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
+        ax.tick_params(axis="both", labelsize=FONTSIZE)
+        plt.tight_layout()
         if args.output:
             plt.savefig(args.output, bbox_inches="tight")
         else:
@@ -142,6 +144,8 @@ if __name__ == "__main__":
             ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
             ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
+        ax.tick_params(axis="both", labelsize=FONTSIZE)
+        plt.tight_layout()
         if args.output:
             plt.savefig(args.output, bbox_inches="tight")
         else:
@@ -195,6 +199,8 @@ if __name__ == "__main__":
             ax.set_ylabel("TV Show Episodes", fontsize=FONTSIZE)
             ax.set_xlabel("Novels Chapters", fontsize=FONTSIZE)
 
+        ax.tick_params(axis="both", labelsize=FONTSIZE)
+        plt.tight_layout()
         if args.output:
             plt.savefig(args.output, bbox_inches="tight")
         else:
