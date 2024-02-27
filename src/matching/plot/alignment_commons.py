@@ -398,7 +398,6 @@ def graph_similarity_matrix(
         H_lst = [filtered_graph(H, list(G_xor_H_chars)) for H in H_lst]
 
     elif character_filtering.startswith("top20"):
-
         if character_filtering == "top20s2":
             df = pd.read_csv(f"{root_dir}/in/ranked_importance_S2.csv")
         elif character_filtering == "top20s5":
@@ -522,7 +521,6 @@ def tune_alignment_params(
     )
 
     for params in progress:
-
         metrics_list = []
 
         for S, G in zip(S_tune, G_tune):
