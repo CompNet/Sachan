@@ -16,13 +16,22 @@ if __name__ == "__main__":
         action="store_true",
         help="if specified, simplify table and take the best score along jaccard and weighting parameters.",
     )
+    parser.add_argument(
+        "-c",
+        "--cumulative",
+        action="store_true",
+        help="if specified, use cumulative results",
+    )
     args = parser.parse_args()
 
     dfs_dict = {}
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
-        with open(
-            f"{root_dir}/out/matching/plot/{medias}_structural/df.pickle", "rb"
-        ) as f:
+        path = f"{root_dir}/out/matching/plot/{medias}_structural/df.pickle"
+        if args.cumulative:
+            path = (
+                f"{root_dir}/out/matching/plot/{medias}_structural_cumulative/df.pickle"
+            )
+        with open(path, "rb") as f:
             df = pickle.load(f)
             df = df.loc[
                 :, ["sim_mode", "use_weights", "character_filtering", "alignment", "f1"]
