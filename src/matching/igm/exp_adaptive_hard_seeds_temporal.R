@@ -38,16 +38,20 @@ mode.folder <- "common_raw_adaptive_hard_temporal"
 ###############################################################################
 # no choice here, we need to use the cumulative networks
 CUMULATIVE <- TRUE
+# only take the first two narrative units (whole narrative not supported here)
+NARRATIVE_PART <- 2
 # load the dynamic graphs
+NU_NV <- "chapter"	# narrative unit for the novels: only "chapter" is possible
+NU_CX <- "chapter"	# narrative unit for the comics: only "chapter" is supported in this script
 source("src/common/load_dynamic_nets.R")
 
 
 
 
 ###############################################################################
-## compute a list of characters ranked by importance
+## read the list of characters ranked by importance
 source("src/common/char_importance.R")
-tab.file <- file.path("in",paste0("ranked_importance_S",2,".csv"))
+tab.file <- file.path("in",paste0("ranked_importance_S",NARRATIVE_PART,".csv"))
 char.importance <- read.csv(file=tab.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, fileEncoding="UTF-8")
 ranked.chars <- char.importance[,"Name"]
 imp.moy <- char.importance[,"Mean"]

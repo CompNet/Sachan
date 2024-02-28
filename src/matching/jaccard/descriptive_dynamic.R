@@ -23,7 +23,7 @@ source("src/common/stats.R")
 ###############################################################################
 # processing parameters
 COMMON_CHARS_ONLY <- TRUE	# all named characters, or only those common to both compared graphs
-CUMULATIVE <- TRUE			# use the instant or cumulative networks
+CUMULATIVE <- TRUE			# use the instant (FALSE) or cumulative (TRUE) networks
 MEAS <- "jaccard"			# no alternative for now
 TOP_CHAR_NBR <- 20			# number of important characters
 
@@ -55,6 +55,8 @@ NARRATIVE_PART <- 2
 # load the static graphs and rank the characters by importance
 source("src/common/load_static_nets.R")
 # load the dynamic graphs
+NU_NV <- "chapter"	# narrative unit for the novels: only "chapter" is possible
+NU_CX <- "chapter"	# narrative unit for the comics: only "chapter" is supported in this script
 source("src/common/load_dynamic_nets.R")
 
 

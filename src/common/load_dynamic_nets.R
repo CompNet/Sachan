@@ -12,7 +12,10 @@
 
 ###############################################################################
 # parameters
-{	if(CUMULATIVE)
+NU_NV <- "chapter"	# no choice here
+
+{	# cumultaive vs. instant
+	if(CUMULATIVE)
 	{	folder <- "cumul"
 		pref.nv <- "cumul"
 		pref.cx <- "cum"
@@ -25,6 +28,78 @@
 		pref.tv <- "instant"
 	}
 }
+
+# notes:
+# - comics:
+#   - last volume 2 chapter: #143 (file  xxxx_143.graphml)
+#   - last volume 2 scene:  #1438 (file xxxx_1437.graphml)
+# - tv show:
+#   - last S02 episode:  #20 (file xxxx_019.graphml)
+#   - last S02 block:   #236 (file xxxx_235.graphml)
+#   - last S02 scene:   #754 (file xxxx_0753.graphml)
+#   - last S05 episode:  #50 (file xxxx_049.graphml)
+#   - last S05 block:   #503 (file xxxx_502.graphml)
+#   - last S05 scene:  #2249 (file xxxx_2248.graphml)
+#   - very last episode: #73 (file xxxx_072.graphml)
+#   - very last block:  #739 (file xxxx_738.graphml)
+#   - very last scene: #4165 (file xxxx_4164.graphml)
+# - novels:
+#   - last book 2 chapter: 2.ACoK_69_xxxx.graphml
+#   - last book 5 chapter: 5.ADwD_72_xxxx.graphml
+
+{	# temporal coverage
+	if(NARRATIVE_PART==0)
+	{	# novels
+		file.nv <- file.path("in/novels",folder,paste0("5.ADwD_72_",pref.nv,".graphml"))
+		# comics
+		if(NU_CX=="chapter")
+			file.cx <- file.path("in/comics",folder,paste0("chapter/",pref.cx,"_143.graphml"))
+		else
+			file.cx <- file.path("in/comics",folder,paste0("scene/",pref.cx,"_1437.graphml"))
+		# tv show
+		if(NU_TV=="episode")
+			file.tv <- file.path("in/tvshow",folder,paste0("episode/",pref.tv,"_72.graphml"))
+		else if(NU_TV=="block")
+			file.tv <- file.path("in/tvshow",folder,paste0("block_locations/",pref.tv,"_738.graphml"))
+		else if(NU_TV=="scene")
+			file.tv <- file.path("in/tvshow",folder,paste0("scene/",pref.tv,"_4164.graphml"))
+	}
+	else if(NARRATIVE_PART==2)
+	{	# novels
+		file.nv <- file.path("in/novels",folder,paste0("2.ACoK_69_",pref.nv,".graphml"))
+		# comics
+		if(NU_CX=="chapter")
+			file.cx <- file.path("in/comics",folder,paste0("chapter/",pref.cx,"_143.graphml"))
+		else
+			file.cx <- file.path("in/comics",folder,paste0("scene/",pref.cx,"_1437.graphml"))
+		# tv show
+		if(NU_TV=="episode")
+			file.tv <- file.path("in/tvshow",folder,paste0("episode/",pref.tv,"_019.graphml"))
+		else if(NU_TV=="block")
+			file.tv <- file.path("in/tvshow",folder,paste0("block_locations/",pref.tv,"_235.graphml"))
+		else if(NU_TV=="scene")
+			file.tv <- file.path("in/tvshow",folder,paste0("scene/",pref.tv,"_0753.graphml"))
+	}
+	else if(NARRATIVE_PART==5)
+	{	# novels
+		file.nv <- file.path("in/novels",folder,paste0("5.ADwD_72_",pref.nv,".graphml"))
+		# comics
+		file.cx <- NA
+		# tv show
+		if(NU_TV=="episode")
+			file.tv <- file.path("in/tvshow",folder,paste0("episode/",pref.tv,"_049.graphml"))
+		else if(NU_TV=="block")
+			file.tv <- file.path("in/tvshow",folder,paste0("block_locations/",pref.tv,"_502.graphml"))
+		else if(NU_TV=="scene")
+			file.tv <- file.path("in/tvshow",folder,paste0("scene/",pref.tv,"_2248.graphml"))
+	}
+}
+
+# test
+#NU_NV <- "chapter"
+#NU_CX <- "scene"
+#NU_TV <- "scene"
+
 
 
 
@@ -44,27 +119,17 @@ aff.map <- sapply(strsplit(x=aff.map, split=",", fixed=TRUE), function(v) v[1])
 
 ###############################################################################
 # load the dynamic graphs
+gs.all <- list()
 
-# notes:
-# - comics:
-#   - last chapter: #143 (file cum/inst_143.graphml)
-#   - last scene: #1438 (file cum/inst_1437.graphml)
-# - tv show:
-#   - last S02 episode: #20 (file cumulative/instant_019.graphml)
-#   - last S02 scene: #754 (file cumulative/instant_0753.graphml)
-#   - very last episode: #73 (file cumulative/instant_072.graphml)
-#   - very last scene: #4165 (file cumulative/instant_4164.graphml)
-# - novels:
-#   - last book 2 chapter: 2.ACoK_69_cumul.graphml / 2.ACoK_69_instant.graphml
-#   - last chapter: 5.ADwD_72_cumul.graphml / 5.ADwD_72_instant.graphml
-
-# read the chapter-based novel cumulative graphs
+# read the novel graphs
 gs.nv <- list()
 names.nv <- c()
 files <- sort(list.files(path=file.path("in/novels",folder), pattern=".+\\.graphml", full.names=TRUE))
 i <- 1
-while(files[i]!=file.path("in/novels",folder,paste0("3.ASoS_00_",pref.nv,".graphml")))
+last <- FALSE
+while(!last)
 {	cat("..Loading file \"",files[i],"\"\n",sep="")
+	last <- files[i]==file.nv
 	
 	# load graph
 	g.nv <- read.graph(files[i], format="graphml")
@@ -82,61 +147,71 @@ while(files[i]!=file.path("in/novels",folder,paste0("3.ASoS_00_",pref.nv,".graph
 	gs.nv <- c(gs.nv, list(g.nv))
 	i <- i + 1
 }
+gs$novels <- gs.nv
 cat("Loaded a total of ",length(gs.nv)," novel networks\n",sep="")
 
-# read the chapter-based comics cumulative graphs
-gs.cx <- list()
-names.cx <- c()
-files <- sort(list.files(path=file.path("in/comics",folder,"chapter"), pattern=".+\\.graphml", full.names=TRUE))
-for(i in 1:length(files))
+# possibly read the comics graphs
+if(!is.na(file.cx))
+{	gs.cx <- list()
+	names.cx <- c()
+	files <- sort(list.files(path=file.path("in/comics",folder,NU_CX), pattern=".+\\.graphml", full.names=TRUE))
+	i <- 1
+	last <- FALSE
+	while(!last)
+	{	cat("..Loading file \"",files[i],"\"\n",sep="")
+		last <- files[i]==file.cx
+		
+		# load graph
+		g.cx <- read.graph(files[i], format="graphml")
+		g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)		# keep only named characters
+		if(gsize(g.cx)>0)
+			E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
+		
+		# add affiliation
+		aff <- aff.map[V(g.cx)$name]
+		aff[is.na(aff)] <- "Unknown"
+		V(g.cx)$affiliation <- aff
+		
+		# retrieve character names
+		names.cx <- sort(union(names.cx, V(g.cx)$name))
+		
+		gs.cx <- c(gs.cx, list(g.cx))
+		i <- i + 1
+	}
+	gs$comics <- gs.cx
+	cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
+}
+
+## read the TV Show graphs 
+gs.tv <- list()
+names.tv <- c()
+files <- sort(list.files(path=file.path("in/tvshow",folder,NU_TV), pattern=".+\\.graphml", full.names=TRUE))
+i <- 1
+last <- FALSE
+while(!last)
 {	cat("..Loading file \"",files[i],"\"\n",sep="")
+	last <- files[i]==file.tv
 	
 	# load graph
-	g.cx <- read.graph(files[i], format="graphml")
-	g.cx <- delete_vertices(graph=g.cx, v=!V(g.cx)$named)		# keep only named characters
-	if(gsize(g.cx)>0)
-		E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
+	g.tv <- read.graph(files[i], format="graphml")
+	if(gorder(g.tv)>0)
+		g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
+	if(gsize(g.tv)>0)
+		E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
 	
 	# add affiliation
-	aff <- aff.map[V(g.cx)$name]
+	aff <- aff.map[V(g.tv)$name]
 	aff[is.na(aff)] <- "Unknown"
-	V(g.cx)$affiliation <- aff
+	V(g.tv)$affiliation <- aff
 	
 	# retrieve character names
-	names.cx <- sort(union(names.cx, V(g.cx)$name))
+	names.tv <- sort(union(names.tv, V(g.tv)$name))
 	
-	gs.cx <- c(gs.cx, list(g.cx))
+	gs.tv <- c(gs.tv, list(g.tv))
+	i <- i + 1
 }
-cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
-
-## read the episode-based TV Show cumulative graphs 
-## TODO pb: not the same number of time slices as novels and comics
-#gs.tv <- list()
-#names.tv <- c()
-#files <- sort(list.files(path=file.path("in/tvshow",folder,"episode"), pattern=".+\\.graphml", full.names=TRUE))
-#i <- 1
-#while(files[i]!=file.path("in/tvshow/",folder,"episode",paste0(pref.tv,"_019.graphml")))
-#{	cat("..Loading file \"",files[i],"\"\n",sep="")
-#	
-#	# load graph
-#	g.tv <- read.graph(files[i], format="graphml")
-#	if(gorder(g.tv)>0)
-#		g.tv <- delete_vertices(graph=g.tv, v=!V(g.tv)$named)			# keep only named characters
-#	if(gsize(g.tv)>0)
-#		E(g.tv)$weight <- E(g.tv)$weight/max(E(g.tv)$weight)			# normalize weights
-#	
-#	# add affiliation
-#	aff <- aff.map[V(g.tv)$name]
-#	aff[is.na(aff)] <- "Unknown"
-#	V(g.tv)$affiliation <- aff
-#	
-#	# retrieve character names
-#	names.tv <- sort(union(names.tv, V(g.tv)$name))
-#	
-#	gs.tv <- c(gs.tv, list(g.tv))
-#	i <- i + 1
-#}
-#cat("Loaded a total of ",length(gs.tv)," TV show networks\n",sep="")
+gs$tvshow <- gs.tv
+cat("Loaded a total of ",length(gs.tv)," TV show networks\n",sep="")
 
 
 
@@ -144,6 +219,7 @@ cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 ###############################################################################
 # names of the narratives (for plots)
 narr.names <- c("comics"="Comics", "novels"="Novels", "tvshow"="TV Show")
+g.names <- names(gs.all)
 
 
 
