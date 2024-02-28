@@ -60,6 +60,12 @@ if __name__ == "__main__":
         default='{"mode": "edges", "use_weights": true, "character_filtering": "named"}',
         help="JSON formatted kwargs for structural alignment",
     )
+    parser.add_argument(
+        "-c",
+        "--cumulative",
+        action="store_true",
+        help="if specified, use cumulative results",
+    )
     parser.add_argument("-a", "--alpha", type=float, default=0.5)
     parser.add_argument("-m1", "--min-delimiter-first-media", type=int, default=None)
     parser.add_argument("-x1", "--max-delimiter-first-media", type=int, default=None)
@@ -82,6 +88,7 @@ if __name__ == "__main__":
             args.max_delimiter_second_media,
             "locations" if args.blocks else None,
             comics_blocks=bool(args.blocks),
+            cumulative=args.cumulative,
         )
 
         # Compute similarity
@@ -172,6 +179,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            cumulative=args.cumulative_graph,
         )
 
         # Compute similarity

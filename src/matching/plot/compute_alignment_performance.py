@@ -42,6 +42,12 @@ if __name__ == "__main__":
         help="either unspecified (default for media pair) or one of U2, U5",
     )
     parser.add_argument(
+        "-c",
+        "--cumulative",
+        action="store_true",
+        help="if specified, perform alignment using the cumulative networks (if applicable)",
+    )
+    parser.add_argument(
         "-s",
         "--similarity",
         type=str,
@@ -88,6 +94,7 @@ if __name__ == "__main__":
             *delimiters,
             tvshow_blocks="locations" if args.blocks else None,
             comics_blocks=bool(args.blocks),
+            cumulative=args.cumulative,
         )
 
         sim_modes: List[Literal["nodes", "edges"]] = ["nodes", "edges"]
@@ -320,7 +327,9 @@ if __name__ == "__main__":
 
         # sim_fn * mode * use_weights * filtering
         with tqdm(total=2 * 2 * 2 * 3) as pbar:
-            first_graphs, second_graphs = load_medias_graphs(args.medias, *delimiters)
+            first_graphs, second_graphs = load_medias_graphs(
+                args.medias, *delimiters, cumulative=args.cumulative
+            )
             G = load_medias_gold_alignment(args.medias, *delimiters)
 
             first_summaries, second_summaries = load_medias_summaries(
@@ -457,6 +466,8 @@ if __name__ == "__main__":
         dir_name += "_blocks"
     if args.medias == "tvshow-novels" and args.period == "U2":
         dir_name += "_U2"
+    if args.cumulative:
+        dir_name += "_cumulative"
     dir_path = f"{root_dir}/out/matching/plot/{dir_name}"
     print(f"exporting results to {dir_path}...")
     os.makedirs(dir_path, exist_ok=True)

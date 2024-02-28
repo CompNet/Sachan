@@ -189,8 +189,11 @@ def load_medias_graphs(
     max_delimiter_second_media: Optional[int] = None,
     tvshow_blocks: Optional[Literal["locations", "similarity"]] = None,
     comics_blocks: bool = False,
+    cumulative: bool = False,
 ) -> Tuple[List[nx.Graph], List[nx.Graph]]:
     """Load the instant graphs for two medias to compare them.
+
+    :param cumulative: if ``True``, return cumulative networks.
 
     :return: (graph for first media, graph for second media)
     """
@@ -214,12 +217,16 @@ def load_medias_graphs(
         else:
             raise ValueError(f"wrong medias specification: {medias}")
 
-    return (
-        load_graphs(first_media, min_delimiter_first_media, max_delimiter_first_media),
-        load_graphs(
-            second_media, min_delimiter_second_media, max_delimiter_second_media
-        ),
+    graphs1 = load_graphs(
+        first_media, min_delimiter_first_media, max_delimiter_first_media
     )
+    graphs2 = load_graphs(
+        second_media, min_delimiter_second_media, max_delimiter_second_media
+    )
+    if not cumulative:
+        return (graphs1, graphs2)
+
+    return (list(cumulative_graph(graphs1)), list(cumulative_graph(graphs2)))
 
 
 def load_tvshow_episode_summaries(
@@ -398,7 +405,6 @@ def graph_similarity_matrix(
         H_lst = [filtered_graph(H, list(G_xor_H_chars)) for H in H_lst]
 
     elif character_filtering.startswith("top20"):
-
         if character_filtering == "top20s2":
             df = pd.read_csv(f"{root_dir}/in/ranked_importance_S2.csv")
         elif character_filtering == "top20s5":
@@ -522,7 +528,6 @@ def tune_alignment_params(
     )
 
     for params in progress:
-
         metrics_list = []
 
         for S, G in zip(S_tune, G_tune):

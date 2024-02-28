@@ -92,6 +92,12 @@ if __name__ == "__main__":
         help="one of 'structural', 'textual' or 'combined'",
     )
     parser.add_argument(
+        "-c",
+        "--cumulative",
+        action="store_true",
+        help="if specified, perform alignment using the cumulative networks (if applicable)",
+    )
+    parser.add_argument(
         "-sf",
         "--similarity-function",
         type=str,
@@ -139,6 +145,7 @@ if __name__ == "__main__":
             args.max_delimiter_second_media,
             "locations" if args.blocks else None,
             comics_blocks=bool(args.blocks),
+            cumulative=args.cumulative,
         )
 
         # Compute similarity
@@ -335,6 +342,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            cumulative=args.cumulative,
         )
 
         # Compute similarity

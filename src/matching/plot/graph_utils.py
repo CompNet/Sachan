@@ -24,14 +24,18 @@ def cumulative_graph(graphs: List[nx.Graph]) -> Generator[nx.Graph, None, None]:
         # nx.compose creates a new graph with the nodes and edges
         # from both graphs...
         K = nx.compose(H, prev_G)
-        # ... however it doesn't sum the attributes : we readjust
-        # these here.
+        # ... however it doesn't sum the attributes (which is useful
+        # for edge weights for example): we readjust these here.
         for n1, n2 in K.edges:
             attrs = {}
             for attr in all_attrs:
                 G_attr = prev_G.edges.get([n1, n2], default={attr: 0})[attr]
                 H_attr = H.edges.get([n1, n2], default={attr: 0})[attr]
-                attrs[attr] = G_attr + H_attr
+                try:
+                    attrs[attr] = G_attr + H_attr
+                # NOTE: not all attributes are summable!
+                except Exception:
+                    continue
             K.add_edge(n1, n2, **attrs)
         # We also re-add the graph and nodes attributes from G
         K.graph = H.graph
