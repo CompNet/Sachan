@@ -120,17 +120,26 @@ for(charset in CHARSETS)
 				# compute measure
 				mm <- TOPO_MEAS_ALL[[meas]]
 				val <- mm$foo(g)
-#				print(val)
-if(any(is.na(val) | is.nan(val) | is.infinite(val)) && !(meas %in% c("closeness","w_closeness","distance","w_distance")))
-	stop("svsofe")
-				if(mm$type %in% c("vertex","edge"))
-				{	val[is.nan(val) | is.infinite(val)] <- NA
-					val <- mean(val,na.rm=TRUE)
-				}
-#				print(val)
-if(is.na(val) || is.nan(val) || is.infinite(val))
-	stop("GERIHLKSHOIDHS")
+				print(val)
 				
+				# probably an empty graph
+				if(length(val)==0 || all(is.na(val) | is.nan(val) | is.infinite(val)) && gsize(g)<2)
+					val <- NA
+				# regular case
+				else
+				{
+if(any(is.na(val) | is.nan(val) | is.infinite(val)) && !(meas %in% c("closeness","w_closeness","distance","w_distance")))
+	stop("Problem with a measure: unexpected value")
+					if(mm$type %in% c("vertex","edge"))
+					{	val[is.nan(val) | is.infinite(val)] <- NA
+						val <- mean(val,na.rm=TRUE)
+					}
+					print(val)
+if(is.na(val) || is.nan(val) || is.infinite(val))
+	stop("Problem with a measure: unexpected value")
+				}
+				
+				# update vector
 				if(t==1)
 					list.meas[[meas]] <- val
 				else
