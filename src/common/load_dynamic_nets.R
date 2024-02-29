@@ -244,15 +244,17 @@ g.names <- names(gs.all)
 
 ###############################################################################
 # load the chapter mapping file
-tab <- read.csv(file="in/comics/chapters.csv", header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
-chap.map <- tab[,"Rank"]
-# re-order comic networks to match the chapter order of the novels 
-if(!CUMULATIVE)	# cannot apply to cumulative nets, as they are not built in the proper order
-{	gs.cx2 <- list()
-	for(n in 1:length(chap.map))
-		gs.cx2[[chap.map[n]]] <- gs.cx[[n]]
-	gs.cx <- gs.cx2
-	gs.all$comics <- gs.cx2
+if(!is.na(file.cx))
+{	tab <- read.csv(file="in/comics/chapters.csv", header=TRUE, check.names=FALSE, stringsAsFactors=FALSE)
+	chap.map <- tab[,"Rank"]
+	# re-order comic networks to match the chapter order of the novels 
+	if(!CUMULATIVE)	# cannot apply to cumulative nets, as they are not built in the proper order
+	{	gs.cx2 <- list()
+		for(n in 1:length(chap.map))
+			gs.cx2[[chap.map[n]]] <- gs.cx[[n]]
+		gs.cx <- gs.cx2
+		gs.all$comics <- gs.cx2
+	}
 }
 
 
@@ -262,43 +264,50 @@ if(!CUMULATIVE)	# cannot apply to cumulative nets, as they are not built in the 
 # set the normalized narrative units, based on books/volumes/seasons
 
 # novels
-books <- sapply(gs.nv, function(g) graph_attr(g,"book"))
-book.nbr <- max(books)
-t <- 1
-for(b in 1:book.nbr)
-{	unit.nbr <- length(which(books==b))
-	for(u in 1:unit.nbr)
-	{	timestamp <- b + (u-1)/unit.nbr
-		gs.nv[[t]] <- set_graph_attr(graph=gs.nv[[t]], name="timestamp", value=timestamp)
-		t <- t + 1
+{	books <- sapply(gs.nv, function(g) graph_attr(g,"book"))
+	book.nbr <- max(books)
+	t <- 1
+	for(b in 1:book.nbr)
+	{	unit.nbr <- length(which(books==b))
+		for(u in 1:unit.nbr)
+		{	timestamp <- b + (u-1)/unit.nbr
+			gs.nv[[t]] <- set_graph_attr(graph=gs.nv[[t]], name="timestamp", value=timestamp)
+			t <- t + 1
+		}
 	}
+	#print(sapply(gs.nv, function(g) graph_attr(graph=g, name="timestamp")))
+	gs.all$novels <- gs.nv
 }
-print(sapply(gs.nv, function(g) graph_attr(graph=g, name="timestamp")))
 
 # comics
-volumes <- sapply(gs.cx, function(g) graph_attr(g,"volume"))
-volume.nbr <- max(volumes)
-t <- 1
-for(v in 1:volume.nbr)
-{	unit.nbr <- length(which(volumes==v))
-	for(u in 1:unit.nbr)
-	{	timestamp <- v + (u-1)/unit.nbr
-		gs.cx[[t]] <- set_graph_attr(graph=gs.cx[[t]], name="timestamp", value=timestamp)
-		t <- t + 1
+if(!is.na(file.cx))
+{	volumes <- sapply(gs.cx, function(g) graph_attr(g,"volume"))
+	volume.nbr <- max(volumes)
+	t <- 1
+	for(v in 1:volume.nbr)
+	{	unit.nbr <- length(which(volumes==v))
+		for(u in 1:unit.nbr)
+		{	timestamp <- v + (u-1)/unit.nbr
+			gs.cx[[t]] <- set_graph_attr(graph=gs.cx[[t]], name="timestamp", value=timestamp)
+			t <- t + 1
+		}
 	}
+#	print(sapply(gs.cx, function(g) graph_attr(graph=g, name="timestamp")))
+	gs.all$comics <- gs.cx
 }
-print(sapply(gs.cx, function(g) graph_attr(graph=g, name="timestamp")))
 
 # tv show
-seasons <- sapply(gs.tv, function(g) graph_attr(g,"season"))
-season.nbr <- max(seasons)
-t <- 1
-for(s in 1:season.nbr)
-{	unit.nbr <- length(which(seasons==s))
-	for(u in 1:unit.nbr)
-	{	timestamp <- s + (u-1)/unit.nbr
-		gs.tv[[t]] <- set_graph_attr(graph=gs.tv[[t]], name="timestamp", value=timestamp)
-		t <- t + 1
+{	seasons <- sapply(gs.tv, function(g) graph_attr(g,"season"))
+	season.nbr <- max(seasons)
+	t <- 1
+	for(s in 1:season.nbr)
+	{	unit.nbr <- length(which(seasons==s))
+		for(u in 1:unit.nbr)
+		{	timestamp <- s + (u-1)/unit.nbr
+			gs.tv[[t]] <- set_graph_attr(graph=gs.tv[[t]], name="timestamp", value=timestamp)
+			t <- t + 1
+		}
 	}
+	#print(sapply(gs.tv, function(g) graph_attr(graph=g, name="timestamp")))
+	gs.all$tvshow <- gs.tv
 }
-print(sapply(gs.tv, function(g) graph_attr(graph=g, name="timestamp")))

@@ -7,7 +7,7 @@
 # 08/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/centrality/char_centrality.R")
+# source("src/descript/char_centrality.R")
 ###############################################################################
 library("igraph")
 library("viridis")
@@ -80,7 +80,7 @@ source("src/common/load_static_nets.R")
 			gs[[i]] <- g
 		}
 	}
-	# or possibly keep only top20 characters
+	# or possibly keep only top characters
 	else if(CHARSET=="top")
 	{	for(i in 1:length(gs))
 		{	g <- gs[[i]]
