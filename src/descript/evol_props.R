@@ -120,14 +120,14 @@ for(charset in CHARSETS)
 				# compute measure
 				mm <- TOPO_MEAS_ALL[[meas]]
 				val <- mm$foo(g)
-				print(val)
+#				print(val)
 if(any(is.na(val) | is.nan(val) | is.infinite(val)) && !(meas %in% c("closeness","w_closeness","distance","w_distance")))
 	stop("svsofe")
 				if(mm$type %in% c("vertex","edge"))
 				{	val[is.nan(val) | is.infinite(val)] <- NA
 					val <- mean(val,na.rm=TRUE)
 				}
-				print(val)
+#				print(val)
 if(is.na(val) || is.nan(val) || is.infinite(val))
 	stop("GERIHLKSHOIDHS")
 				
