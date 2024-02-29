@@ -18,6 +18,7 @@ library("cluster")
 library("latex2exp")
 
 source("src/common/colors.R")
+source("src/common/topo_measures.R")
 
 
 
@@ -25,7 +26,6 @@ source("src/common/colors.R")
 ###############################################################################
 # parameters
 CENTR_MEAS <- c("degree", "strength", "closeness", "w_closeness", "betweenness", "w_betweenness", "eigenvector", "w_eigenvector")
-short.names <- c("degree"="Deg.", "strength"="Str.", "closeness"="Clos.", "w_closeness"="W.Clo.", "betweenness"="Betw.", "w_betweenness"="W.Betw.", "eigenvector"="Eig.", "w_eigenvector"="W.Eig")
 STANDARDIZE <- TRUE				# whether to standardize (z-score) the centrality scores
 CHARSET <- "common"				# all named characters (named), or only those common to both compared graphs (common), or the 20 most important (top)
 TOP_CHAR_NBR <- 20				# number of important characters
@@ -118,23 +118,8 @@ for(i in 1:length(gs))
 	for(j in 1:length(CENTR_MEAS))
 	{	meas <- CENTR_MEAS[j]
 		cat("....Computing centrality measure",meas,"\n")
-		
-		if(meas=="degree")
-			vals <- degree(graph=g, mode="all", normalized=FALSE)
-		else if(meas=="strength")
-			vals <- strength(graph=g, mode="all", weights=E(g)$weight)
-		else if(meas=="closeness")
-			vals <- closeness(graph=g, mode="all", weights=rep(1,gsize(g)), normalized=FALSE)
-		else if(meas=="w_closeness")
-			vals <- closeness(graph=g, mode="all", weights=1-E(g)$weight+min(E(g)$weight), normalized=FALSE)		# need to "reverse" the weights, as the measure considers them as distances 
-		else if(meas=="betweenness")
-			vals <- betweenness(graph=g, directed=FALSE, weights=rep(1,gsize(g)), normalized=FALSE)
-		else if(meas=="w_betweenness")
-			vals <- betweenness(graph=g, directed=FALSE, weights=1-E(g)$weight+min(E(g)$weight), normalized=FALSE)	# same here
-		else if(meas=="eigenvector")
-			vals <- eigen_centrality(graph=g, directed=FALSE, scale=FALSE, weights=rep(1,gsize(g)))$vector
-		else if(meas=="w_eigenvector")
-			vals <- eigen_centrality(graph=g, directed=FALSE, scale=FALSE, weights=E(g)$weight)$vector
+		#print(TOPO_MEAS_ALL[[meas]]$foo)
+		vals <- TOPO_MEAS_ALL[[meas]]$foo(g)
 		
 		# remove NaNs
 		vals[is.nan(vals)] <- 0
@@ -159,8 +144,8 @@ for(i in 1:length(gs))
 	for(cm in c("pearson","spearman"))
 	{	# all characters
 		cor.mat <- cor(x=centr.tab, method=cm)
-		rownames(cor.mat) <- short.names[rownames(cor.mat)]
-		colnames(cor.mat) <- short.names[colnames(cor.mat)]
+		rownames(cor.mat) <- TOPO_MEAS_SHORT_NAMES[rownames(cor.mat)]
+		colnames(cor.mat) <- TOPO_MEAS_SHORT_NAMES[colnames(cor.mat)]
 #dsd <- which(cor.mat<0,arr.ind=TRUE)
 #if(nrow(dsd)>0) for(r in 1:nrow(dsd)) cor.mat[dsd[r,1],dsd[r,2]] <- 0
 	
@@ -179,8 +164,8 @@ for(i in 1:length(gs))
 		# only most important characters
 		if(CHARSET!="top")
 		{	cor.mat <- cor(x=centr.tab[idx[1:TOP_CHAR_NBR],], method=cm)
-			rownames(cor.mat) <- short.names[rownames(cor.mat)]
-			colnames(cor.mat) <- short.names[colnames(cor.mat)]
+			rownames(cor.mat) <- TOPO_MEAS_SHORT_NAMES[rownames(cor.mat)]
+			colnames(cor.mat) <- TOPO_MEAS_SHORT_NAMES[colnames(cor.mat)]
 			plot.file <- file.path(local.folder,paste0("corrmat_top",TOP_CHAR_NBR,"_",cm))
 			pdf(paste0(plot.file,".pdf"), width=8, height=7)	# bg="white"
 				par(mar=c(5, 4, 4-2.5, 2+1.05)+0.1)	# margins Bottom Left Top Right
@@ -200,7 +185,7 @@ for(i in 1:length(gs))
 	sel.cols <- brewer_pal(type="qual", palette=2)(length(selected.chars))
 	cols <- rep(adjustcolor("BLACK",alpha.f=0.3), nrow(centr.tab))
 	cols[selected.chars] <- sel.cols
-	anames <- short.names[colnames(centr.tab)]
+	anames <- TOPO_MEAS_SHORT_NAMES[colnames(centr.tab)]
 	plot.file <- file.path(local.folder,paste0("radar_all"))
 	pdf(paste0(plot.file,".pdf"))	# bg="white"
 		radarchart(
@@ -328,7 +313,7 @@ for(i in 1:length(gs))
 			sel.cols.alpha <- sapply(sel.cols, function(col) adjustcolor(col,alpha.f=0.3))
 			cols <- rep(adjustcolor("BLACK",alpha.f=0.4), nrow(centr.tab))
 			cols[!is.na(vals)] <- sel.cols.alpha[vals[!is.na(vals)]]
-			anames <- short.names[colnames(centr.tab)]
+			anames <- TOPO_MEAS_SHORT_NAMES[colnames(centr.tab)]
 			plot.file <- file.path(local.folder,paste0("radar_k",k,"_att=",att))
 			pdf(paste0(plot.file,".pdf"), width=pps[k,2], height=pps[k,1])	# bg="white"
 				parameter <- par(mfrow=pp[k,]) # set up the plotting space
@@ -374,7 +359,7 @@ for(att in c("none",ATTR_LIST))
 		parameter <- radarchart(
 				radar.data[[i]][[att]], 
 				pty=32, pcol=radar.cols[[i]][[att]], plty=1, plwd=1.5, cglty=3, 
-				cglwd=1, cglcol="BLACK", vlabels=short.names[colnames(centr.tab)], title=bquote(bolditalic(.(narr.names[g.names[i]]))))
+				cglwd=1, cglcol="BLACK", vlabels=TOPO_MEAS_SHORT_NAMES[colnames(centr.tab)], title=bquote(bolditalic(.(narr.names[g.names[i]]))))
 	}
 	dev.off()
 }

@@ -1,4 +1,4 @@
-# TODO: Add comment
+# Basic stats functions.
 # 
 # Author: Vincent Labatut
 ###############################################################################
