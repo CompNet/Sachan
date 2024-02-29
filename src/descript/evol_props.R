@@ -8,6 +8,7 @@
 # source("src/descript/evol_props.R")
 ###############################################################################
 library("igraph")
+library("scales")
 
 source("src/common/topo_measures.R")
 
@@ -16,7 +17,7 @@ source("src/common/topo_measures.R")
 
 ###############################################################################
 # parameters
-CUMULATIVE <- TRUE				# use the instant (FALSE) or cumulative (TRUE) networks
+CUMULATIVE <- FALSE				# use the instant (FALSE) or cumulative (TRUE) networks
 TOP_CHAR_NBR <- 20				# number of important characters
 NU_NV <- "chapter"				# novel narrative unit: no choice here
 NU_CX <- "chapter"				# comics narrative unit: chapter, scene
