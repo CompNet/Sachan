@@ -136,6 +136,13 @@ while(!last)
 	g.nv <- delete_vertices(graph=g.nv, v=!V(g.nv)$named)			# keep only named characters
 	E(g.nv)$weight <- E(g.nv)$weight/max(E(g.nv)$weight)			# normalize weights
 	
+	# add book and chapter numbers
+	cst <- nchar(file.path("in/novels",folder)) + 1
+	book <- as.integer(substr(files[i], start=1+cst, stop=1+cst))
+	g.nv <- set_graph_attr(graph=g.nv, name="book", value=book)
+	chapter <- as.integer(substr(files[i], start=8+cst, stop=9+cst)) + 1	# +1 bc of the prologues
+	g.nv <- set_graph_attr(graph=g.nv, name="chapter", value=chapter)
+	
 	# add affiliation
 	aff <- aff.map[V(g.nv)$name]
 	aff[is.na(aff)] <- "Unknown"
@@ -147,12 +154,14 @@ while(!last)
 	gs.nv <- c(gs.nv, list(g.nv))
 	i <- i + 1
 }
-gs$novels <- gs.nv
+gs.all$novels <- gs.nv
 cat("Loaded a total of ",length(gs.nv)," novel networks\n",sep="")
 
 # possibly read the comics graphs
 if(!is.na(file.cx))
-{	gs.cx <- list()
+{	chap <- 1
+	vol <- 1
+	gs.cx <- list()
 	names.cx <- c()
 	files <- sort(list.files(path=file.path("in/comics",folder,NU_CX), pattern=".+\\.graphml", full.names=TRUE))
 	i <- 1
@@ -167,6 +176,15 @@ if(!is.na(file.cx))
 		if(gsize(g.cx)>0)
 			E(g.cx)$weight <- E(g.cx)$weight/max(E(g.cx)$weight)	# normalize weights
 		
+		# add volume and chapter numbers
+		if(i==74 && NU_CX=="chapter" || i==682 && NU_CX=="scene")
+		{	vol <- 2
+			chap <- 1
+		}
+		g.cx <- set_graph_attr(graph=g.cx, name="volume", value=vol)
+		g.cx <- set_graph_attr(graph=g.cx, name="chapter", value=chap)
+		chap <- chap + 1
+		
 		# add affiliation
 		aff <- aff.map[V(g.cx)$name]
 		aff[is.na(aff)] <- "Unknown"
@@ -178,7 +196,7 @@ if(!is.na(file.cx))
 		gs.cx <- c(gs.cx, list(g.cx))
 		i <- i + 1
 	}
-	gs$comics <- gs.cx
+	gs.all$comics <- gs.cx
 	cat("Loaded a total of ",length(gs.cx)," comic networks\n",sep="")
 }
 
@@ -210,7 +228,7 @@ while(!last)
 	gs.tv <- c(gs.tv, list(g.tv))
 	i <- i + 1
 }
-gs$tvshow <- gs.tv
+gs.all$tvshow <- gs.tv
 cat("Loaded a total of ",length(gs.tv)," TV show networks\n",sep="")
 
 
@@ -234,4 +252,53 @@ if(!CUMULATIVE)	# cannot apply to cumulative nets, as they are not built in the 
 	for(n in 1:length(chap.map))
 		gs.cx2[[chap.map[n]]] <- gs.cx[[n]]
 	gs.cx <- gs.cx2
+	gs.all$comics <- gs.cx2
 }
+
+
+
+
+###############################################################################
+# set the normalized narrative units, based on books/volumes/seasons
+
+# novels
+books <- sapply(gs.nv, function(g) graph_attr(g,"book"))
+book.nbr <- max(books)
+t <- 1
+for(b in 1:book.nbr)
+{	unit.nbr <- length(which(books==b))
+	for(u in 1:unit.nbr)
+	{	timestamp <- b + (u-1)/unit.nbr
+		gs.nv[[t]] <- set_graph_attr(graph=gs.nv[[t]], name="timestamp", value=timestamp)
+		t <- t + 1
+	}
+}
+print(sapply(gs.nv, function(g) graph_attr(graph=g, name="timestamp")))
+
+# comics
+volumes <- sapply(gs.cx, function(g) graph_attr(g,"volume"))
+volume.nbr <- max(volumes)
+t <- 1
+for(v in 1:volume.nbr)
+{	unit.nbr <- length(which(volumes==v))
+	for(u in 1:unit.nbr)
+	{	timestamp <- v + (u-1)/unit.nbr
+		gs.cx[[t]] <- set_graph_attr(graph=gs.cx[[t]], name="timestamp", value=timestamp)
+		t <- t + 1
+	}
+}
+print(sapply(gs.cx, function(g) graph_attr(graph=g, name="timestamp")))
+
+# tv show
+seasons <- sapply(gs.tv, function(g) graph_attr(g,"season"))
+season.nbr <- max(seasons)
+t <- 1
+for(s in 1:season.nbr)
+{	unit.nbr <- length(which(seasons==s))
+	for(u in 1:unit.nbr)
+	{	timestamp <- s + (u-1)/unit.nbr
+		gs.tv[[t]] <- set_graph_attr(graph=gs.tv[[t]], name="timestamp", value=timestamp)
+		t <- t + 1
+	}
+}
+print(sapply(gs.tv, function(g) graph_attr(graph=g, name="timestamp")))
