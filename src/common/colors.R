@@ -188,11 +188,11 @@ combine.colors <- function(col1, col2, transparency=50)
 	
 	# create new color using specified transparency
 	res <- rgb(
-			transp*rgb1[1] + (1-transp)*rgb2[1], 
-			transp*rgb1[2] + (1-transp)*rgb2[2], 
-			transp*rgb1[3] + (1-transp)*rgb2[3],
-			max=255,
-			alpha=transp*rgb1[4] + (1-transp)*rgb2[4]
+		transp*rgb1[1] + (1-transp)*rgb2[1], 
+		transp*rgb1[2] + (1-transp)*rgb2[2], 
+		transp*rgb1[3] + (1-transp)*rgb2[3],
+		max=255,
+		alpha=transp*rgb1[4] + (1-transp)*rgb2[4]
 	)
 	
 	return(res)
