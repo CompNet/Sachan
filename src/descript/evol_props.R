@@ -288,13 +288,14 @@ for(i in 1:length(gs.all))
 			{	ys <- list.vals[[c]]
 				if(!CUMULATIVE && WINDOW_SIZE>0)
 					ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
-				lines(x=xs, y=ys, col=cols, lty=c, lwd=2)
+				lines(x=xs, y=ys, col=cols[c], lty=c, lwd=2)
 			}
 			# add legend
 			legend(
 				x="bottomright",
 				legend=cs.legend,
-				col=cols, lty=1:length(CHARSETS), lwd=2
+				col=cols, lty=1:length(CHARSETS), lwd=2,
+				bg="#FFFFFFCC"
 			)
 		dev.off()
 	}	

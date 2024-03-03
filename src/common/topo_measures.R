@@ -1,4 +1,4 @@
-# Scripts containing the calls allowing to compute the topological measures.
+# Scripts containing the functions allowing to compute the topological measures.
 # 
 # Author: Vincent Labatut
 # 02/2023
