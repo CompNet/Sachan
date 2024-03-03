@@ -139,7 +139,7 @@ if(any(is.na(val) | is.nan(val) | is.infinite(val)) && !(meas %in% c("closeness"
 					{	val[is.nan(val) | is.infinite(val)] <- NA
 						val <- mean(val,na.rm=TRUE)
 					}
-					print(val)
+#					print(val)
 if(is.na(val) || is.nan(val) || is.infinite(val))
 	stop("Problem with a measure: unexpected value")
 				}
@@ -198,6 +198,7 @@ for(charset in CHARSETS)
 			list.vals[[i]] <- vals
 		}
 		
+		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-all_charset-",charset))
 		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
@@ -224,6 +225,8 @@ for(charset in CHARSETS)
 				fill=colors
 			)
 		dev.off()
+		
+		write.csv(x=char.importance, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 	}	
 }
 
@@ -269,8 +272,9 @@ for(i in 1:length(gs.all))
 			rg <- range(rg,vals,na.rm=TRUE)
 			list.vals[[c]] <- vals
 		}
+		tab <- matrix(NA,nrow=length(vals),ncol=length(CHARSETS))
 		
-		colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
+		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-",g.names[i],"_charset-all"))
 		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
@@ -285,10 +289,11 @@ for(i in 1:length(gs.all))
 			abline(v=6, lty=3)
 			# loop over character sets
 			for(c in 1:length(CHARSETS))
-			{	ys <- list.vals[[c]]
+			{	ys <- tab[,c] <- list.vals[[c]]
 				if(!CUMULATIVE && WINDOW_SIZE>0)
 					ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
 				lines(x=xs, y=ys, col=cols[c], lty=c, lwd=2)
+				
 			}
 			# add legend
 			legend(
@@ -298,5 +303,9 @@ for(i in 1:length(gs.all))
 				bg="#FFFFFFCC"
 			)
 		dev.off()
+		
+		# record csv
+		colnames(tab) <- CHARSETS
+		write.csv(x=tab, file=paste0(plot.file,".csv"), row.names=FALSE, fileEncoding="UTF-8")
 	}	
 }

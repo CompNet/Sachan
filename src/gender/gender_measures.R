@@ -46,7 +46,7 @@ compute.gender.measures <- function(g)
 	if(gsize(g)>0)
 	{	el <- as_edgelist(graph=g, names=FALSE)
 		el.sex <- cbind(V(g)[el[,1]]$sex, V(g)[el[,2]]$sex)
-		el.str <- t(apply(el.sex, 1, sort))
+		el.str <- t(apply(el.sex, 1, sort))		
 		# filter unknown sex and convert mixed sex
 		idx.mxd <- which(el.str[,1]=="Female" & el.str[,2]=="Mixed")
 		el.str[idx.mxd,2] <- rep("Male",length(idx.mxd))
@@ -58,7 +58,7 @@ compute.gender.measures <- function(g)
 		el.str[idx.mxd,2] <- rep("Male",length(idx.mxd))
 		idx.ukn <- which(el.str[,1]=="Unknown" | el.str[,2]=="Unknown")
 		if(length(idx.ukn)>0)
-			el.str <- el.str[-idx.ukn,]
+			el.str <- el.str[-idx.ukn,,drop=FALSE]
 		levs <- sort(c("Female","Male"))
 		tt <- table(factor(el.str[,1], levs), factor(el.str[,2], levs))
 		tab <- c(t(tt)[c(1,2,4)],NA)
@@ -86,11 +86,13 @@ compute.gender.measures <- function(g)
 	tt <- sum(cnt)
 	if(tt==0) tt <- 1
 	tab <- cbind(cnt,cnt/tt*100)
+	tt <- cnt["Male"] + cnt["Female"]
+	tab <- cbind(tab, c(cnt["Male"]/tt*100,cnt["Female"]/tt*100,NA,NA))
 	ratio <- cnt["Female"]/cnt["Male"]
-	tab <- rbind(tab, c(NA,NA))
+	tab <- rbind(tab, rep(NA,ncol(tab)))
 	tab <- cbind(tab, c(rep(NA,length(sexes)), ratio))
 	rownames(tab) <- c(sexes,"All")
-	colnames(tab) <- c("Total","Proportion","GenderDegreeRatio")
+	colnames(tab) <- c("Total","Proportion","FM_Proportion","GenderDegreeRatio")
 	res[["degree"]] <- tab
 	
 	# strength
@@ -99,13 +101,15 @@ compute.gender.measures <- function(g)
 	tt <- sum(cnt)
 	if(tt==0) tt <- 1
 	tab <- cbind(cnt,cnt/tt*100)
+	tt <- cnt["Male"] + cnt["Female"]
+	tab <- cbind(tab, c(cnt["Male"]/tt*100,cnt["Female"]/tt*100,NA,NA))
 	ratio <- cnt["Female"]/cnt["Male"]
-	tab <- rbind(tab, c(NA,NA))
+	tab <- rbind(tab, rep(NA,ncol(tab)))
 	tab <- cbind(tab, c(rep(NA,length(sexes)), ratio))
 	rownames(tab) <- c(sexes,"All")
-	colnames(tab) <- c("Total","Proportion","GenderStrengthRatio")
+	colnames(tab) <- c("Total","Proportion","FM_Proportion","GenderStrengthRatio")
 	res[["strength"]] <- tab
-
+	
 	# density
 	if(gorder(g)>0)
 	{	dens.all <- edge_density(g)

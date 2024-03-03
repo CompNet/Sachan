@@ -19,8 +19,8 @@ source("src/gender/gender_measures.R")
 
 ###############################################################################
 # parameters
-CUMULATIVE <- TRUE				# use the instant (FALSE) or cumulative (TRUE) networks
-WINDOW_SIZE <- 3				# for the instant mode (cf. above), size of the window used for smoothing 
+CUMULATIVE <- FALSE				# use the instant (FALSE) or cumulative (TRUE) networks
+WINDOW_SIZE <- 0				# for the instant mode (cf. above), size of the window used for smoothing 
 TOP_CHAR_NBR <- 20				# number of important characters
 NU_NV <- "chapter"				# novel narrative unit: no choice here
 NU_CX <- "chapter"				# comics narrative unit: chapter, scene
@@ -88,7 +88,7 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 ###############################################################################
 # compute the measures
 
-# TODO scene stats must be implemented here, as they use the whole dyn series
+# TODO Bechdel test missing (requires annotation)
 
 # loop over character sets
 list.res <- list()
@@ -154,12 +154,18 @@ for(charset in CHARSETS)
 # plot each narrative as a distinct series
 colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
 measures <- c(
+	"fpropvtx"="vertices:Female:FM_Proportion",
+	"fpropdeg"="degree:Female:FM_Proportion",
+	"fpropstr"="strength:Female:FM_Proportion",
 	"fmratio"="edges:All:F-/M- Ratio",
 	"homophily"="edges:All:Homophily",
 	"gdratio"="degree:All:GenderDegreeRatio",
 	"gsratio"="strength:All:GenderStrengthRatio"
 )
 meas.fullnames <- c(
+	"fpropvtx"="Proportion of female vertices (%)",
+	"fpropdeg"="Female proportion of total degree (%)",
+	"fpropstr"="Female proportion of total strength (%)",
 	"fmratio"="F/M Edge Ratio",
 	"homophily"="Gender Homophily",
 	"gdratio"="Gender Degree Ratio",
@@ -193,6 +199,7 @@ for(charset in CHARSETS)
 			list.vals[[i]] <- vals
 		}
 		
+		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-all_charset-",charset))
 		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
@@ -261,8 +268,9 @@ for(i in 1:length(gs.all))
 			rg <- range(rg,vals,na.rm=TRUE)
 			list.vals[[c]] <- vals
 		}
+		tab <- matrix(NA,nrow=length(vals),ncol=length(CHARSETS))
 		
-		colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
+		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-",g.names[i],"_charset-all"))
 		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
@@ -277,7 +285,7 @@ for(i in 1:length(gs.all))
 			abline(v=6, lty=3)
 			# loop over character sets
 			for(c in 1:length(CHARSETS))
-			{	ys <- list.vals[[c]]
+			{	ys <- tab[,c] <- list.vals[[c]]
 				if(!CUMULATIVE && WINDOW_SIZE>0)
 					ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
 				lines(x=xs, y=ys, col=cols[c], lty=c, lwd=2)
@@ -290,5 +298,131 @@ for(i in 1:length(gs.all))
 				bg="#FFFFFFCC"
 			)
 		dev.off()
+		
+		# record csv
+		colnames(tab) <- CHARSETS
+		write.csv(x=tab, file=paste0(plot.file,".csv"), row.names=FALSE, fileEncoding="UTF-8")
 	}	
 }
+
+
+
+
+###############################################################################
+# plot groups of related measures
+group.meas <- list(
+	# vertices
+	"vertices-count"=list(
+		"fullname"="Number of Vertices",
+		"variables"=c("Male"="vertices:Male:Count", "Female"="vertices:Female:Count")),
+	"vertices-prop"=list(
+		"fullname"="Proportion of Vertices (%)",
+		"variables"=c("Male"="vertices:Male:FM_Proportion", "Female"="vertices:Female:FM_Proportion")),
+	# edges
+	"edges-count"=list(
+		"fullname"="Number of Edges",
+		"variables"=c("Female-Female"="edges:F-F:Count", "Female-Male"="edges:F-M:Count", "Male-Male"="edges:M-M:Count")),
+	"edges-prop"=list(
+		"fullname"="Proportion of Edges (%)",
+		"variables"=c("Female-Female"="edges:F-F:Proportion", "Female-Male"="edges:F-M:Proportion", "Male-Male"="edges:M-M:Proportion")),
+	# degree
+	"degree-total"=list(
+		"fullname"="Total Degree",
+		"variables"=c("Male"="degree:Male:Total","Female"="degree:Female:Total")),
+	"degree-prop"=list(
+		"fullname"="Proportion of Degree (%)",
+		"variables"=c("Male"="degree:Male:FM_Proportion","Female"="degree:Female:FM_Proportion")),
+	# strength
+	"strength-total"=list(
+		"fullname"="Total Strength",
+		"variables"=c("Male"="strength:Male:Total","Female"="strength:Female:Total")),
+	"strength-prop"=list(
+		"fullname"="Proportion of Strength (%)",
+		"variables"=c("Male"="strength:Male:FM_Proportion","Female"="strength:Female:FM_Proportion")),
+	# density
+	"density"=list(
+		"fullname"="Density",
+		"variables"=c("Male"="density:Male:Density", "Female"="density:Female:Density")),
+	# triangles
+	"triangles-count"=list(
+		"fullname"="Number of Triangles",
+		"variables"=c("Female-Female-Female"="triangles:Female-Female-Female:Count", "Female-Female-Male"="triangles:Female-Female-Male:Count", "Female-Male-Male"="triangles:Female-Male-Male:Count", "Male-Male-Male"="triangles:Male-Male-Male:Count")),
+	"triangles-prop"=list(
+		"fullname"="Proportion of Triangles (%)",
+		"variables"=c("Female-Female-Female"="triangles:Female-Female-Female:FM_Proportion", "Female-Female-Male"="triangles:Female-Female-Male:FM_Proportion", "Female-Male-Male"="triangles:Female-Male-Male:FM_Proportion", "Male-Male-Male"="triangles:Male-Male-Male:FM_Proportion"))
+)
+
+# loop over narratives
+for(i in 1:length(gs.all))
+{	cat("Plotting narrative ",g.names[i],"\n",sep="")
+	xlab <- paste0("Time (",unit.map[g.names[i]],")")
+	xs <- sapply(gs.all[[i]], function(g) graph_attr(g,"timestamp"))
+	cols <- c(combine.colors(col1=colors[i], col2="WHITE", transparency=67), colors[i], combine.colors(col1=colors[i], col2="BLACK", transparency=67)) 
+	
+	# loop over character sets
+	for(c in 1:length(CHARSETS))
+	{	charset <- CHARSETS[c]
+		cat("..Plotting charset ",charset," (",g.names[i],")\n",sep="")
+		
+		# loop over measures
+		for(m in 1:length(group.meas))
+		{	cat("....Plotting measure ",names(group.meas)[m]," (",g.names[i],"--",charset,")\n",sep="")
+			
+			# file/label name
+			meas <- names(group.meas)[m]
+			ylab <- group.meas[[meas]]$fullname
+			variables <- group.meas[[meas]]$variables
+			
+			# create folder
+			local.folder <- file.path(out.folder, meas)
+			dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
+			
+			# clean values and compute range
+			rg <- c()
+			list.vals <- list()
+			for(v in 1:length(variables))
+			{	vals <- list.res[[charset]][[g.names[i]]][[variables[v]]]
+				vals[is.nan(vals) | is.infinite(vals)] <- NA
+				rg <- range(rg,vals,na.rm=TRUE)
+				list.vals[[v]] <- vals
+			}
+			tab <- matrix(NA,nrow=length(vals),ncol=length(variables))
+			
+			# produce plot
+			plot.file <- file.path(local.folder, paste0("narrative-",g.names[i],"_charset-",charset))
+			pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
+				par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
+				plot(
+					NULL, 
+					main=bquote(bolditalic(.(narr.names[g.names[i]]))~" -- "~bold(.(cs.names[charset]))),
+					xlab=xlab, ylab=ylab,
+					xlim=c(start.nu,round(max(xs))), ylim=rg
+				)
+				# vertical lines
+				abline(v=3, lty=3)
+				abline(v=6, lty=3)
+				# loop over variables
+				for(v in 1:length(variables))
+				{	ys <- tab[,v] <- list.vals[[v]]
+					if(!CUMULATIVE && WINDOW_SIZE>0)
+						ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
+					lines(x=xs, y=ys, col=ATT_COLORS_SEX[names(variables)[v]], lwd=2)
+				}
+				# add legend
+				legend(
+					x="bottomright",
+					legend=names(variables),
+					col=ATT_COLORS_SEX[names(variables)], lwd=2,
+					bg="#FFFFFFCC"
+				)
+			dev.off()
+			
+			# record csv
+			colnames(tab) <- names(variables)
+			write.csv(x=tab, file=paste0(plot.file,".csv"), row.names=FALSE, fileEncoding="UTF-8")
+		}
+	}	
+}
+
+# TODO try to put the M/F-only measure on the same plot for all three narratives (using dots for M/F and colors for narratives)
+#      (does not seem to work for character set)
