@@ -260,7 +260,8 @@ for(i in 1:(length(gs)-1))
 					"bottomright",
 					fill=pal,
 					legend=paste0(fprobs,"%"),
-					title="Vertices"
+					title="Vertices",
+					bg="#FFFFFFCC"
 				)
 			dev.off()
 		}
@@ -307,7 +308,8 @@ for(i in 1:(length(gs)-1))
 				x="topright",
 				title="Characters",
 				legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
-				fill=pal
+				fill=pal,
+				bg="#FFFFFFCC"
 			)
 		dev.off()
 		
@@ -341,7 +343,8 @@ for(i in 1:(length(gs)-1))
 				x="bottomright",
 				title="Characters",
 				legend=c(paste0("Top-",TOP_CHAR_NBR),"Others"),
-				fill=pal
+				fill=pal,
+				bg="#FFFFFFCC"
 			)
 		dev.off()
 		
