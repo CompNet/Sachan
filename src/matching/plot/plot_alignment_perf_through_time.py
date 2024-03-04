@@ -1,14 +1,8 @@
 # Compute and plot alignment performance through time
 #
-#
-# Example usage:
-#
-# python plot_combined_alignment_perf_through_time.py --similarity-function sbert
-#
-#
 # For more details, see:
 #
-# python plot_combined_alignment_perf_through_time.py --help
+# python plot_alignment_perf_through_time.py --help
 #
 #
 # Author: Arthur Amalvy
