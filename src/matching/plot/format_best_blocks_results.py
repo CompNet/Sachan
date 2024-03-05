@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     dfs_dict = {}
 
-    for medias in ["tvshow-novels", "comics-novels"]:
+    for medias in ["tvshow-novels", "comics-novels", "tvshow-comics"]:
         with open(
             f"{root_dir}/out/matching/plot/{medias}_structural_blocks/df.pickle", "rb"
         ) as f:
@@ -45,19 +45,24 @@ if __name__ == "__main__":
     indexs = ["sim_mode", "use_weights", "character_filtering", "alignment"]
     # output cols: f1_x, f1_y
     df = dfs_dict["tvshow-novels"].merge(
-        dfs_dict["comics-novels"], how="inner", on=indexs
+        dfs_dict["tvshow-comics"], how="inner", on=indexs
     )
+    # output cols: f1_x, f1_y, f1
+    df = df.merge(dfs_dict["comics-novels"], how="inner", on=indexs)
     df = df.rename(
         columns={
-            "f1_x": "Novels vs. TV Show",
-            "f1_y": "Novels vs. Comics",
+            "sim_mode": "Representation",
+            "use_weights": "Measure",
             "alignment": "Alignment",
+            "f1_x": "Novels vs. TV Show",
+            "f1_y": "Comics vs. TV Show",
+            "f1": "Novels vs. Comics",
         }
     )
 
-    df = df.set_index(["sim_mode", "use_weights", "character_filtering", "Alignment"])
+    df = df.set_index(["Representation", "Measure", "character_filtering", "Alignment"])
     # fix the order of pairs
-    df = df[["Novels vs. Comics", "Novels vs. TV Show"]]
+    df = df[["Novels vs. Comics", "Novels vs. TV Show", "Comics vs. TV Show"]]
     # put the "character filtering" level in the column
     df = df.unstack(2)
     # fix the order of the character sets
@@ -84,7 +89,8 @@ if __name__ == "__main__":
         .map_index(format_index, axis="columns")
         .highlight_max(subset="Novels vs. Comics", props="bfseries: ;", axis=None)
         .highlight_max(subset="Novels vs. TV Show", props="bfseries: ;", axis=None)
-        .to_latex(hrules=True, column_format="l r@{~}r@{~}r r@{~}r@{~}r")
+        .highlight_max(subset="Comics vs. TV Show", props="bfseries: ;", axis=None)
+        .to_latex(hrules=True, column_format="l r@{~}r@{~}r r@{~}r@{~}r r@{~}r@{~}r")
     )
     # hide the "character_filtering" level name
     LaTeX_export = LaTeX_export.replace("character_filtering", "")
