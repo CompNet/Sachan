@@ -1,5 +1,6 @@
 import os, pickle
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     tune_threshold_other_medias,
@@ -32,7 +33,7 @@ def compute_season_f1s(M: np.ndarray, G: np.ndarray) -> list[float]:
         G_season = G[start:end, :]
         M_season = M[start:end, :]
 
-        _, _, f1, _ = precision_recall_fscore_support(
+        p, r, f1, _ = precision_recall_fscore_support(
             G_season.flatten(),
             M_season.flatten(),
             average="binary",
@@ -47,10 +48,12 @@ if __name__ == "__main__":
     best_rows = {}
 
     for similarity in ["structural", "textual", "combined"]:
-        with open(
-            f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}/df.pickle",
-            "rb",
-        ) as f:
+        if similarity == "structural":
+            # blocks have better performance for structural matching
+            path = f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}_blocks/df.pickle"
+        else:
+            path = f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}/df.pickle"
+        with open(path, "rb") as f:
             df = pickle.load(f)
             best_rows[similarity] = df.iloc[df["f1"].idxmax()]
 
@@ -63,6 +66,12 @@ if __name__ == "__main__":
 
     G = load_medias_gold_alignment("tvshow-novels", 1, 5, 1, 5)
 
+    plt.style.use("science")
+    fig, ax = plt.subplots()
+    ax.set_xlabel("Seasons")
+    ax.set_ylabel("F1")
+    ax.grid()
+
     # Structural
     # ----------
     structural_params = best_rows["structural"]
@@ -70,7 +79,7 @@ if __name__ == "__main__":
     S = graph_similarity_matrix(
         first_media_graphs,
         second_media_graphs,
-        structural_params["mode"],
+        structural_params["sim_mode"],
         structural_params["use_weights"],
         structural_params["character_filtering"],
     )
@@ -80,7 +89,7 @@ if __name__ == "__main__":
             "tvshow-novels",
             "structural",
             np.arange(0.0, 1.0, 0.01),
-            structural_mode=structural_params["mode"],
+            structural_mode=structural_params["sim_mode"],
             structural_use_weights=structural_params["use_weights"],
             structural_filtering=structural_params["character_filtering"],
         )
@@ -96,7 +105,7 @@ if __name__ == "__main__":
             np.arange(0.0, 0.2, 0.01),
             np.arange(0.0, 0.2, 0.01),
             np.arange(0.0, 0.1, 0.1),
-            structural_mode=structural_params["mode"],
+            structural_mode=structural_params["sim_mode"],
             structural_use_weights=structural_params["use_weights"],
             structural_filtering=structural_params["character_filtering"],
         )
@@ -107,6 +116,7 @@ if __name__ == "__main__":
         raise ValueError
 
     season_f1s = compute_season_f1s(M, G)
+    ax.plot(list(range(1, 6)), season_f1s, label="Structural")
 
     # Textual
     # -------
@@ -149,44 +159,40 @@ if __name__ == "__main__":
         raise ValueError
 
     season_f1s = compute_season_f1s(M, G)
+    ax.plot(list(range(1, 6)), season_f1s, label="Textual")
 
     # Combined
     # --------
     combined_params = best_rows["combined"]
 
     S_textual = textual_similarity(
-        episode_summaries, chapter_summaries, combined_params["sim_fn"]
+        episode_summaries, chapter_summaries, combined_params["textual_sim_fn"]
     )
 
     S_structural = graph_similarity_matrix(
         first_media_graphs,
         second_media_graphs,
-        combined_params["mode"],
-        combined_params["use_weigths"],
-        combined_params["character_filtering"],
+        combined_params["structural_sim_mode"],
+        combined_params["structural_use_weights"],
+        combined_params["structural_character_filtering"],
     )
 
-    if combined_params["combined"] == "threshold":
+    if combined_params["alignment"] == "threshold":
         alpha, t = tune_alpha_other_medias(
             "tvshow-novels",
             "threshold",
             np.arange(0.0, 1.0, 0.01),  # alpha
             [np.arange(0.0, 1.0, 0.01)],  # threshold
-            textual_sim_fn=combined_params["sim_fn"],
-            structural_mode=combined_params["mode"],
-            structural_use_weights=combined_params["use_weights"],
-            structural_filtering=combined_params["character_filtering"],
+            textual_sim_fn=combined_params["textual_sim_fn"],
+            structural_mode=combined_params["structural_sim_mode"],
+            structural_use_weights=combined_params["structural_use_weights"],
+            structural_filtering=combined_params["structural_character_filtering"],
             silent=True,
         )
         S_combined = combined_similarities(S_structural, S_textual, alpha)
         M = S_combined > t
-    elif combined_params["combined"] == "smith-waterman":
-        (
-            alpha,
-            gap_start_penalty,
-            gap_cont_penalty,
-            neg_th,
-        ) = tune_alpha_other_medias(
+    elif combined_params["alignment"] == "smith-waterman":
+        (alpha, gap_start_penalty, gap_cont_penalty, neg_th,) = tune_alpha_other_medias(
             "tvshow-novels",
             "smith-waterman",
             np.arange(0.1, 0.9, 0.05),  # alpha
@@ -195,10 +201,10 @@ if __name__ == "__main__":
                 np.arange(0.0, 0.2, 0.01),  # gap_cont_penalty
                 np.arange(0.0, 0.1, 0.1),  # neg_th
             ],
-            textual_sim_fn=combined_params["sim_fn"],
-            structural_mode=combined_params["mode"],
-            structural_use_weights=combined_params["use_weigths"],
-            structural_filtering=combined_params["character_filtering"],
+            textual_sim_fn=combined_params["textual_sim_fn"],
+            structural_mode=combined_params["structural_sim_mode"],
+            structural_use_weights=combined_params["structural_use_weights"],
+            structural_filtering=combined_params["structural_character_filtering"],
             silent=True,
         )
         S_combined = combined_similarities(S_structural, S_textual, alpha)
@@ -207,3 +213,9 @@ if __name__ == "__main__":
         )
     else:
         raise ValueError
+
+    season_f1s = compute_season_f1s(M, G)
+    ax.plot(list(range(1, 6)), season_f1s, label="Combined")
+
+    ax.legend()
+    plt.show()
