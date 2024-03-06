@@ -405,7 +405,7 @@ if __name__ == "__main__":
                     first_media_graphs,
                     second_media_graphs,
                 )
-                M, *_ = smith_waterman_align_blocks(
+                M = smith_waterman_align_blocks(
                     args.medias,
                     first_media_graphs,
                     second_media_graphs,
