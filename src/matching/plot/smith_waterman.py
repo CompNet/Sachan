@@ -3,6 +3,7 @@ from sklearn.metrics import precision_recall_fscore_support
 import numpy as np
 import networkx as nx
 from alignment_commons import (
+    align_blocks,
     load_medias_gold_alignment,
     load_medias_graphs,
     load_medias_summaries,
@@ -313,29 +314,5 @@ def smith_waterman_align_blocks(
 
     :param S: of shape ``(first_media, second_media)``
     """
-    if medias == "tvshow-novels":
-        block_to_narrunit = np.array([get_episode_i(G) for G in first_media_graphs])
-    elif medias == "comics-novels":
-        block_to_narrunit = np.array(
-            [get_comics_chapter_issue_i(G) for G in first_media_graphs]
-        )
-    elif medias == "tvshow-comics":
-        M_align_blocks, *_ = smith_waterman_align_affine_gap(S, **sw_kwargs)
-        return _align_blocks_tvshow_comics(
-            first_media_graphs, second_media_graphs, M_align_blocks
-        )
-    else:
-        raise ValueError
-
     M_align_blocks, *_ = smith_waterman_align_affine_gap(S, **sw_kwargs)
-
-    _, uniq_start_i = np.unique(block_to_narrunit, return_index=True)
-    splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
-
-    M = []
-    for split in splits:
-        M.append(np.any(split, axis=0))
-
-    M = np.stack(M)
-
-    return M
+    return align_blocks(medias, first_media_graphs, second_media_graphs, M_align_blocks)

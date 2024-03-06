@@ -18,6 +18,7 @@ import scienceplots
 import numpy as np
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
+    combined_similarities_blocks,
     get_comics_chapter_issue_i,
     graph_similarity_matrix,
     load_medias_gold_alignment,
@@ -25,7 +26,7 @@ from alignment_commons import (
     get_episode_i,
     load_medias_summaries,
     textual_similarity,
-    threshold_align_blocks,
+    align_blocks,
     combined_similarities,
     tune_alpha_other_medias,
     tune_threshold_other_medias,
@@ -165,12 +166,11 @@ if __name__ == "__main__":
                 structural_filtering=structural_kwargs["character_filtering"],
             )
             print(f"found {t=}")
+            M = S > t
             if args.blocks:
-                M = threshold_align_blocks(
-                    args.medias, first_media_graphs, second_media_graphs, S, t
+                M = align_blocks(
+                    args.medias, first_media_graphs, second_media_graphs, M
                 )
-            else:
-                M = S > t
 
         elif args.alignment == "smith-waterman":
             (
@@ -313,8 +313,6 @@ if __name__ == "__main__":
             plt.show()
 
     elif args.similarity == "combined":
-        assert not args.blocks
-
         # Load summaries
         # --------------
         first_summaries, second_summaries = load_medias_summaries(
@@ -327,12 +325,14 @@ if __name__ == "__main__":
 
         # Load networks
         # -------------
-        tvshow_graphs, novels_graphs = load_medias_graphs(
+        first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias,
             args.min_delimiter_first_media,
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
+            tvshow_blocks="locations" if args.blocks else None,
+            comics_blocks=args.blocks,
             cumulative=args.cumulative,
         )
 
@@ -340,7 +340,7 @@ if __name__ == "__main__":
         # ------------------
         structural_kwargs = json.loads(args.structural_kwargs)
         S_structural = graph_similarity_matrix(
-            tvshow_graphs, novels_graphs, **structural_kwargs
+            first_media_graphs, second_media_graphs, **structural_kwargs
         )
         S_textual = textual_similarity(
             first_summaries, second_summaries, args.similarity_function
@@ -360,8 +360,21 @@ if __name__ == "__main__":
                 structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
-            S_combined = combined_similarities(S_structural, S_textual, alpha)
-            M = S_combined > t
+            if args.blocks:
+                S_combined = combined_similarities_blocks(
+                    S_structural,
+                    S_textual,
+                    alpha,
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
+                )
+                M = align_blocks(
+                    args.medias, first_media_graphs, second_media_graphs, S_combined > t
+                )
+            else:
+                S_combined = combined_similarities(S_structural, S_textual, alpha)
+                M = S_combined > t
         elif args.alignment == "smith-waterman":
             (
                 alpha,
@@ -383,6 +396,30 @@ if __name__ == "__main__":
                 structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
+            if args.blocks:
+                S_combined = combined_similarities_blocks(
+                    S_structural,
+                    S_textual,
+                    alpha,
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
+                )
+                M, *_ = smith_waterman_align_blocks(
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
+                    S_combined,
+                    gap_start_penalty=gap_start_penalty,
+                    gap_cont_penalty=gap_cont_penalty,
+                    neg_th=neg_th,
+                )
+            else:
+                S_combined = combined_similarities(S_structural, S_textual, alpha)
+                M, *_ = smith_waterman_align_affine_gap(
+                    S_combined, gap_start_penalty, gap_cont_penalty, neg_th
+                )
+
             S_combined = combined_similarities(S_structural, S_textual, alpha)
             M, *_ = smith_waterman_align_affine_gap(
                 S_combined, gap_start_penalty, gap_cont_penalty, neg_th

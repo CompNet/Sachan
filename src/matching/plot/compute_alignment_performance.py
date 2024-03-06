@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
+    combined_similarities_blocks,
     load_medias_gold_alignment,
     load_medias_graphs,
     load_medias_summaries,
@@ -13,7 +14,7 @@ from alignment_commons import (
     tune_alpha_other_medias,
     tune_threshold_other_medias,
     combined_similarities,
-    threshold_align_blocks,
+    align_blocks,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
@@ -61,7 +62,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.blocks:
-        assert args.similarity == "structural"
+        assert args.similarity in ["structural", "combined"]
 
     if not args.period is None:
         if args.period == "U2":
@@ -149,16 +150,11 @@ if __name__ == "__main__":
                             structural_filtering=character_filtering,
                             silent=True,
                         )
+                        M = S > t
                         if args.blocks:
-                            M = threshold_align_blocks(
-                                args.medias,
-                                first_media_graphs,
-                                second_media_graphs,
-                                S,
-                                t,
+                            M = align_blocks(
+                                args.medias, first_media_graphs, second_media_graphs, M
                             )
-                        else:
-                            M = S > t
 
                         precision, recall, f1, _ = precision_recall_fscore_support(
                             G.flatten(),
@@ -315,7 +311,11 @@ if __name__ == "__main__":
         # sim_fn * mode * use_weights * filtering
         with tqdm(total=2 * 2 * 2 * 3) as pbar:
             first_graphs, second_graphs = load_medias_graphs(
-                args.medias, *delimiters, cumulative=args.cumulative
+                args.medias,
+                *delimiters,
+                cumulative=args.cumulative,
+                tvshow_blocks="locations" if args.blocks else None,
+                comics_blocks=args.blocks,
             )
             G = load_medias_gold_alignment(args.medias, *delimiters)
 
@@ -370,8 +370,24 @@ if __name__ == "__main__":
                         filtering,
                         silent=True,
                     )
-                    S_combined = combined_similarities(S_struct, S_text, alpha)
-                    M = S_combined > t
+                    if args.blocks:
+                        S_combined = combined_similarities_blocks(
+                            S_struct,
+                            S_text,
+                            alpha,
+                            args.medias,
+                            first_graphs,
+                            second_graphs,
+                        )
+                        M = align_blocks(
+                            args.medias,
+                            first_graphs,
+                            second_graphs,
+                            S_combined > t,
+                        )
+                    else:
+                        S_combined = combined_similarities(S_struct, S_text, alpha)
+                        M = S_combined > t
 
                     precision, recall, f1, _ = precision_recall_fscore_support(
                         G.flatten(),
@@ -415,11 +431,29 @@ if __name__ == "__main__":
                         filtering,
                         silent=True,
                     )
-                    S_combined = combined_similarities(S_struct, S_text, alpha)
-
-                    M, *_ = smith_waterman_align_affine_gap(
-                        S_combined, gap_start_penalty, gap_cont_penalty, neg_th
-                    )
+                    if args.blocks:
+                        S_combined = combined_similarities_blocks(
+                            S_struct,
+                            S_text,
+                            alpha,
+                            args.medias,
+                            first_graphs,
+                            second_graphs,
+                        )
+                        M, *_ = smith_waterman_align_blocks(
+                            args.medias,
+                            first_graphs,
+                            second_graphs,
+                            S_combined,
+                            gap_start_penalty=gap_start_penalty,
+                            gap_cont_penalty=gap_cont_penalty,
+                            neg_th=neg_th,
+                        )
+                    else:
+                        S_combined = combined_similarities(S_struct, S_text, alpha)
+                        M, *_ = smith_waterman_align_affine_gap(
+                            S_combined, gap_start_penalty, gap_cont_penalty, neg_th
+                        )
 
                     precision, recall, f1, _ = precision_recall_fscore_support(
                         G.flatten(),

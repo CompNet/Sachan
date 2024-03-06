@@ -20,13 +20,12 @@ from alignment_commons import (
     load_medias_graphs,
     load_novels_chapter_summaries,
     load_tvshow_episode_summaries,
-    get_episode_i,
     TVSHOW_SEASON_LIMITS,
-    threshold_align_blocks,
+    align_blocks,
     tune_alpha_other_medias,
     tune_threshold_other_medias,
     combined_similarities,
-    get_comics_chapter_issue_i,
+    combined_similarities_blocks,
 )
 from smith_waterman import (
     smith_waterman_align_affine_gap,
@@ -131,12 +130,12 @@ if __name__ == "__main__":
                 structural_filtering=structural_kwargs["character_filtering"],
             )
             print(f"found {t=}")
+            M = S > t
             if args.blocks:
-                M = threshold_align_blocks(
-                    args.medias, first_media_graphs, second_media_graphs, S, t
+                M = align_blocks(
+                    args.medias, first_media_graphs, second_media_graphs, M
                 )
-            else:
-                M = S > t
+
         elif args.alignment == "smith-waterman":
             (
                 gap_start_penalty,
@@ -305,9 +304,7 @@ if __name__ == "__main__":
             plt.show()
 
     elif args.similarity == "combined":
-        assert not args.blocks
-
-        tvshow_graphs, novels_graphs = load_medias_graphs(
+        first_media_graphs, second_media_graphs = load_medias_graphs(
             "tvshow-novels",
             args.min_delimiter_first_media,
             args.max_delimiter_first_media,
@@ -338,7 +335,7 @@ if __name__ == "__main__":
         )
 
         S_structural = graph_similarity_matrix(
-            tvshow_graphs, novels_graphs, "edges", True, "common"
+            first_media_graphs, second_media_graphs, "edges", True, "common"
         )
 
         # Combination
@@ -355,8 +352,21 @@ if __name__ == "__main__":
                 structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
-            S_combined = combined_similarities(S_structural, S_textual, alpha)
-            M = S_combined > t
+            if args.blocks:
+                S_combined = combined_similarities_blocks(
+                    S_structural,
+                    S_textual,
+                    alpha,
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
+                )
+                M = align_blocks(
+                    args.medias, first_media_graphs, second_media_graphs, S_combined > t
+                )
+            else:
+                S_combined = combined_similarities(S_structural, S_textual, alpha)
+                M = S_combined > t
         elif args.alignment == "smith-waterman":
             (
                 alpha,
@@ -378,10 +388,29 @@ if __name__ == "__main__":
                 structural_filtering=structural_kwargs["character_filtering"],
                 silent=True,
             )
-            S_combined = combined_similarities(S_structural, S_textual, alpha)
-            M, *_ = smith_waterman_align_affine_gap(
-                S_combined, gap_start_penalty, gap_cont_penalty, neg_th
-            )
+            if args.blocks:
+                S_combined = combined_similarities_blocks(
+                    S_structural,
+                    S_textual,
+                    alpha,
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
+                )
+                M, *_ = smith_waterman_align_blocks(
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
+                    S_combined,
+                    gap_start_penalty=gap_start_penalty,
+                    gap_cont_penalty=gap_cont_penalty,
+                    neg_th=neg_th,
+                )
+            else:
+                S_combined = combined_similarities(S_structural, S_textual, alpha)
+                M, *_ = smith_waterman_align_affine_gap(
+                    S_combined, gap_start_penalty, gap_cont_penalty, neg_th
+                )
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
 
