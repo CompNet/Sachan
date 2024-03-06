@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from more_itertools import flatten
+from more_itertools.recipes import sliding_window
 from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
@@ -797,6 +798,30 @@ def find_best_combined_alignment(
     return (best_t, best_alpha, best_f1, best_M)
 
 
+def _align_blocks_tvshow_comics(
+    tvshow_blocks_graphs: list[nx.Graph],
+    comics_blocks_graphs: list[nx.Graph],
+    M_align_blocks: np.ndarray,
+) -> np.ndarray:
+    tvshow_block_to_narrunit = [get_episode_i(G) for G in tvshow_blocks_graphs]
+    comics_block_to_narrunit = [
+        get_comics_chapter_issue_i(G) for G in comics_blocks_graphs
+    ]
+
+    _, tvshow_uniq_limits = np.unique(tvshow_block_to_narrunit, return_index=True)
+    tvshow_uniq_limits = list(tvshow_uniq_limits) + [len(tvshow_block_to_narrunit)]
+    _, comics_uniq_limits = np.unique(comics_block_to_narrunit, return_index=True)
+    comics_uniq_limits = list(comics_uniq_limits) + [len(comics_block_to_narrunit)]
+
+    n, m = (len(set(tvshow_block_to_narrunit)), len(set(comics_block_to_narrunit)))
+    M = np.zeros((n, m))
+    for k, (i_prev, i) in enumerate(sliding_window(tvshow_uniq_limits, 2)):
+        for l, (j_prev, j) in enumerate(sliding_window(comics_uniq_limits, 2)):
+            M[k][l] = np.any(M_align_blocks[i_prev:i, j_prev:j])
+
+    return M
+
+
 def threshold_align_blocks(
     medias: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
     first_media_graphs: List[nx.Graph],
@@ -806,7 +831,10 @@ def threshold_align_blocks(
 ) -> np.ndarray:
     """Align two medias using blocks for one media
 
-    :param S: of shape ``(first_media, second_media)``
+    :param S: of shape (first_media_blocks_nb, second_media) if
+              ``medias`` is 'tvshow-novels' or 'comics-novels', or of
+              shape (first_media_blocks_nb, second_media_blocks_nb) if
+              ``medias`` is 'tvshow-comics'
     """
     if medias == "tvshow-novels":
         block_to_narrunit = np.array([get_episode_i(G) for G in first_media_graphs])
@@ -815,16 +843,16 @@ def threshold_align_blocks(
             [get_comics_chapter_issue_i(G) for G in first_media_graphs]
         )
     elif medias == "tvshow-comics":
-        block_to_narrunit = np.array(
-            [get_comics_chapter_issue_i(G) for G in second_media_graphs]
+        # this is specific because both medias use narrative sub-units
+        return _align_blocks_tvshow_comics(
+            first_media_graphs, second_media_graphs, S > t
         )
-        S = S.T
     else:
         raise ValueError
 
     assert S.shape[0] == block_to_narrunit.shape[0]
 
-    M_align_blocks = S >= t
+    M_align_blocks = S > t
 
     _, uniq_start_i = np.unique(block_to_narrunit, return_index=True)
     splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
@@ -835,8 +863,6 @@ def threshold_align_blocks(
 
     M = np.stack(M)
 
-    if medias == "tvshow-comics":
-        return M.T
     return M
 
 

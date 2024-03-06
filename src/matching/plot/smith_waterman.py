@@ -11,6 +11,7 @@ from alignment_commons import (
     get_comics_chapter_issue_i,
     textual_similarity,
     tune_alignment_params,
+    _align_blocks_tvshow_comics,
 )
 
 
@@ -319,10 +320,10 @@ def smith_waterman_align_blocks(
             [get_comics_chapter_issue_i(G) for G in first_media_graphs]
         )
     elif medias == "tvshow-comics":
-        block_to_narrunit = np.array(
-            [get_comics_chapter_issue_i(G) for G in second_media_graphs]
+        M_align_blocks, *_ = smith_waterman_align_affine_gap(S, **sw_kwargs)
+        return _align_blocks_tvshow_comics(
+            first_media_graphs, second_media_graphs, M_align_blocks
         )
-        S = S.T
     else:
         raise ValueError
 
@@ -337,6 +338,4 @@ def smith_waterman_align_blocks(
 
     M = np.stack(M)
 
-    if medias == "tvshow-comics":
-        return M.T
     return M

@@ -87,9 +87,7 @@ if __name__ == "__main__":
         first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias,
             *delimiters,
-            tvshow_blocks="locations"
-            if args.blocks and not args.medias == "tvshow-comics"
-            else None,
+            tvshow_blocks="locations",
             comics_blocks=bool(args.blocks),
             cumulative=args.cumulative,
         )
