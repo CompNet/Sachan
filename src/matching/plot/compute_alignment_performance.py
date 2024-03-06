@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
-    get_comics_chapter_issue_i,
     load_medias_gold_alignment,
     load_medias_graphs,
     load_medias_summaries,
@@ -14,7 +13,6 @@ from alignment_commons import (
     tune_alpha_other_medias,
     tune_threshold_other_medias,
     combined_similarities,
-    get_episode_i,
     threshold_align_blocks,
 )
 from smith_waterman import (
@@ -62,10 +60,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # validate the use of args.blocks, since it is only relevant in
-    # certain configurations
     if args.blocks:
-        assert args.medias in ("tvshow-novels", "comics-novels")
         assert args.similarity == "structural"
 
     if not args.period is None:
@@ -92,7 +87,9 @@ if __name__ == "__main__":
         first_media_graphs, second_media_graphs = load_medias_graphs(
             args.medias,
             *delimiters,
-            tvshow_blocks="locations" if args.blocks else None,
+            tvshow_blocks="locations"
+            if args.blocks and not args.medias == "tvshow-comics"
+            else None,
             comics_blocks=bool(args.blocks),
             cumulative=args.cumulative,
         )
@@ -155,19 +152,13 @@ if __name__ == "__main__":
                             silent=True,
                         )
                         if args.blocks:
-                            if args.medias == "tvshow-novels":
-                                block_to_narrunit = np.array(
-                                    [get_episode_i(G) for G in first_media_graphs]
-                                )
-                            else:
-                                assert args.medias == "comics-novels"
-                                block_to_narrunit = np.array(
-                                    [
-                                        get_comics_chapter_issue_i(G)
-                                        for G in first_media_graphs
-                                    ]
-                                )
-                            M = threshold_align_blocks(S, t, block_to_narrunit)
+                            M = threshold_align_blocks(
+                                args.medias,
+                                first_media_graphs,
+                                second_media_graphs,
+                                S,
+                                t,
+                            )
                         else:
                             M = S > t
 
@@ -208,13 +199,11 @@ if __name__ == "__main__":
                             silent=True,
                         )
                         if args.blocks:
-                            # NOTE: we can 'type: ignore' on
-                            # block_to_narrunit because we are sure it
-                            # is computed when computing threshold
-                            # alignment above if args.blocks is truthy
                             M = smith_waterman_align_blocks(
+                                args.medias,
+                                first_media_graphs,
+                                second_media_graphs,
                                 S,
-                                block_to_narrunit,  # type: ignore
                                 gap_start_penalty=gap_start_penalty,
                                 gap_cont_penalty=gap_cont_penalty,
                                 neg_th=neg_th,

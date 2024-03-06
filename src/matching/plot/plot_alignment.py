@@ -166,11 +166,9 @@ if __name__ == "__main__":
             )
             print(f"found {t=}")
             if args.blocks:
-                assert args.medias.startswith("tvshow")
-                block_to_episode = np.array(
-                    [get_episode_i(G) for G in first_media_graphs]
+                M = threshold_align_blocks(
+                    args.medias, first_media_graphs, second_media_graphs, S, t
                 )
-                M = threshold_align_blocks(S, t, block_to_episode)
             else:
                 M = S > t
 
@@ -191,18 +189,11 @@ if __name__ == "__main__":
             )
             print(f"found {gap_start_penalty=} {gap_cont_penalty=} {neg_th=}")
             if args.blocks:
-                if args.medias == "tvshow-novels":
-                    block_to_narrunit = np.array(
-                        [get_episode_i(G) for G in first_media_graphs]
-                    )
-                else:
-                    assert args.medias == "comics-novels"
-                    block_to_narrunit = np.array(
-                        [get_comics_chapter_issue_i(G) for G in first_media_graphs]
-                    )
                 M = smith_waterman_align_blocks(
+                    args.medias,
+                    first_media_graphs,
+                    second_media_graphs,
                     S,
-                    block_to_narrunit,
                     gap_start_penalty=gap_start_penalty,
                     gap_cont_penalty=gap_cont_penalty,
                     neg_th=neg_th,

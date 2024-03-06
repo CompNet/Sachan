@@ -798,13 +798,30 @@ def find_best_combined_alignment(
 
 
 def threshold_align_blocks(
-    S: np.ndarray, t: float, block_to_narrunit: np.ndarray
+    medias: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    first_media_graphs: List[nx.Graph],
+    second_media_graphs: List[nx.Graph],
+    S: np.ndarray,
+    t: float,
 ) -> np.ndarray:
     """Align two medias using blocks for one media
 
-    :param S: of shape ``(block_media, other_media)``
-    :param block_to_narrunit: of shape ``(block_media,)``
+    :param S: of shape ``(first_media, second_media)``
     """
+    if medias == "tvshow-novels":
+        block_to_narrunit = np.array([get_episode_i(G) for G in first_media_graphs])
+    elif medias == "comics-novels":
+        block_to_narrunit = np.array(
+            [get_comics_chapter_issue_i(G) for G in first_media_graphs]
+        )
+    elif medias == "tvshow-comics":
+        block_to_narrunit = np.array(
+            [get_comics_chapter_issue_i(G) for G in second_media_graphs]
+        )
+        S = S.T
+    else:
+        raise ValueError
+
     assert S.shape[0] == block_to_narrunit.shape[0]
 
     M_align_blocks = S >= t
@@ -818,6 +835,8 @@ def threshold_align_blocks(
 
     M = np.stack(M)
 
+    if medias == "tvshow-comics":
+        return M.T
     return M
 
 
