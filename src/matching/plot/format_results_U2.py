@@ -18,31 +18,50 @@ if __name__ == "__main__":
         f"{root_dir}/out/matching/plot/tvshow-novels_structural_U2/df.pickle", "rb"
     ) as f:
         df = pickle.load(f)
-        best_struct_f1 = df["f1"].max()
+        best_struct_f1_th = df[df["alignment"] == "threshold"]["f1"].max()
+        best_struct_f1_sw = df[df["alignment"] == "smith-waterman"]["f1"].max()
 
     with open(
         f"{root_dir}/out/matching/plot/tvshow-novels_structural_blocks_U2/df.pickle",
         "rb",
     ) as f:
         df = pickle.load(f)
-        best_struct_blocks_f1 = df["f1"].max()
+        best_struct_blocks_f1_th = df[df["alignment"] == "threshold"]["f1"].max()
+        best_struct_blocks_f1_sw = df[df["alignment"] == "smith-waterman"]["f1"].max()
 
     with open(
         f"{root_dir}/out/matching/plot/tvshow-novels_textual_U2/df.pickle", "rb"
     ) as f:
         df = pickle.load(f)
-        best_text_f1 = df["f1"].max()
+        best_text_f1_th = df[df["alignment"] == "threshold"]["f1"].max()
+        best_text_f1_sw = df[df["alignment"] == "smith-waterman"]["f1"].max()
 
     with open(
         f"{root_dir}/out/matching/plot/tvshow-novels_combined_U2/df.pickle", "rb"
     ) as f:
         df = pickle.load(f)
-        best_combined_f1 = df["f1"].max()
+        best_combined_f1_th = df[df["alignment"] == "threshold"]["f1"].max()
+        best_combined_f1_sw = df[df["alignment"] == "smith-waterman"]["f1"].max()
 
     df = pd.DataFrame(
-        [[best_struct_f1, best_struct_blocks_f1, best_text_f1, best_combined_f1]],
-        columns=["structural", "structural (+sub-units)", "textual", "combined"],
+        [
+            [
+                best_struct_f1_th,
+                best_struct_blocks_f1_th,
+                best_text_f1_th,
+                best_combined_f1_th,
+            ],
+            [
+                best_struct_f1_sw,
+                best_struct_blocks_f1_sw,
+                best_text_f1_sw,
+                best_combined_f1_sw,
+            ],
+        ],
+        columns=["Structural", "Structural (+sub-units)", "Textual", "Combined"],
+        index=["Thresholding", "Smith--Waterman"],
     )
+    df.index.name = "Alignment"
 
     if args.format == "plain":
         print(df)
@@ -50,8 +69,7 @@ if __name__ == "__main__":
 
     LaTeX_export = (
         df.style.format(lambda v: "{:.2f}".format(v * 100))
-        .highlight_max(props="bfseries: ;", axis=1)
-        .hide(axis="index")
-        .to_latex(hrules=True, sparse_index=False, column_format="cccc")
+        .highlight_max(props="bfseries: ;", axis=None)
+        .to_latex(hrules=True, sparse_index=False)
     )
     print(LaTeX_export)

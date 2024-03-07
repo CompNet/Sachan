@@ -8,7 +8,9 @@
 # source("src/descript/evol_props.R")
 ###############################################################################
 library("igraph")
+library("scales")
 
+source("src/common/colors.R")
 source("src/common/topo_measures.R")
 
 
@@ -16,7 +18,8 @@ source("src/common/topo_measures.R")
 
 ###############################################################################
 # parameters
-CUMULATIVE <- TRUE				# use the instant (FALSE) or cumulative (TRUE) networks
+CUMULATIVE <- FALSE				# use the instant (FALSE) or cumulative (TRUE) networks
+WINDOW_SIZE <- 3				# for the instant mode (cf. above), size of the window used for smoothing 
 TOP_CHAR_NBR <- 20				# number of important characters
 NU_NV <- "chapter"				# novel narrative unit: no choice here
 NU_CX <- "chapter"				# comics narrative unit: chapter, scene
@@ -25,7 +28,6 @@ NU_TV <- "episode"				# tv narrative unit: episode, block, scene
 # measures
 measures <- names(TOPO_MEAS_ALL)
 #measures <- setdiff(measures, c("communities","w_communities"))
-measures <- setdiff(measures, c("weights"))
 
 CHARSETS <- c("named","common","top")
 cs.names <- c("named"="Named Characters", "common"="Common Characters", "top"=paste0(TOP_CHAR_NBR," Most Important Characters"))
@@ -74,7 +76,10 @@ base.name <- paste0(base.name, "_tvshow-", NU_TV)
 {	if(CUMULATIVE)
 		dyn.folder <- "cumul"
 	else
-		dyn.folder <- "instant"
+	{	dyn.folder <- "instant"
+		if(WINDOW_SIZE>0)
+			dyn.folder <- paste0(dyn.folder,"_smoothed-",WINDOW_SIZE)		
+	}
 }
 # output folder
 out.folder <- file.path("out", "descript", dyn.folder, base.name)
@@ -120,7 +125,7 @@ for(charset in CHARSETS)
 				# compute measure
 				mm <- TOPO_MEAS_ALL[[meas]]
 				val <- mm$foo(g)
-				print(val)
+#				print(val)
 				
 				# probably an empty graph
 				if(length(val)==0 || all(is.na(val) | is.nan(val) | is.infinite(val)) && gsize(g)<2)
@@ -134,7 +139,7 @@ if(any(is.na(val) | is.nan(val) | is.infinite(val)) && !(meas %in% c("closeness"
 					{	val[is.nan(val) | is.infinite(val)] <- NA
 						val <- mean(val,na.rm=TRUE)
 					}
-					print(val)
+#					print(val)
 if(is.na(val) || is.nan(val) || is.infinite(val))
 	stop("Problem with a measure: unexpected value")
 				}
@@ -193,6 +198,7 @@ for(charset in CHARSETS)
 			list.vals[[i]] <- vals
 		}
 		
+		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-all_charset-",charset))
 		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
@@ -207,7 +213,10 @@ for(charset in CHARSETS)
 			# loop over narratives
 			for(i in 1:length(gs.all))
 			{	xs <- sapply(gs.all[[i]], function(g) graph_attr(g,"timestamp"))
-				lines(x=xs, y=list.vals[[i]], col=colors[i], lwd=2)
+				ys <- list.vals[[i]]
+				if(!CUMULATIVE && WINDOW_SIZE>0)
+					ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
+				lines(x=xs, y=ys, col=colors[i], lwd=2)
 			}
 			# add legend
 			legend(
@@ -216,6 +225,8 @@ for(charset in CHARSETS)
 				fill=colors
 			)
 		dev.off()
+		
+		write.csv(x=char.importance, file=tab.file, row.names=FALSE, fileEncoding="UTF-8")
 	}	
 }
 
@@ -233,8 +244,8 @@ for(i in 1:length(gs.all))
 {	cat("Plotting narrative ",g.names[i],"\n",sep="")
 	xlab <- paste0("Time (",unit.map[g.names[i]],")")
 	xs <- sapply(gs.all[[i]], function(g) graph_attr(g,"timestamp"))
-	col <- colors[i]
-			
+	cols <- c(combine.colors(col1=colors[i], col2="WHITE", transparency=67), colors[i], combine.colors(col1=colors[i], col2="BLACK", transparency=67)) 
+	
 	# loop over measures
 	for(meas in measures)
 	{	cat("..Plotting measure ",meas," (",g.names[i],")\n",sep="")
@@ -261,8 +272,9 @@ for(i in 1:length(gs.all))
 			rg <- range(rg,vals,na.rm=TRUE)
 			list.vals[[c]] <- vals
 		}
+		tab <- matrix(NA,nrow=length(vals),ncol=length(CHARSETS))
 		
-		colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
+		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-",g.names[i],"_charset-all"))
 		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
@@ -277,13 +289,23 @@ for(i in 1:length(gs.all))
 			abline(v=6, lty=3)
 			# loop over character sets
 			for(c in 1:length(CHARSETS))
-				lines(x=xs, y=list.vals[[c]], col=col, lty=c, lwd=2)
+			{	ys <- tab[,c] <- list.vals[[c]]
+				if(!CUMULATIVE && WINDOW_SIZE>0)
+					ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
+				lines(x=xs, y=ys, col=cols[c], lty=c, lwd=2)
+				
+			}
 			# add legend
 			legend(
 				x="bottomright",
 				legend=cs.legend,
-				col=col, lty=1:length(CHARSETS), lwd=2
+				col=cols, lty=1:length(CHARSETS), lwd=2,
+				bg="#FFFFFFCC"
 			)
 		dev.off()
+		
+		# record csv
+		colnames(tab) <- CHARSETS
+		write.csv(x=tab, file=paste0(plot.file,".csv"), row.names=FALSE, fileEncoding="UTF-8")
 	}	
 }

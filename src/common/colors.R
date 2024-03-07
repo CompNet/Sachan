@@ -120,27 +120,6 @@ CAT_COLORS_32 <- c(	# glasbey.colors(32) from package Polychrome
 
 
 
-###############################################################################
-ATT_COLORS_SEX <- c(		# retrieved from https://blog.datawrapper.de/gendercolor/
-	"Male"="#19A0AA",		# turquoise
-	"Female"="#F15F36",		# salmon
-	"Mixed"="#730B6D", 		# purple
-	"Unknown"="LIGHTGRAY"	# gray
-)
-ATT_COLORS_BOOL <- c(
-	"FALSE"=rgb(255,127,0,maxColorValue=255),		# orange
-	"TRUE"=rgb(77,175,74,maxColorValue=255)			# green
-)
-
-# overall list
-ATT_COLORS <- list(
-	Named=ATT_COLORS_BOOL,
-	Sex=ATT_COLORS_SEX
-)
-
-
-
-
 #############################################################
 # Returns the appropriate number of colors
 # 
@@ -188,11 +167,11 @@ combine.colors <- function(col1, col2, transparency=50)
 	
 	# create new color using specified transparency
 	res <- rgb(
-			transp*rgb1[1] + (1-transp)*rgb2[1], 
-			transp*rgb1[2] + (1-transp)*rgb2[2], 
-			transp*rgb1[3] + (1-transp)*rgb2[3],
-			max=255,
-			alpha=transp*rgb1[4] + (1-transp)*rgb2[4]
+		transp*rgb1[1] + (1-transp)*rgb2[1], 
+		transp*rgb1[2] + (1-transp)*rgb2[2], 
+		transp*rgb1[3] + (1-transp)*rgb2[3],
+		max=255,
+		alpha=transp*rgb1[4] + (1-transp)*rgb2[4]
 	)
 	
 	return(res)
@@ -224,3 +203,34 @@ make.color.transparent <- function(color, transparency=50)
 	
 	return(res)
 }
+
+
+
+
+###############################################################################
+ATT_COLORS_SEX <- c(		# retrieved from https://blog.datawrapper.de/gendercolor/
+	# single
+	"Male"="#19A0AA",		# turquoise
+	"Female"="#F15F36",		# salmon
+	"Mixed"="#730B6D", 		# purple
+	"Unknown"="LIGHTGRAY",	# gray
+	# double
+	"Female-Female"="#F15F36",
+	"Female-Male"=combine.colors("#19A0AA", "#F15F36", transparency=50),
+	"Male-Male"="#19A0AA",
+	# triple
+	"Female-Female-Female"="#F15F36",
+	"Female-Female-Male"=combine.colors("#19A0AA", "#F15F36", transparency=33),
+	"Female-Male-Male"=combine.colors("#19A0AA", "#F15F36", transparency=67),
+	"Male-Male-Male"="#19A0AA"
+)
+ATT_COLORS_BOOL <- c(
+	"FALSE"=rgb(255,127,0,maxColorValue=255),		# orange
+	"TRUE"=rgb(77,175,74,maxColorValue=255)			# green
+)
+
+# overall list
+ATT_COLORS <- list(
+	Named=ATT_COLORS_BOOL,
+	Sex=ATT_COLORS_SEX
+)

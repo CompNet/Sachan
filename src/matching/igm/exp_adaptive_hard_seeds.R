@@ -373,7 +373,8 @@ for(tc in c(FALSE,TRUE))
 				legend(
 					x="topleft",
 					legend=m.names[methods],
-					fill=colors
+					fill=colors,
+					bg="#FFFFFFCC"
 				)
 			# close plot
 			dev.off()

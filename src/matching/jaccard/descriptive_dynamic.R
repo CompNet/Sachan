@@ -254,7 +254,8 @@ for(i in 1:(length(gs)-1))
 			legend(
 				x="bottomleft",
 				legend=colnames(perf.tab.all),
-				fill=colors
+				fill=colors,
+				bg="#FFFFFFCC"
 			)
 		dev.off()
 		# focus on top 20 characters
@@ -270,7 +271,8 @@ for(i in 1:(length(gs)-1))
 			legend(
 					x="bottomleft",
 					legend=colnames(perf.tab.top),
-					fill=colors
+					fill=colors,
+					bg="#FFFFFFCC"
 			)
 		dev.off()
 		
@@ -297,7 +299,7 @@ for(i in 1:(length(gs)-1))
 				else
 					points(x=xs, y=sim.diff[selected.chars[k],], col=colors[k], pch=16)
 			}
-			legend(x="bottomleft", legend=ranked.chars[selected.chars], fill=colors, bg="WHITE")
+			legend(x="bottomleft", legend=ranked.chars[selected.chars], fill=colors, bg="#FFFFFFCC")
 		dev.off()
 			
 		# compute performance over whole time series (g1 vs g2)

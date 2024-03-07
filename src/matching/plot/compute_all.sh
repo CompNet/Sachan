@@ -15,6 +15,11 @@ python3 compute_alignment_performance.py -m comics-novels -s combined
 # blocks
 python3 compute_alignment_performance.py -m tvshow-novels -s structural --blocks
 python3 compute_alignment_performance.py -m comics-novels -s structural --blocks
+python3 compute_alignment_performance.py -m tvshow-comics -s structural --blocks
+
+python3 compute_alignment_performance.py -m tvshow-novels -s combined --blocks
+python3 compute_alignment_performance.py -m comics-novels -s combined --blocks
+python3 compute_alignment_performance.py -m tvshow-comics -s combined --blocks
 
 # cumulative networks
 python3 compute_alignment_performance.py -m tvshow-novels -s structural --cumulative

@@ -352,7 +352,8 @@ for(i in 1:(length(gs)-1))
 			legend(
 				x="topleft",
 				legend=m.names[methods],
-				fill=colors
+				fill=colors,
+				bg="#FFFFFFCC"
 			)
 		# close plot
 		dev.off()
@@ -373,7 +374,8 @@ for(i in 1:(length(gs)-1))
 			legend(
 				x="topleft",
 				legend=m.names[methods],
-				fill=colors
+				fill=colors,
+				bg="#FFFFFFCC"
 			)
 		# close plot
 		dev.off()

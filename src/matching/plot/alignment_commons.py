@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from more_itertools import flatten
+from more_itertools.recipes import sliding_window
 from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics.pairwise import cosine_similarity
@@ -328,7 +329,7 @@ def get_comics_chapter_issue_i(G: nx.Graph) -> int:
     chapter = int(chapter_str.split("_")[1])
     issue_str = chapter_to_issue[chapter]
     issue_name = issue_str[:4]
-    return int(issue_str[4:]) + volume_offsets[issue_name]
+    return int(issue_str[4:]) - 1 + volume_offsets[issue_name]
 
 
 def jaccard_graph_sim(
@@ -619,6 +620,12 @@ def tune_alpha(
 def combined_similarities(
     S_structural: np.ndarray, S_textual: np.ndarray, alpha: float
 ) -> np.ndarray:
+    """Combine structural and textual similarities
+
+    :param S_structural: (first_media, second_media)
+    :param S_textual: (first_media, second_media)
+    :param alpha:
+    """
     S_textual = (S_textual - np.min(S_textual)) / (
         np.max(S_textual) - np.min(S_textual)
     )
@@ -626,6 +633,54 @@ def combined_similarities(
         np.max(S_structural) - np.min(S_structural)
     )
     return alpha * S_structural + (1 - alpha) * S_textual
+
+
+def combined_similarities_blocks(
+    S_structural: np.ndarray,
+    S_textual: np.ndarray,
+    alpha: float,
+    medias: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    first_media_graphs: List[nx.Graph],
+    second_media_graphs: List[nx.Graph],
+) -> np.ndarray:
+    """Combine structural and textual similarities, when the
+    structural similarity matrix has blocks dimensions
+
+    :param S_structural: (first_media or first_media_blocks, second_media or second_media_blocks)
+    :param S_textual: (first_media, second_media)
+    :param alpha:
+    :param block_to_narrunit: ??? hum, no
+    :return: S_combined with the shape as S_structural
+    """
+    if medias == "tvshow-novels":
+        blocks_to_narrunit = (
+            np.array([get_episode_i(G) for G in first_media_graphs]),
+            None,
+        )
+    elif medias == "comics-novels":
+        blocks_to_narrunit = (
+            np.array([get_comics_chapter_issue_i(G) for G in first_media_graphs]),
+            None,
+        )
+    elif medias == "tvshow-comics":
+        blocks_to_narrunit = (
+            np.array([get_episode_i(G) for G in first_media_graphs]),
+            np.array([get_comics_chapter_issue_i(G) for G in second_media_graphs]),
+        )
+    else:
+        raise ValueError
+
+    # Enlarge S_textual to match the shape of S_structural
+    if S_textual.shape[0] != S_structural.shape[0]:
+        S_textual = S_textual[blocks_to_narrunit[0], :].squeeze()
+    if S_textual.shape[1] != S_structural.shape[1]:
+        S_textual = S_textual[:, blocks_to_narrunit[1]].squeeze()
+    assert S_textual.shape == S_structural.shape
+
+    S_combined = combined_similarities(S_structural, S_textual, alpha)
+    assert S_combined.shape == S_structural.shape
+
+    return S_combined
 
 
 def tune_alpha_other_medias(
@@ -797,17 +852,58 @@ def find_best_combined_alignment(
     return (best_t, best_alpha, best_f1, best_M)
 
 
-def threshold_align_blocks(
-    S: np.ndarray, t: float, block_to_narrunit: np.ndarray
+def _align_blocks_tvshow_comics(
+    tvshow_blocks_graphs: list[nx.Graph],
+    comics_blocks_graphs: list[nx.Graph],
+    M_align_blocks: np.ndarray,
+) -> np.ndarray:
+    tvshow_block_to_narrunit = [get_episode_i(G) for G in tvshow_blocks_graphs]
+    comics_block_to_narrunit = [
+        get_comics_chapter_issue_i(G) for G in comics_blocks_graphs
+    ]
+
+    _, tvshow_uniq_limits = np.unique(tvshow_block_to_narrunit, return_index=True)
+    tvshow_uniq_limits = list(tvshow_uniq_limits) + [len(tvshow_block_to_narrunit)]
+    _, comics_uniq_limits = np.unique(comics_block_to_narrunit, return_index=True)
+    comics_uniq_limits = list(comics_uniq_limits) + [len(comics_block_to_narrunit)]
+
+    n, m = (len(set(tvshow_block_to_narrunit)), len(set(comics_block_to_narrunit)))
+    M = np.zeros((n, m))
+    for k, (i_prev, i) in enumerate(sliding_window(tvshow_uniq_limits, 2)):
+        for l, (j_prev, j) in enumerate(sliding_window(comics_uniq_limits, 2)):
+            M[k][l] = np.any(M_align_blocks[i_prev:i, j_prev:j])
+
+    return M
+
+
+def align_blocks(
+    medias: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    first_media_graphs: List[nx.Graph],
+    second_media_graphs: List[nx.Graph],
+    M_align_blocks: np.ndarray,
 ) -> np.ndarray:
     """Align two medias using blocks for one media
 
-    :param S: of shape ``(block_media, other_media)``
-    :param block_to_narrunit: of shape ``(block_media,)``
+    :param M: of shape (first_media_blocks_nb, second_media) if
+              ``medias`` is 'tvshow-novels' or 'comics-novels', or of
+              shape (first_media_blocks_nb, second_media_blocks_nb) if
+              ``medias`` is 'tvshow-comics'
     """
-    assert S.shape[0] == block_to_narrunit.shape[0]
+    if medias == "tvshow-novels":
+        block_to_narrunit = np.array([get_episode_i(G) for G in first_media_graphs])
+    elif medias == "comics-novels":
+        block_to_narrunit = np.array(
+            [get_comics_chapter_issue_i(G) for G in first_media_graphs]
+        )
+    elif medias == "tvshow-comics":
+        # this is specific because both medias use narrative sub-units
+        return _align_blocks_tvshow_comics(
+            first_media_graphs, second_media_graphs, M_align_blocks
+        )
+    else:
+        raise ValueError
 
-    M_align_blocks = S >= t
+    assert M_align_blocks.shape[0] == block_to_narrunit.shape[0]
 
     _, uniq_start_i = np.unique(block_to_narrunit, return_index=True)
     splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)

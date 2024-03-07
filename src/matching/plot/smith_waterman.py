@@ -1,15 +1,18 @@
 from typing import Tuple, Dict, Optional, List, Literal, cast
-from tqdm import tqdm
 from sklearn.metrics import precision_recall_fscore_support
 import numpy as np
+import networkx as nx
 from alignment_commons import (
+    align_blocks,
     load_medias_gold_alignment,
     load_medias_graphs,
     load_medias_summaries,
     graph_similarity_matrix,
+    get_episode_i,
+    get_comics_chapter_issue_i,
     textual_similarity,
-    combined_similarities,
     tune_alignment_params,
+    _align_blocks_tvshow_comics,
 )
 
 
@@ -301,17 +304,15 @@ def tune_smith_waterman_params_other_medias(
 
 
 def smith_waterman_align_blocks(
-    S: np.ndarray, block_to_episode: np.ndarray, **sw_kwargs
+    medias: Literal["tvshow-novels", "comics-novels", "tvshow-comics"],
+    first_media_graphs: List[nx.Graph],
+    second_media_graphs: List[nx.Graph],
+    S: np.ndarray,
+    **sw_kwargs,
 ) -> np.ndarray:
+    """Align two medias with SW, using blocks for one media
+
+    :param S: of shape ``(first_media, second_media)``
+    """
     M_align_blocks, *_ = smith_waterman_align_affine_gap(S, **sw_kwargs)
-
-    _, uniq_start_i = np.unique(block_to_episode, return_index=True)
-    splits = np.split(M_align_blocks, uniq_start_i[1:], axis=0)
-
-    M = []
-    for split in splits:
-        M.append(np.any(split, axis=0))
-
-    M = np.stack(M)
-
-    return M
+    return align_blocks(medias, first_media_graphs, second_media_graphs, M_align_blocks)
