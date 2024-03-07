@@ -105,7 +105,7 @@ for(charset in CHARSETS)
 		# loop over time slices
 		list.meas <- list()
 		for(t in 1:length(gs))
-		{	cat("....Computing time ",t,"/",length(gs),"(",charset,"--",g.names[i],")\n",sep="")
+		{	cat("....Computing time ",t,"/",length(gs),"(",charset,"-",g.names[i],")\n",sep="")
 			g <- gs[[t]]
 			# possibly leep only common characters
 			if(charset=="common")
@@ -120,7 +120,7 @@ for(charset in CHARSETS)
 			
 			# loop over measures
 			for(meas in measures)
-			{	cat(".....Computing measure ",meas," (",charset,"--",g.names[i],"--t=",t,"/",length(gs),")\n",sep="")
+			{	cat(".....Computing measure ",meas," (",charset,"-",g.names[i],"-t=",t,"/",length(gs),")\n",sep="")
 				
 				# compute measure
 				mm <- TOPO_MEAS_ALL[[meas]]
