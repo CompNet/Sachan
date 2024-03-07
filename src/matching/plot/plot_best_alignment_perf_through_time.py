@@ -1,6 +1,7 @@
-import os, pickle
+import os, pickle, argparse
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator
 from sklearn.metrics import precision_recall_fscore_support
 from alignment_commons import (
     tune_threshold_other_medias,
@@ -11,12 +12,14 @@ from alignment_commons import (
     TVSHOW_SEASON_LIMITS,
     load_medias_gold_alignment,
     textual_similarity,
-    combined_similarities,
     tune_alpha_other_medias,
+    align_blocks,
+    combined_similarities_blocks,
 )
 from smith_waterman import (
     tune_smith_waterman_params_other_medias,
     smith_waterman_align_affine_gap,
+    smith_waterman_align_blocks,
 )
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -33,7 +36,7 @@ def compute_season_f1s(M: np.ndarray, G: np.ndarray) -> list[float]:
         G_season = G[start:end, :]
         M_season = M[start:end, :]
 
-        p, r, f1, _ = precision_recall_fscore_support(
+        f1, _ = precision_recall_fscore_support(
             G_season.flatten(),
             M_season.flatten(),
             average="binary",
@@ -45,11 +48,17 @@ def compute_season_f1s(M: np.ndarray, G: np.ndarray) -> list[float]:
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--output", type=str, default=None)
+    args = parser.parse_args()
+
     best_rows = {}
 
     for similarity in ["structural", "textual", "combined"]:
-        if similarity == "structural":
-            # blocks have better performance for structural matching
+        if similarity == ["structural", "combined"]:
+            # blocks have better performance for structural and combined
+            # matching
             path = f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}_blocks/df.pickle"
         else:
             path = f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}/df.pickle"
@@ -93,7 +102,9 @@ if __name__ == "__main__":
             structural_use_weights=structural_params["use_weights"],
             structural_filtering=structural_params["character_filtering"],
         )
-        M = S > t
+        M_structural = align_blocks(
+            "tvshow-novels", first_media_graphs, second_media_graphs, S > t
+        )
     elif structural_params["alignment"] == "smith-waterman":
         (
             gap_start_penalty,
@@ -109,13 +120,19 @@ if __name__ == "__main__":
             structural_use_weights=structural_params["use_weights"],
             structural_filtering=structural_params["character_filtering"],
         )
-        M, *_ = smith_waterman_align_affine_gap(
-            S, gap_start_penalty, gap_cont_penalty, neg_th
+        M_structural = smith_waterman_align_blocks(
+            "tvshow-novels",
+            first_media_graphs,
+            second_media_graphs,
+            S,
+            gap_start_penalty=gap_start_penalty,
+            gap_cont_penalty=gap_cont_penalty,
+            neg_th=neg_th,
         )
     else:
         raise ValueError
 
-    season_f1s = compute_season_f1s(M, G)
+    season_f1s = compute_season_f1s(M_structural, G)
     ax.plot(list(range(1, 6)), season_f1s, label="Structural")
 
     # Textual
@@ -134,7 +151,7 @@ if __name__ == "__main__":
             textual_sim_fn=textual_params["sim_fn"],
             silent=True,
         )
-        M = S > t
+        M_textual = S > t
     elif textual_params["alignment"] == "smith-waterman":
         (
             gap_start_penalty,
@@ -149,7 +166,7 @@ if __name__ == "__main__":
             textual_sim_fn=textual_params["sim_fn"],
             silent=True,
         )
-        M, *_ = smith_waterman_align_affine_gap(
+        M_textual, *_ = smith_waterman_align_affine_gap(
             S,
             gap_start_penalty=gap_start_penalty,
             gap_cont_penalty=gap_cont_penalty,
@@ -158,7 +175,7 @@ if __name__ == "__main__":
     else:
         raise ValueError
 
-    season_f1s = compute_season_f1s(M, G)
+    season_f1s = compute_season_f1s(M_textual, G)
     ax.plot(list(range(1, 6)), season_f1s, label="Textual")
 
     # Combined
@@ -189,8 +206,17 @@ if __name__ == "__main__":
             structural_filtering=combined_params["structural_character_filtering"],
             silent=True,
         )
-        S_combined = combined_similarities(S_structural, S_textual, alpha)
-        M = S_combined > t
+        S_combined = combined_similarities_blocks(
+            S_structural,
+            S_textual,
+            alpha,
+            "tvshow-novels",
+            first_media_graphs,
+            second_media_graphs,
+        )
+        M_combined = align_blocks(
+            "tvshow-novels", first_media_graphs, second_media_graphs, S_combined > t
+        )
     elif combined_params["alignment"] == "smith-waterman":
         (alpha, gap_start_penalty, gap_cont_penalty, neg_th,) = tune_alpha_other_medias(
             "tvshow-novels",
@@ -207,15 +233,33 @@ if __name__ == "__main__":
             structural_filtering=combined_params["structural_character_filtering"],
             silent=True,
         )
-        S_combined = combined_similarities(S_structural, S_textual, alpha)
-        M, *_ = smith_waterman_align_affine_gap(
-            S_combined, gap_start_penalty, gap_cont_penalty, neg_th
+        S_combined = combined_similarities_blocks(
+            S_structural,
+            S_textual,
+            alpha,
+            "tvshow-novels",
+            first_media_graphs,
+            second_media_graphs,
+        )
+        M_combined = smith_waterman_align_blocks(
+            "tvshow-novels",
+            first_media_graphs,
+            second_media_graphs,
+            S_combined,
+            gap_start_penalty=gap_start_penalty,
+            gap_cont_penalty=gap_cont_penalty,
+            neg_th=neg_th,
         )
     else:
         raise ValueError
 
-    season_f1s = compute_season_f1s(M, G)
+    season_f1s = compute_season_f1s(M_combined, G)
     ax.plot(list(range(1, 6)), season_f1s, label="Combined")
 
     ax.legend()
-    plt.show()
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+    if args.output:
+        plt.savefig(args.output)
+    else:
+        plt.show()
