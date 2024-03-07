@@ -36,7 +36,7 @@ def compute_season_f1s(M: np.ndarray, G: np.ndarray) -> list[float]:
         G_season = G[start:end, :]
         M_season = M[start:end, :]
 
-        f1, _ = precision_recall_fscore_support(
+        p, r, f1, _ = precision_recall_fscore_support(
             G_season.flatten(),
             M_season.flatten(),
             average="binary",
