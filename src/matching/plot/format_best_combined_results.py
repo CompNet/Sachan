@@ -11,13 +11,15 @@ if __name__ == "__main__":
     parser.add_argument(
         "-f", "--format", type=str, default="latex", help="either 'plain' or 'latex'"
     )
+    parser.add_argument("-b", "--blocks", action="store_true")
     args = parser.parse_args()
 
     dfs_dict = {}
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
-        with open(
-            f"{root_dir}/out/matching/plot/{medias}_combined/df.pickle", "rb"
-        ) as f:
+        path = f"{root_dir}/out/matching/plot/{medias}_combined/df.pickle"
+        if args.blocks:
+            path = f"{root_dir}/out/matching/plot/{medias}_combined_blocks/df.pickle"
+        with open(path, "rb") as f:
             df = pickle.load(f)
             df = df.loc[
                 :,
