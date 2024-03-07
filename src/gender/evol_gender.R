@@ -19,7 +19,7 @@ source("src/gender/gender_measures.R")
 
 ###############################################################################
 # parameters
-CUMULATIVE <- FALSE				# use the instant (FALSE) or cumulative (TRUE) networks
+CUMULATIVE <- TRUE				# use the instant (FALSE) or cumulative (TRUE) networks
 WINDOW_SIZE <- 0				# for the instant mode (cf. above), size of the window used for smoothing 
 TOP_CHAR_NBR <- 20				# number of important characters
 NU_NV <- "chapter"				# novel narrative unit: no choice here
@@ -104,7 +104,7 @@ for(charset in CHARSETS)
 		# loop over time slices
 		list.meas <- list()
 		for(t in 1:length(gs))
-		{	cat("....Computing time ",t,"/",length(gs),"(",charset,"--",g.names[i],")\n",sep="")
+		{	cat("....Computing time ",t,"/",length(gs),"(",charset,"-",g.names[i],")\n",sep="")
 			g <- gs[[t]]
 			# possibly leep only common characters
 			if(charset=="common")
@@ -154,18 +154,18 @@ for(charset in CHARSETS)
 # plot each narrative as a distinct series
 colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
 measures <- c(
-	"fpropvtx"="vertices:Female:FM_Proportion",
-	"fpropdeg"="degree:Female:FM_Proportion",
-	"fpropstr"="strength:Female:FM_Proportion",
+	"vertices-prop-fem"="vertices:Female:FM_Proportion",
+	"degree-prop-fem"="degree:Female:FM_Proportion",
+	"strength-prop-femfpropstr"="strength:Female:FM_Proportion",
 	"fmratio"="edges:All:F-/M- Ratio",
 	"homophily"="edges:All:Homophily",
 	"gdratio"="degree:All:GenderDegreeRatio",
 	"gsratio"="strength:All:GenderStrengthRatio"
 )
 meas.fullnames <- c(
-	"fpropvtx"="Proportion of female vertices (%)",
-	"fpropdeg"="Female proportion of total degree (%)",
-	"fpropstr"="Female proportion of total strength (%)",
+	"vertices-prop-fem"="Proportion of female vertices (%)",
+	"degree-prop-fem"="Female proportion of total degree (%)",
+	"strength-prop-femfpropstr"="Female proportion of total strength (%)",
 	"fmratio"="F/M Edge Ratio",
 	"homophily"="Gender Homophily",
 	"gdratio"="Gender Degree Ratio",
@@ -364,9 +364,9 @@ for(i in 1:length(gs.all))
 	{	charset <- CHARSETS[c]
 		cat("..Plotting charset ",charset," (",g.names[i],")\n",sep="")
 		
-		# loop over measures
+		# loop over measure groups
 		for(m in 1:length(group.meas))
-		{	cat("....Plotting measure ",names(group.meas)[m]," (",g.names[i],"--",charset,")\n",sep="")
+		{	cat("....Plotting measure group ",names(group.meas)[m]," (",g.names[i],"-",charset,")\n",sep="")
 			
 			# file/label name
 			meas <- names(group.meas)[m]
@@ -394,7 +394,7 @@ for(i in 1:length(gs.all))
 				par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
 				plot(
 					NULL, 
-					main=bquote(bolditalic(.(narr.names[g.names[i]]))~" -- "~bold(.(cs.names[charset]))),
+					main=bquote(bolditalic(.(narr.names[g.names[i]]))~" - "~bold(.(cs.names[charset]))),
 					xlab=xlab, ylab=ylab,
 					xlim=c(start.nu,round(max(xs))), ylim=rg
 				)
@@ -424,5 +424,120 @@ for(i in 1:length(gs.all))
 	}	
 }
 
-# TODO try to put the M/F-only measure on the same plot for all three narratives (using dots for M/F and colors for narratives)
-#      (does not seem to work for character set)
+
+
+
+###############################################################################
+# plot each narrative as a distinct series, but for pairs of F/M measures
+pair.meas <- list(
+	# vertices
+	"vertices-count"=list(
+		"fullname"="Number of Vertices",
+		"variables"=c("Male"="vertices:Male:Count", "Female"="vertices:Female:Count")),
+	"vertices-prop"=list(
+		"fullname"="Proportion of Vertices (%)",
+		"variables"=c("Male"="vertices:Male:FM_Proportion", "Female"="vertices:Female:FM_Proportion")),
+	# degree
+	"degree-total"=list(
+		"fullname"="Total Degree",
+		"variables"=c("Male"="degree:Male:Total","Female"="degree:Female:Total")),
+	"degree-prop"=list(
+		"fullname"="Proportion of Degree (%)",
+		"variables"=c("Male"="degree:Male:FM_Proportion","Female"="degree:Female:FM_Proportion")),
+	# strength
+	"strength-total"=list(
+		"fullname"="Total Strength",
+		"variables"=c("Male"="strength:Male:Total","Female"="strength:Female:Total")),
+	"strength-prop"=list(
+		"fullname"="Proportion of Strength (%)",
+		"variables"=c("Male"="strength:Male:FM_Proportion","Female"="strength:Female:FM_Proportion")),
+	# density
+	"density"=list(
+		"fullname"="Density",
+		"variables"=c("Male"="density:Male:Density", "Female"="density:Female:Density"))
+)
+
+# loop over character sets
+for(charset in CHARSETS)
+{	cat("Plotting character set ",charset,"\n",sep="")
+	xlab <- "Time (Novel/Volume/Season)"
+	
+	# loop over measure pairs
+	for(m in 1:length(pair.meas))
+	{	cat("..Plotting measure pair ",names(pair.meas)[m]," (",charset,")\n",sep="")
+		
+		# file/label name
+		meas <- names(pair.meas)[m]
+		ylab <- pair.meas[[meas]]$fullname
+		variables <- pair.meas[[meas]]$variables
+		
+		# create folder
+		local.folder <- file.path(out.folder, meas)
+		dir.create(path=local.folder, showWarnings=FALSE, recursive=TRUE)
+		
+		# clean values and compute range
+		rg <- c()
+		list.vals <- list()
+		for(i in 1:length(gs.all))
+		{	list.gdr <- list()
+			for(v in 1:length(variables))
+			{	vals <- list.res[[charset]][[g.names[i]]][[variables[v]]]
+				vals[is.nan(vals) | is.infinite(vals)] <- NA
+				rg <- range(rg,vals,na.rm=TRUE)
+				list.gdr[[v]] <- vals
+			}
+			list.vals[[i]] <- list.gdr
+		}
+		
+		# produce plot
+		plot.file <- file.path(local.folder, paste0("narrative-all_charset-",charset))
+		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
+			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
+			plot(
+				NULL, 
+				main=bquote(bold(.(cs.names[charset]))),
+				xlab=xlab, ylab=ylab,
+				xlim=c(start.nu,round(max(xs))), ylim=rg
+			)
+			# vertical lines
+			abline(v=3, lty=3)
+			abline(v=6, lty=3)
+			# loop over narratives
+			for(i in 1:length(gs.all))
+			{	xs <- sapply(gs.all[[i]], function(g) graph_attr(g,"timestamp"))
+				# loop over variables
+				for(v in 1:length(variables))
+				{	ys <- list.vals[[i]][[v]]
+					if(!CUMULATIVE && WINDOW_SIZE>0)
+						ys <- sapply(1:length(ys), function(j) mean(ys[max(1,round(j-WINDOW_SIZE/2)):min(length(ys),round(j+WINDOW_SIZE/2))]))
+					lines(x=xs, y=ys, col=colors[i], lwd=2, lty=v)
+				}
+			}
+			# add legend
+#			legend(
+#				x="bottomright",
+#				legend=c(narr.names[g.names],"Male","Female"),
+#				fill=c(colors,rep(NA,length(variables))), 
+#				col=c(rep(NA,length(gs.all)),rep("BLACK",length(variables))), 
+#				border=c(rep("BLACK",length(gs.all)),rep(NA,length(variables))), 
+##				x.intersp=c(rep(-1,length(gs.all)),rep(1,length(variables))),
+#				lwd=2, lty=c(rep(1,length(gs.all)),1:length(variables)),
+#				bg="#FFFFFFCC", xjust=1
+#			)
+			legend(
+				x="bottomright",
+				legend=c(narr.names[g.names],"Male","Female"),
+				col=c(rep(NA,length(gs.all)),rep("BLACK",length(variables))), 
+				lwd=2, lty=c(rep(1,length(gs.all)),1:length(variables)),
+				bg="#FFFFFFCC"
+			)
+			legend(
+				x="bottomright",
+				legend=c(narr.names[g.names],"Male","Female"),
+				fill=c(colors,rep(NA,length(variables))),
+				border=c(rep("BLACK",length(gs.all)),rep(NA,length(variables))), 
+				bg=NA, bty="n"
+			)
+			dev.off()
+	}
+}
