@@ -156,7 +156,7 @@ colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
 measures <- c(
 	"vertices-prop-fem"="vertices:Female:FM_Proportion",
 	"degree-prop-fem"="degree:Female:FM_Proportion",
-	"strength-prop-femfpropstr"="strength:Female:FM_Proportion",
+	"strength-prop-fem"="strength:Female:FM_Proportion",
 	"fmratio"="edges:All:F-/M- Ratio",
 	"homophily"="edges:All:Homophily",
 	"gdratio"="degree:All:GenderDegreeRatio",
@@ -165,7 +165,7 @@ measures <- c(
 meas.fullnames <- c(
 	"vertices-prop-fem"="Proportion of female vertices (%)",
 	"degree-prop-fem"="Female proportion of total degree (%)",
-	"strength-prop-femfpropstr"="Female proportion of total strength (%)",
+	"strength-prop-fem"="Female proportion of total strength (%)",
 	"fmratio"="F/M Edge Ratio",
 	"homophily"="Gender Homophily",
 	"gdratio"="Gender Degree Ratio",
