@@ -42,12 +42,15 @@ def compute_season_f1s(M: np.ndarray, G: np.ndarray) -> list[float]:
             average="binary",
             zero_division=0.0,
         )
-        season_f1s.append(f1)
+        season_f1s.append(f1 * 100)
 
     return season_f1s
 
 
 if __name__ == "__main__":
+    FONTSIZE = 10
+    COLUMN_WIDTH_IN = 5.166
+    ASPECT_RATIO = 0.4
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--output", type=str, default=None)
@@ -76,9 +79,9 @@ if __name__ == "__main__":
     G = load_medias_gold_alignment("tvshow-novels", 1, 5, 1, 5)
 
     plt.style.use("science")
-    fig, ax = plt.subplots()
-    ax.set_xlabel("Seasons")
-    ax.set_ylabel("F1")
+    fig, ax = plt.subplots(figsize=(COLUMN_WIDTH_IN, COLUMN_WIDTH_IN * 0.55))
+    ax.set_xlabel("Seasons", fontsize=FONTSIZE)
+    ax.set_ylabel("F1", fontsize=FONTSIZE)
     ax.grid()
 
     # Structural
@@ -218,7 +221,12 @@ if __name__ == "__main__":
             "tvshow-novels", first_media_graphs, second_media_graphs, S_combined > t
         )
     elif combined_params["alignment"] == "smith-waterman":
-        (alpha, gap_start_penalty, gap_cont_penalty, neg_th,) = tune_alpha_other_medias(
+        (
+            alpha,
+            gap_start_penalty,
+            gap_cont_penalty,
+            neg_th,
+        ) = tune_alpha_other_medias(
             "tvshow-novels",
             "smith-waterman",
             np.arange(0.1, 0.9, 0.05),  # alpha
@@ -254,12 +262,12 @@ if __name__ == "__main__":
         raise ValueError
 
     season_f1s = compute_season_f1s(M_combined, G)
-    ax.plot(list(range(1, 6)), season_f1s, label="Combined")
+    ax.plot(list(range(1, 6)), season_f1s, label="Hybrid")
 
-    ax.legend()
+    ax.legend(fontsize=FONTSIZE)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
     if args.output:
-        plt.savefig(args.output)
+        plt.savefig(args.output, bbox_inches="tight")
     else:
         plt.show()
