@@ -5,7 +5,6 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = f"{script_dir}/../../.."
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-n",
@@ -39,10 +38,7 @@ if __name__ == "__main__":
                 continue
 
             # blocks
-            if similarity == "structural" and medias in [
-                "tvshow-novels",
-                "comics-novels",
-            ]:
+            if similarity in ["structural", "combined"]:
                 with open(
                     f"{root_dir}/out/matching/plot/{medias}_{similarity}_blocks{period}/df.pickle",
                     "rb",
