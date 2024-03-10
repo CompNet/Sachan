@@ -39,6 +39,16 @@ if __name__ == "__main__":
             }
             df["alignment"] = df["alignment"].apply(align_map.get)
 
+            filtering_map = {
+                "named": "named",
+                "common": "common",
+                "top20s2": "top20",
+                "top20s5": "top20",
+            }
+            df["structural_character_filtering"] = df[
+                "structural_character_filtering"
+            ].apply(filtering_map.get)
+
             dfs_dict[medias] = df
 
     indexs = [
