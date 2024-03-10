@@ -419,11 +419,6 @@ if __name__ == "__main__":
                 M, *_ = smith_waterman_align_affine_gap(
                     S_combined, gap_start_penalty, gap_cont_penalty, neg_th
                 )
-
-            S_combined = combined_similarities(S_structural, S_textual, alpha)
-            M, *_ = smith_waterman_align_affine_gap(
-                S_combined, gap_start_penalty, gap_cont_penalty, neg_th
-            )
         else:
             raise ValueError(f"unknown alignment method: {args.alignment}")
 
