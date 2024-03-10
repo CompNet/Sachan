@@ -31,3 +31,4 @@ python3 compute_alignment_performance.py -m tvshow-novels -s structural -p U2
 python3 compute_alignment_performance.py -m tvshow-novels -s textual -p U2
 python3 compute_alignment_performance.py -m tvshow-novels -s combined -p U2
 python3 compute_alignment_performance.py -m tvshow-novels -s structural --blocks -p U2
+python3 compute_alignment_performance.py -m tvshow-novels -s combined --blocks -p U2
