@@ -22,6 +22,9 @@ if __name__ == "__main__":
         action="store_true",
         help="if specified, use cumulative results",
     )
+    parser.add_argument(
+        "-b", "--blocks", action="store_true"
+    )
     args = parser.parse_args()
 
     dfs_dict = {}
@@ -31,6 +34,8 @@ if __name__ == "__main__":
             path = (
                 f"{root_dir}/out/matching/plot/{medias}_structural_cumulative/df.pickle"
             )
+        if args.blocks:
+            path = f"{root_dir}/out/matching/plot/{medias}_structural_blocks/df.pickle"
         with open(path, "rb") as f:
             df = pickle.load(f)
             df = df.loc[
