@@ -179,7 +179,7 @@ if __name__ == "__main__":
             args.max_delimiter_first_media,
             args.min_delimiter_second_media,
             args.max_delimiter_second_media,
-            cumulative=args.cumulative_graph,
+            cumulative=args.cumulative,
         )
 
         # Compute similarity
