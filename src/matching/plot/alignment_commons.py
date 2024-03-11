@@ -135,7 +135,9 @@ def load_comics_graphs(
 
 
 def load_medias_gold_alignment(
-    medias: Literal["comics-novels", "tvshow-comics", "tvshow-novels"],
+    medias: Literal[
+        "comics-novels", "comics-novels-c2c", "tvshow-comics", "tvshow-novels"
+    ],
     min_delimiter_first_media: Optional[int] = None,
     max_delimiter_first_media: Optional[int] = None,
     min_delimiter_second_media: Optional[int] = None,
@@ -143,6 +145,7 @@ def load_medias_gold_alignment(
 ) -> np.ndarray:
     MEDIAS_TO_PATH = {
         "comics-novels": f"{root_dir}/in/plot_alignment/comics_novels_i2c_gold_alignment.pickle",
+        "comics-novels-c2c": f"{root_dir}/in/plot_alignment/novels_comics_c2c_gold_alignment.pickle",
         "tvshow-comics": f"{root_dir}/in/plot_alignment/tvshow_comics_i2e_gold_alignment.pickle",
         "tvshow-novels": f"{root_dir}/in/plot_alignment/tvshow_novels_gold_alignment.pickle",
     }
@@ -152,6 +155,11 @@ def load_medias_gold_alignment(
 
     with open(matrix_path, "rb") as f:
         gold_matrix = pickle.load(f)
+
+    if medias == "comics-novels-c2c":
+        # we load comics-novels, not novels-comics as in the pickle
+        # file
+        gold_matrix = gold_matrix.T
 
     if (
         medias == "tvshow-comics"
