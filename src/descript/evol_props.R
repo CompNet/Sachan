@@ -18,7 +18,7 @@ source("src/common/topo_measures.R")
 
 ###############################################################################
 # parameters
-CUMULATIVE <- FALSE				# use the instant (FALSE) or cumulative (TRUE) networks
+CUMULATIVE <- TRUE				# use the instant (FALSE) or cumulative (TRUE) networks
 WINDOW_SIZE <- 3				# for the instant mode (cf. above), size of the window used for smoothing 
 TOP_CHAR_NBR <- 20				# number of important characters
 NU_NV <- "chapter"				# novel narrative unit: no choice here
@@ -130,6 +130,15 @@ for(charset in CHARSETS)
 				# probably an empty graph
 				if(length(val)==0 || all(is.na(val) | is.nan(val) | is.infinite(val)) && gsize(g)<2)
 					val <- NA
+				else if(meas=="assortativity" && is.nan(val))
+				{	deg <- degree(g,mode="all")
+					if(gsize(g)==0 || gorder(g)==0)
+						val <- 0
+					else if(all(deg)==deg[1])
+						val <- 1
+					else
+						val <- NA
+				}
 				# regular case
 				else
 				{
@@ -165,7 +174,8 @@ if(is.na(val) || is.nan(val) || is.infinite(val))
 
 ###############################################################################
 # plot each narrative as a distinct series
-colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
+#colors <- brewer_pal(type="qual", palette=2)(length(gs.all))
+colors <- c("#1f77b4ff","#ff7f0eff","#2ca02cff")	# padraig's colors
 
 # loop over character sets
 for(charset in CHARSETS)
@@ -200,7 +210,7 @@ for(charset in CHARSETS)
 		
 		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-all_charset-",charset))
-		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
+		pdf(paste0(plot.file,".pdf"), width=12, height=3)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
 			plot(
 				NULL, 
@@ -276,7 +286,7 @@ for(i in 1:length(gs.all))
 		
 		# produce plot
 		plot.file <- file.path(local.folder, paste0("narrative-",g.names[i],"_charset-all"))
-		pdf(paste0(plot.file,".pdf"), width=12, height=7)	# bg="white"
+		pdf(paste0(plot.file,".pdf"), width=12, height=3)	# bg="white"
 			par(mar=c(5, 4, 4-2.50, 2-1.25)+0.1)	# margins Bottom Left Top Right
 			plot(
 				NULL, 
