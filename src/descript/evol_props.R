@@ -94,7 +94,7 @@ dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 # loop over character sets
 list.res <- list()
 for(charset in CHARSETS)
-{	cat("Computing charecter set ",charset,"\n",sep="")
+{	cat("Computing character set ",charset,"\n",sep="")
 	
 	# loop over narratives
 	list.narr <- list()

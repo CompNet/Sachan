@@ -120,6 +120,11 @@ TOPO_MEAS_GRAPH <- list(
 		foo=function(g) {graph.density(graph=g)},
 		shortname="Dens.",
 		fullname="Density"),
+	"assortativity"=list(
+		type="graph",
+		foo=function(g) {assortativity_degree(graph=g, directed=FALSE)},
+		shortname="Deg.Ass.",
+		fullname="Degree Assortativity"),
 	"global_transitivity"=list(
 		type="graph",
 		foo=function(g) {transitivity(graph=g, type="globalundirected", weights=NULL, isolates="zero")},
