@@ -1,2 +1,5 @@
 *
 !.gitignore
+!layout_comics.csv
+!layout_novels.csv
+!layout_tvshow.csv
