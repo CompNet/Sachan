@@ -7,7 +7,7 @@
 # 04/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/igm/exp_simple.R")
+# source("src/vertex_matching/igm/exp_simple.R")
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
@@ -31,7 +31,7 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out", "matching")
+out.folder <- file.path("out", "vertex_matching")
 {	if(NARRATIVE_PART==0)
 		out.folder <- file.path(out.folder, "whole_narr")
 	else if(NARRATIVE_PART==2)

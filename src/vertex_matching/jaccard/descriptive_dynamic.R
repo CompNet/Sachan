@@ -8,7 +8,7 @@
 # 08/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/jaccard/descriptive_dynamic.R")
+# source("src/vertex_matching/jaccard/descriptive_dynamic.R")
 ###############################################################################
 library("igraph")
 library("viridis")
@@ -32,7 +32,7 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching","first_2",MEAS)
+out.folder <- file.path("out","vertex_matching","first_2",MEAS)
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 
 {	if(COMMON_CHARS_ONLY)

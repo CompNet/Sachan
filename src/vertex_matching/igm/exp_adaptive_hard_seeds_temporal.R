@@ -7,7 +7,7 @@
 # 07/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/igm/exp_adaptive_hard_seeds_temporal.R")
+# source("src/vertex_matching/igm/exp_adaptive_hard_seeds_temporal.R")
 ###############################################################################
 library("igraph")
 library("iGraphMatch")
@@ -28,7 +28,7 @@ TOP_CHAR_NBR <- 20			# number of important characters
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out","matching","first_2","attr_none")
+out.folder <- file.path("out","vertex_matching","first_2","attr_none")
 dir.create(path=out.folder, showWarnings=FALSE, recursive=TRUE)
 mode.folder <- "common_raw_adaptive_hard_temporal"
 

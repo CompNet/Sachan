@@ -4,7 +4,7 @@
 # 02/2024
 # 
 # setwd("D:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/jaccard/specific_chars.R")
+# source("src/vertex_matching/jaccard/specific_chars.R")
 ###############################################################################
 library("igraph")
 
@@ -63,7 +63,7 @@ for(NARRATIVE_PART in c(2,5))
 {	cat(">>>>>>>>>> Processing narrative part = ",NARRATIVE_PART," <<<<<<<<<<\n",sep="")
 	
 	# load the csv file
-	tab.file <- file.path("out", "matching", paste0("first_",NARRATIVE_PART), "jaccard", "named", "novels_vs_tvshow", "sim_matrix_all.csv")
+	tab.file <- file.path("out", "vertex_matching", paste0("first_",NARRATIVE_PART), "jaccard", "named", "novels_vs_tvshow", "sim_matrix_all.csv")
 	cat("..Reading similarity matrix in \"",tab.file,"\"\n",sep="")
 	sim.mat <- read.csv(file=tab.file, header=TRUE, check.names=FALSE, stringsAsFactors=FALSE, row.names=1)
 	

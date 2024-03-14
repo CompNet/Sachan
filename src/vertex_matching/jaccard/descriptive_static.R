@@ -5,7 +5,7 @@
 # 08/2023
 # 
 # setwd("C:/Users/Vincent/eclipse/workspaces/Networks/Sachan")
-# source("src/matching/jaccard/descriptive_static.R")
+# source("src/vertex_matching/jaccard/descriptive_static.R")
 ###############################################################################
 library("igraph")
 library("viridis")
@@ -29,7 +29,7 @@ PLOT_CHAR_NAMES <- FALSE	# whether to plot the character names in the larger plo
 
 ###############################################################################
 # output folder
-out.folder <- file.path("out", "matching")
+out.folder <- file.path("out", "vertex_matching")
 {	if(NARRATIVE_PART==0)
 		out.folder <- file.path(out.folder, "whole_narr")
 	else if(NARRATIVE_PART==2)
