@@ -37,7 +37,7 @@ import copy
 import pandas as pd
 import math
 ########################
-character_list = pd.read_excel('character_list.xlsx', 'MapNovels')
+character_list = pd.read_excel('in/novels/raw/character_list.xlsx', 'MapNovels')
 def relabeled_with_id(G: nx.Graph, attribute: str) -> nx.Graph:
     """Relabel a graph with unique number ids as nodes, and the current node as an attribute
     :param G:
@@ -229,5 +229,5 @@ if __name__ == "__main__":
     books = ['AGoT', 'ACoK', 'ASoS', 'AFFC', 'ADwD']
     G = nx.Graph()
     for book in books:
-        G = build_network(f'data/books/{books.index(book) + 1}.{book}',G, ch_start=0)
+        G = build_network(f'in/novels/raw/{books.index(book) + 1}.{book}',G, ch_start=0)
     

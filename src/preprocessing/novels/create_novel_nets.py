@@ -17,14 +17,14 @@ if __name__ == '__main__':
     G_cumulative = nx.Graph()
     for book in list(max_chapters.keys()):
         for i in range(0, max_chapters[book] + 1):
-            G_instant = build_network(f'data/books/{book}',nx.Graph(),ch_start=i, ch_end=i)
-            G_cumulative = build_network(f'data/books/{book}',G_cumulative,ch_start=i, ch_end=i)
+            G_instant = build_network(f'in/novels/raw/{book}',nx.Graph(),ch_start=i, ch_end=i)
+            G_cumulative = build_network(f'in/novels/raw/{book}',G_cumulative,ch_start=i, ch_end=i)
             nx.set_node_attributes(G_instant, G_cumulative.nodes())
             H_instant = relabeled_with_id(G_instant, 'name')
             H_cumulative = relabeled_with_id(G_cumulative, 'name')
             if i < 10:
-                nx.write_graphml(H_instant, f'data/books/nets/instant_chapter/{book}_0{i}_instant.graphml')
-                nx.write_graphml(H_cumulative, f'data/books/nets/cumulative_chapter/{book}_0{i}_cumul.graphml')
+                nx.write_graphml(H_instant, f'in/novels/instant/chapter/{book}_0{i}_instant.graphml')
+                nx.write_graphml(H_cumulative, f'in/novels/cumul/chapter/{book}_0{i}_cumul.graphml')
             else:
-                nx.write_graphml(H_instant, f'data/books/nets/instant_chapter/{book}_{i}_instant.graphml')
-                nx.write_graphml(H_cumulative, f'data/books/nets/cumulative_chapter/{book}_{i}_cumul.graphml')       
+                nx.write_graphml(H_instant, f'in/novels/instant/chapter/{book}_{i}_instant.graphml')
+                nx.write_graphml(H_cumulative, f'in/novels/cumul/chapter/{book}_{i}_cumul.graphml')       

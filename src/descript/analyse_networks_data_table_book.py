@@ -345,5 +345,5 @@ for i,g in enumerate(graphs):
       
 
 
-export_excel_G = Data_Table_Gender.to_excel("Data table gender GoT B_CC.xlsx", index=False)
+export_excel_G = Data_Table_Gender.to_excel("out/descript/summary/Data table gender GoT B_CC.xlsx", index=False)
 

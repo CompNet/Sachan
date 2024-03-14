@@ -1,4 +1,4 @@
-# Installs all the required packages.
+# Installs all the required R packages.
 # 
 # Author: Vincent Labatut
 # 04/2023

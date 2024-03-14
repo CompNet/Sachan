@@ -22,7 +22,7 @@ G_cumulative = nx.Graph()
 networks = []
 for book in list(max_chapters.keys()):
     for i in range(0, max_chapters[book] + 1):
-        G_instant = build_network(f'data/books/{book}',nx.Graph(),ch_start=i, ch_end=i)
+        G_instant = build_network(f'in/novels/raw/{book}',nx.Graph(),ch_start=i, ch_end=i)
         networks.append(G_instant)
      
 df = pd.DataFrame()
@@ -37,5 +37,5 @@ for number, chapter in enumerate(networks):
 
     df[f'chapter_{number}'] = distances
     
-df.to_csv('self_similarity_NB.csv', index=False)
+df.to_csv('out/summary/self_similarity_NB.csv', index=False)
     

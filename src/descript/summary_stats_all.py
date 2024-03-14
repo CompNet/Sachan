@@ -10,7 +10,7 @@ from summary_stats import summary_stats
 
 ##########
 #Book instant chapter:
-dir_path = 'data/books/instant_chapter/'
+dir_path = 'in/novels/instant/'
 
 ##########
 #Datasets
@@ -21,10 +21,10 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'book', 'Results/summary_stats_books_instant_chapter')
+df = summary_stats(networks, 'book', 'out/descript/summary/summary_stats_books_instant_chapter')
 
 #Book cumulative chapter:
-dir_path = 'data/books/cumulative_chapter/'
+dir_path = 'in/novels/cumul/'
 
 ##########
 #Datasets
@@ -35,11 +35,11 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'book', 'Results/summary_stats_books_cumulative_chapter')
+df = summary_stats(networks, 'book', 'out/descript/summary/summary_stats_books_cumulative_chapter')
 
 
 #Comic instant chapter:
-dir_path = 'data/comics/instant_chapter/'
+dir_path = 'in/comics/instant/chapter/'
 
 ##########
 #Datasets
@@ -50,11 +50,11 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'comic', 'Results/summary_stats_comics_instant_chapter')
+df = summary_stats(networks, 'comic', 'out/descript/summary/summary_stats_comics_instant_chapter')
 
 
 #Comic cumulative chapter:
-dir_path = 'data/comics/cumulative_chapter/'
+dir_path = 'in/comics/cumul/chapter/'
 
 ##########
 #Datasets
@@ -65,10 +65,10 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'comic', 'Results/summary_stats_comics_cumulative_chapter')
+df = summary_stats(networks, 'comic', 'out/descript/summary/summary_stats_comics_cumulative_chapter')
 
 #Comic instant scene:
-dir_path = 'data/comics/instant_scene/'
+dir_path = 'in/comics/instant/scene/'
 
 ##########
 #Datasets
@@ -79,11 +79,11 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'comic', 'Results/summary_stats_comics_instant_scene')
+df = summary_stats(networks, 'comic', 'out/descript/summary/summary_stats_comics_instant_scene')
 
 
 #Comic cumulative scene:
-dir_path = 'data/comics/cumulative_scene/'
+dir_path = 'in/comics/cumul/scene/'
 
 ##########
 #Datasets
@@ -94,11 +94,11 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'comic', 'Results/summary_stats_comics_cumulative_scene')
+df = summary_stats(networks, 'comic', 'out/descript/summary/summary_stats_comics_cumulative_scene')
 
 
 #Show instant episode:
-dir_path = 'data/show/nets/instant_episode/'
+dir_path = 'in/tvshow/instant/episode/'
 
 ##########
 #Datasets
@@ -109,10 +109,10 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'show', 'Results/summary_stats_show_instant_episode')
+df = summary_stats(networks, 'show', 'out/descript/summary/summary_stats_show_instant_episode')
 
 #Show cumulative episode:
-dir_path = 'data/show/nets/cumulative_episode/'
+dir_path = 'in/tvshow/cumul/episode/'
 
 ##########
 #Datasets
@@ -123,10 +123,10 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'show', 'Results/summary_stats_show_cumulative_episode')
+df = summary_stats(networks, 'show', 'out/descript/summary/summary_stats_show_cumulative_episode')
 
 #Show instant scene:
-dir_path = 'data/show/nets/instant_scene/'
+dir_path = 'in/tvshow/instant/scene/'
 
 ##########
 #Datasets
@@ -137,10 +137,10 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'show', 'Results/summary_stats_show_instant_scene')
+df = summary_stats(networks, 'show', 'out/descript/summary/summary_stats_show_instant_scene')
 
 #Show cumulative episode:
-dir_path = 'data/show/nets/cumulative_scene/'
+dir_path = 'in/tvshow/cumul/scene/'
 
 ##########
 #Datasets
@@ -151,5 +151,5 @@ for file in os.listdir(dir_path):
 #print(networks)
 networks.sort()
 
-df = summary_stats(networks, 'show', 'Results/summary_stats_show_cumulative_scene')
+df = summary_stats(networks, 'show', 'out/descript/summary/summary_stats_show_cumulative_scene')
 
