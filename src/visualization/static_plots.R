@@ -114,45 +114,52 @@ for(i in 1:length(gs))
 
 ###############################################################################
 # produce the plot files
-graph.file <- file.path(out.folder,paste0("static_",g.names[i],".pdf"))
-g <- gs[[i]]
+v.size.min <- c(0.8, 1.5, 1.5)
+v.size.max <- c(6.0, 8.0, 8.0)
+e.thick.min <- c(1,  1, 1)
+e.thick.max <- c(8, 10, 8)
 
-# vertex size
-v.size.min <- 1.5
-v.size.max <- 8
-vals <- V(g)$importance
-v.sizes <- v.size.min + (vals-min(vals))*(v.size.max-v.size.min)/(max(vals)-min(vals))
-
-# vertex color
-v.colors <- rep("#808080", gorder(g))
-idx.ranked <- match(ranked.chars[1:5],V(g)$name)
-v.colors[idx.ranked] <- brewer_pal(type="qual", palette=2)(5)
-
-# edge thickness
-e.thick.min <- 1
-e.thick.max <- 8
-vals <- E(g)$weight
-e.thick <- e.thick.min + (vals-min(vals))*(e.thick.max-e.thick.min)/(max(vals)-min(vals))
-
-# edge color
-el <- as_edgelist(graph=g, names=FALSE)
-e.colors <- sapply(1:nrow(el), function(e) combine.colors(v.colors[el[e,1]], v.colors[el[e,2]]))
-e.colors <- sapply(1:nrow(el), function(e) 
-			if(el[e,1] %in% idx.ranked || el[e,2] %in% idx.ranked)
-				adjustcolor(e.colors[e],alpha.f=0.5)
-			else
-				adjustcolor(e.colors[e],alpha.f=0.25))
-
-# plot graph
-pdf(graph.file)	# bg="white"
-	plot(
-		gs[[i]], 
-		main=narr.names[g.names[i]],
-		vertex.size=v.sizes, 
-		vertex.label=NA,
-		vertex.color=v.colors,
-		vertex.frame.width=0.1,
-		edge.width=e.thick,
-		edge.color=e.colors
-	)
-dev.off()
+# loop over narratives
+for(i in 1:length(gs))
+{	cat("Computing narrative ",g.names[i],"\n",sep="")
+	
+	graph.file <- file.path(out.folder,paste0("static_",g.names[i],".pdf"))
+	g <- gs[[i]]
+	
+	# vertex size
+	vals <- V(g)$importance
+	v.sizes <- v.size.min[i] + (vals-min(vals))*(v.size.max[i]-v.size.min[i])/(max(vals)-min(vals))
+	
+	# vertex color
+	v.colors <- rep("#808080", gorder(g))
+	idx.ranked <- match(ranked.chars[1:5],V(g)$name)
+	v.colors[idx.ranked] <- brewer_pal(type="qual", palette=2)(5)
+	
+	# edge thickness
+	vals <- E(g)$weight
+	e.thick <- e.thick.min[i] + (vals-min(vals))*(e.thick.max[i]-e.thick.min[i])/(max(vals)-min(vals))
+	
+	# edge color
+	el <- as_edgelist(graph=g, names=FALSE)
+	e.colors <- sapply(1:nrow(el), function(e) combine.colors(v.colors[el[e,1]], v.colors[el[e,2]]))
+	e.colors <- sapply(1:nrow(el), function(e) 
+				if(el[e,1] %in% idx.ranked || el[e,2] %in% idx.ranked)
+					adjustcolor(e.colors[e],alpha.f=0.5)
+				else
+					adjustcolor(e.colors[e],alpha.f=0.25))
+	
+	# plot graph
+	pdf(graph.file)	# bg="white"
+		par(mar=c(0,0,0.8,0), oma=c(0,0,0,0))	# margins Bottom Left Top Right
+		plot(
+			gs[[i]], 
+			main=bquote(bolditalic(.(narr.names[g.names[i]]))),
+			vertex.size=v.sizes, 
+			vertex.label=NA,
+			vertex.color=v.colors,
+			vertex.frame.width=0.1,
+			edge.width=e.thick,
+			edge.color=e.colors
+		)
+	dev.off()
+}

@@ -232,7 +232,8 @@ for(charset in CHARSETS)
 			legend(
 				x="bottomright",
 				legend=narr.names[g.names],
-				fill=colors
+				fill=colors,
+				bg="#FFFFFFCC"
 			)
 		dev.off()
 		
