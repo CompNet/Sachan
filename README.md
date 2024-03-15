@@ -102,5 +102,5 @@ Tested with `Python` version xxxx with the following packages:
 
 
 # References
-* **[A'24]** Labatut, V. *Interconnected Kingdoms: Comparing 'A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks*, Submitted, 2024.  [⟨hal-xxxxxxxx⟩](https://hal.archives-ouvertes.fr/hal-xxxxxxxx) - DOI: [xxxxxxxx](http://doi.org/xxxxxxxx)
+* **[A'24]** <!-- Amalvy, A.; Janickyj, M.; Mannion, S.; MacCarron, P.; Labatut, V. *Interconnected Kingdoms: Comparing 'A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks*, Submitted, 2024.  [⟨hal-xxxxxxxx⟩](https://hal.archives-ouvertes.fr/hal-xxxxxxxx) - DOI: [xxxxxxxx](http://doi.org/xxxxxxxx) -->
 
