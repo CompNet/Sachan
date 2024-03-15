@@ -1,5 +1,5 @@
 # Sachan
-=======
+
 *Story Adaptation and Character Networks*
 
 * Copyright 2023-2024 Arthur Amalvy, Madeleine Janickyj, Shane Mannion, Pádraig MacCarron, and Vincent Labatut 
