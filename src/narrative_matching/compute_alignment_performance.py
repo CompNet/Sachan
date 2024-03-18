@@ -494,3 +494,4 @@ if __name__ == "__main__":
     os.makedirs(dir_path, exist_ok=True)
     with open(f"{dir_path}/df.pickle", "wb") as f:
         pickle.dump(df, f)
+    df.to_csv(f"{dir_path}/df.csv")
