@@ -1,7 +1,7 @@
 import argparse, os, pickle
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -27,7 +27,8 @@ if __name__ == "__main__":
     assert args.medias in ("comics-novels", "tvshow-novels")
 
     with open(
-        f"{root_dir}/out/matching/plot/{args.medias}_structural_blocks/df.pickle", "rb"
+        f"{root_dir}/out/narrative_matching/{args.medias}_structural_blocks/df.pickle",
+        "rb",
     ) as f:
         df = pickle.load(f)
 

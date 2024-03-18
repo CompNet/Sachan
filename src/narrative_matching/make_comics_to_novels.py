@@ -37,10 +37,10 @@ plt.show()
 import os, sys, pickle
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 sys.path.append(f"{root_dir}/src")
 
 with open(
-    f"{root_dir}/in/plot_alignment/comics_novels_i2c_gold_alignment.pickle", "wb"
+    f"{root_dir}/in/narrative_matching/comics_novels_i2c_gold_alignment.pickle", "wb"
 ) as f:
     pickle.dump(M_cn, f)

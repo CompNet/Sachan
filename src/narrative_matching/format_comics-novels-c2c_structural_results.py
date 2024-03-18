@@ -1,7 +1,7 @@
 import argparse, os, pickle
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    path = f"{root_dir}/out/matching/plot/comics-novels-c2c_structural/df.pickle"
+    path = f"{root_dir}/out/narrative_matching/comics-novels-c2c_structural/df.pickle"
     with open(path, "rb") as f:
         df = pickle.load(f)
         df = df.loc[

@@ -2,7 +2,7 @@ import argparse, os, pickle
 from posixpath import split
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
         with open(
-            f"{root_dir}/out/matching/plot/{medias}_textual/df.pickle", "rb"
+            f"{root_dir}/out/narrative_matching/{medias}_textual/df.pickle", "rb"
         ) as f:
             df = pickle.load(f)
 

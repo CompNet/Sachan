@@ -36,7 +36,7 @@ Here are the folders composing the project:
 * Folder `in`: data used by the scripts.
   * Folder `comics`: networks related to the comics.
   * Folder `novels`: networks related to the novels.
-  * Folder `plot_alignement`: data used for narrative matching.
+  * Folder `narrative_matching`: data used for narrative matching.
   * Folder `tvshow`: networks related to the TV show.
 * Folder `out`: files produced by the scripts
   * Folder `centrality`: centrality study.
@@ -63,7 +63,14 @@ To execute the `R` scripts, you first need to install the language and the requi
    2. Set the unzipped directory as the working directory, using `setwd("<my directory>")`.
    3. Run the install script `src/_install.R` (that may take a while).
 
-For the `Python` scripts, ...TODO...
+For the `Python` scripts, the process is similar: 
+
+1. Install the [`Python` language](https://www.python.org/) with a version greater or equal than 3.8. On Linux, `Python` can probably be installed using your preferred package manager.
+2. Download this project from GitHub and unzip.
+3. Install the required packages:
+   1. Open a terminal in the project's root directory
+   2. _(optional)_ Create and activate a virtual environment: `python -m venv env && source env/bin/activate`
+   3. Install the required dependencies: `pip install -r src/requirements.txt`
 
 # Use
 In order to apply the `R` scripts:
@@ -74,7 +81,12 @@ In order to apply the `R` scripts:
 
 In order to apply the `Python` scripts:
 
-...TODO...
+1. Open a terminal
+2. _(optional)_ activate your `Python` environment (e.g. `source env/bin/activate`)
+3. Navigate to `src/narrative_matching` (`cd src/narrative_matching`)
+4. Run the main computation script `src/narrative_matching/compute_all.sh`
+
+See [the Narrative Matching README](./src/narrative_matching/README.md) for more details.
 
 These scripts will produce a number of files in folder `out`.
 
@@ -92,9 +104,16 @@ Tested with `R` version 4.3.2, with the following packages:
 * [`viridis`](https://cran.r-project.org/web/packages/viridis/) package: version 0.6.4.
 * [`XML`](https://cran.r-project.org/web/packages/XML/): version 3.99-0.16.1.
 
-Tested with `Python` version xxxx with the following packages:
-* [`xxxxx`](xxxxxx): version x.x.x.
-...TODO...
+Tested with `Python` version 3.12 with the following packages:
+* [`matplotlib`](https://pypi.org/project/matplotlib/): version 3.5.2.
+* [`more-itertools`](https://pypi.org/project/more-itertools/): version 10.1.0.
+* [`numpy`](https://pypi.org/project/numpy/): version 1.26.4.
+* [`pandas`](https://pypi.org/project/pandas/): version 2.2.0.
+* [`sentence-transformers`](https://pypi.org/project/sentence-transformers/): version 2.2.2.
+* [`SciencePlots`](https://pypi.org/project/SciencePlots/): version 2.1.0.
+* [`scikit-learn`](https://pypi.org/project/scikit-learn/): version 1.3.2.
+* [`scipy`](https://pypi.org/project/scipy/): version 1.10.1.
+* [`tqdm`](https://pypi.org/project/tqdm/): version 4.65.0.
 
 
 # To-do List

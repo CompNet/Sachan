@@ -2,7 +2,7 @@ import argparse, os, pickle
 import pandas as pd
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -16,9 +16,11 @@ if __name__ == "__main__":
 
     dfs_dict = {}
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
-        path = f"{root_dir}/out/matching/plot/{medias}_combined/df.pickle"
+        path = f"{root_dir}/out/narrative_matching/{medias}_combined/df.pickle"
         if args.blocks:
-            path = f"{root_dir}/out/matching/plot/{medias}_combined_blocks/df.pickle"
+            path = (
+                f"{root_dir}/out/narrative_matching/{medias}_combined_blocks/df.pickle"
+            )
         with open(path, "rb") as f:
             df = pickle.load(f)
             df = df.loc[

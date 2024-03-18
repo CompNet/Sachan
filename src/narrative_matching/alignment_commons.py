@@ -23,7 +23,7 @@ NOVEL_LIMITS = [73, 143, 225, 271, 344]
 TVSHOW_SEASON_LIMITS = [10, 20, 30, 40, 50, 60, 67, 73]
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 sys.path.append(f"{root_dir}/src")
 
 
@@ -109,7 +109,7 @@ def load_comics_graphs(
     # comics_graphs has one graph per novel chapter. We must convert
     # that to one graph per issue (an issue contains several chapters
     # from the novel)
-    df = pd.read_csv(f"{root_dir}/in/plot_alignment/comics_mapping.csv")
+    df = pd.read_csv(f"{root_dir}/in/narrative_matching/comics_mapping.csv")
     chapter_to_issue = dict(zip(df["Rank"], df["Volume"]))  # example: {1: "AGOT01"}
 
     # group graphs by issue
@@ -144,10 +144,10 @@ def load_medias_gold_alignment(
     max_delimiter_second_media: Optional[int] = None,
 ) -> np.ndarray:
     MEDIAS_TO_PATH = {
-        "comics-novels": f"{root_dir}/in/plot_alignment/comics_novels_i2c_gold_alignment.pickle",
-        "comics-novels-c2c": f"{root_dir}/in/plot_alignment/novels_comics_c2c_gold_alignment.pickle",
-        "tvshow-comics": f"{root_dir}/in/plot_alignment/tvshow_comics_i2e_gold_alignment.pickle",
-        "tvshow-novels": f"{root_dir}/in/plot_alignment/tvshow_novels_gold_alignment.pickle",
+        "comics-novels": f"{root_dir}/in/narrative_matching/comics_novels_i2c_gold_alignment.pickle",
+        "comics-novels-c2c": f"{root_dir}/in/narrative_matching/novels_comics_c2c_gold_alignment.pickle",
+        "tvshow-comics": f"{root_dir}/in/narrative_matching/tvshow_comics_i2e_gold_alignment.pickle",
+        "tvshow-novels": f"{root_dir}/in/narrative_matching/tvshow_novels_gold_alignment.pickle",
     }
     matrix_path = MEDIAS_TO_PATH.get(medias)
     if matrix_path is None:
@@ -241,7 +241,7 @@ def load_medias_graphs(
 def load_tvshow_episode_summaries(
     min_season: int = 1, max_season: int = 8
 ) -> List[str]:
-    with open(f"{root_dir}/in/plot_alignment/tvshow_episode_summaries.txt") as f:
+    with open(f"{root_dir}/in/narrative_matching/tvshow_episode_summaries.txt") as f:
         episode_summaries = f.read().split("\n\n")
     ep_start = ([0] + TVSHOW_SEASON_LIMITS)[max(0, min_season - 1)]
     ep_end = TVSHOW_SEASON_LIMITS[max_season - 1]
@@ -249,7 +249,7 @@ def load_tvshow_episode_summaries(
 
 
 def load_novels_chapter_summaries(min_novel: int = 1, max_novel: int = 5) -> List[str]:
-    with open(f"{root_dir}/in/plot_alignment/novels_chapter_summaries.txt") as f:
+    with open(f"{root_dir}/in/narrative_matching/novels_chapter_summaries.txt") as f:
         chapter_summaries = f.read().split("\n\n")[:-1]
     ch_start = ([0] + NOVEL_LIMITS)[max(0, min_novel - 1)]
     ch_end = NOVEL_LIMITS[max_novel - 1]
@@ -257,7 +257,7 @@ def load_novels_chapter_summaries(min_novel: int = 1, max_novel: int = 5) -> Lis
 
 
 def load_comics_issue_summaries() -> List[str]:
-    with open(f"{root_dir}/in/plot_alignment/comics_issue_summaries.txt") as f:
+    with open(f"{root_dir}/in/narrative_matching/comics_issue_summaries.txt") as f:
         comics_summaries = f.read().split("\n\n")
         comics_summaries = [
             s if not s == "NO SUMMARY" else "" for s in comics_summaries
@@ -331,7 +331,7 @@ def get_comics_chapter_issue_i(G: nx.Graph) -> int:
         every time, causing performance issue.
     """
     volume_offsets = {"AGOT": 0, "ACOK": 24}
-    df = pd.read_csv(f"{root_dir}/in/plot_alignment/comics_mapping.csv")
+    df = pd.read_csv(f"{root_dir}/in/narrative_matching/comics_mapping.csv")
     chapter_to_issue = dict(zip(df["Rank"], df["Volume"]))  # example: {1: "AGOT01"}
     chapter_str = G.graph["NarrUnit"]
     chapter = int(chapter_str.split("_")[1])

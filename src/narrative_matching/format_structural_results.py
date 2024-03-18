@@ -1,7 +1,7 @@
 import argparse, os, pickle
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -22,20 +22,16 @@ if __name__ == "__main__":
         action="store_true",
         help="if specified, use cumulative results",
     )
-    parser.add_argument(
-        "-b", "--blocks", action="store_true"
-    )
+    parser.add_argument("-b", "--blocks", action="store_true")
     args = parser.parse_args()
 
     dfs_dict = {}
     for medias in ["tvshow-novels", "tvshow-comics", "comics-novels"]:
-        path = f"{root_dir}/out/matching/plot/{medias}_structural/df.pickle"
+        path = f"{root_dir}/out/narrative_matching/{medias}_structural/df.pickle"
         if args.cumulative:
-            path = (
-                f"{root_dir}/out/matching/plot/{medias}_structural_cumulative/df.pickle"
-            )
+            path = f"{root_dir}/out/narrative_matching/{medias}_structural_cumulative/df.pickle"
         if args.blocks:
-            path = f"{root_dir}/out/matching/plot/{medias}_structural_blocks/df.pickle"
+            path = f"{root_dir}/out/narrative_matching/{medias}_structural_blocks/df.pickle"
         with open(path, "rb") as f:
             df = pickle.load(f)
             df = df.loc[

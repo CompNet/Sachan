@@ -34,7 +34,7 @@ from smith_waterman import (
 )
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 sys.path.append(f"{root_dir}/src")
 
 

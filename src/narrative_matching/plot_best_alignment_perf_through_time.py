@@ -23,7 +23,7 @@ from smith_waterman import (
 )
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 
 def compute_season_f1s(M: np.ndarray, G: np.ndarray) -> list[float]:
@@ -62,9 +62,9 @@ if __name__ == "__main__":
         if similarity == ["structural", "combined"]:
             # blocks have better performance for structural and combined
             # matching
-            path = f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}_blocks/df.pickle"
+            path = f"{root_dir}/out/narrative_matching/tvshow-novels_{similarity}_blocks/df.pickle"
         else:
-            path = f"{root_dir}/out/matching/plot/tvshow-novels_{similarity}/df.pickle"
+            path = f"{root_dir}/out/narrative_matching/tvshow-novels_{similarity}/df.pickle"
         with open(path, "rb") as f:
             df = pickle.load(f)
             best_rows[similarity] = df.iloc[df["f1"].idxmax()]
@@ -221,12 +221,7 @@ if __name__ == "__main__":
             "tvshow-novels", first_media_graphs, second_media_graphs, S_combined > t
         )
     elif combined_params["alignment"] == "smith-waterman":
-        (
-            alpha,
-            gap_start_penalty,
-            gap_cont_penalty,
-            neg_th,
-        ) = tune_alpha_other_medias(
+        (alpha, gap_start_penalty, gap_cont_penalty, neg_th,) = tune_alpha_other_medias(
             "tvshow-novels",
             "smith-waterman",
             np.arange(0.1, 0.9, 0.05),  # alpha

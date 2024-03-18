@@ -31,11 +31,11 @@ plt.show()
 import os, sys, pickle
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 sys.path.append(f"{root_dir}/src")
 
 M_tc[M_tc > 1] = 1
 with open(
-    f"{root_dir}/in/plot_alignment/tvshow_comics_i2e_gold_alignment.pickle", "wb"
+    f"{root_dir}/in/narrative_matching/tvshow_comics_i2e_gold_alignment.pickle", "wb"
 ) as f:
     pickle.dump(M_tc, f)

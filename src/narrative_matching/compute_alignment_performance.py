@@ -23,7 +23,7 @@ from smith_waterman import (
 )
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -489,7 +489,7 @@ if __name__ == "__main__":
         dir_name += "_U2"
     if args.cumulative:
         dir_name += "_cumulative"
-    dir_path = f"{root_dir}/out/matching/plot/{dir_name}"
+    dir_path = f"{root_dir}/out/narrative_matching/{dir_name}"
     print(f"exporting results to {dir_path}...")
     os.makedirs(dir_path, exist_ok=True)
     with open(f"{dir_path}/df.pickle", "wb") as f:

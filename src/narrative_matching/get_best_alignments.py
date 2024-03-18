@@ -2,7 +2,7 @@ import os, pickle, argparse
 import pandas as pd
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = f"{script_dir}/../../.."
+root_dir = f"{script_dir}/../.."
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
         for similarity in ["structural", "textual", "combined"]:
             with open(
-                f"{root_dir}/out/matching/plot/{medias}_{similarity}{period}/df.pickle",
+                f"{root_dir}/out/narrative_matching/{medias}_{similarity}{period}/df.pickle",
                 "rb",
             ) as f:
                 df = pickle.load(f)
@@ -40,7 +40,7 @@ if __name__ == "__main__":
             # blocks
             if similarity in ["structural", "combined"]:
                 with open(
-                    f"{root_dir}/out/matching/plot/{medias}_{similarity}_blocks{period}/df.pickle",
+                    f"{root_dir}/out/narrative_matching/{medias}_{similarity}_blocks{period}/df.pickle",
                     "rb",
                 ) as f:
                     df = pickle.load(f)
