@@ -1,0 +1,555 @@
+"Name","X","Y"
+"Jon Snow",-324.37555,341.23328
+"Tormund",-477.35352,204.65723
+"Ghost",-362.11835,304.49957
+"Arya Stark",-159.44434,-50.388134
+"Sansa Stark",42.971603,97.26286
+"Tyrion Lannister",181.73494,-138.17183
+"Davos Seaworth",-340.72284,194.59778
+"Bronn",504.37708,-70.2337
+"Samwell Tarly",-537.6407,279.9246
+"Brienne of Tarth",155.28426,59.856415
+"Bran Stark",9.575439,420.54297
+"Podrick Payne",230.59528,-98.18738
+"Grey Worm",-226.26436,-321.69235
+"Edmure Tully",293.59787,394.78287
+"Gendry",-209.25882,-85.66484
+"Yara Greyjoy",-346.0864,119.86067
+"Robin Arryn",113.0349,255.0494
+"Yohn Royce",-34.711727,136.48523
+"Dornish Lord",-165.06479,-174.88866
+"Lord #1",4.2102213,-138.0938
+"Lord #2",9.374714,-42.415535
+"Lord #3",-338.89966,-8.244772
+"Lord #4",-262.9648,81.99414
+"Daenerys Targaryen",-101.45974,-572.37805
+"Drogon",-82.38764,-384.26602
+"Jaime Lannister",385.58868,135.85541
+"Cersei Lannister",531.71576,59.052944
+"Eleanor Swann",-487.02545,-330.41473
+"Eleanor's Daughter",-388.49774,-360.82556
+"Sandor Clegane",-55.548424,7.490012
+"Gregor Clegane",329.0846,-150.27713
+"Qyburn",418.46625,-18.883112
+"Euron Greyjoy",-85.02905,-242.12216
+"Harry Strickland",42.402424,-275.66757
+"Unsullied Soldier",715.9818,-1120.3296
+"Northern Guard",890.4548,313.96185
+"Varys",155.9215,-183.75015
+"Martha",670.1102,-1231.4062
+"Missandei",-155.54463,-329.12735
+"Wolkan",-39.51263,326.36798
+"Rhaegal",-220.79155,-473.71344
+"Gilly",-606.84436,259.12924
+"Willa",-655.7574,710.71704
+"Lyanna Mormont",-208.77774,167.84367
+"Jorah Mormont",-177.81653,-555.6372
+"Eddison Tollett",-475.4972,316.24225
+"Beric Dondarrion",-230.80153,-14.584699
+"Theon Greyjoy",-144.12811,367.54248
+"Melisandre",-460.80576,90.94483
+"Teela",-477.79117,-156.00887
+"Viserion",-319.90942,-547.209
+"Night's King",-229.43956,274.1914
+"White Walker",-285.4273,416.32077
+"Fergus",-1315.3555,-5.455258
+"Qhono",30.460829,-406.96106
+"Wun Weg Wun Dar Wun",-491.94528,551.04047
+"Alys Karstark",-82.58197,-124.23576
+"Ned Umber",-265.2022,-162.18553
+"Lannister Guard",179.37602,-451.56293
+"Craya",1232.4702,-263.98495
+"Dirah",1228.8583,-170.04694
+"Marei",841.0908,-403.90256
+"Robett Glover",-341.4645,-118.2604
+"Village Woman",-881.8855,-986.7608
+"Winterfell Boy",1084.0797,489.33356
+"Eddard Stark",196.46873,443.92004
+"Lyanna Stark",325.48132,889.5333
+"Rhaegar Targaryen",760.06244,1098.9745
+"High Septon",720.2004,162.27705
+"Petyr Baelish",228.78743,193.37422
+"Harrag",-700.1032,-19.44122
+"Benjen Stark",111.42545,521.9404
+"Thoros of Myr",-567.29694,-155.08836
+"Ebrose",-1192.923,-259.55713
+"Sandhu",-1429.6364,-275.90427
+"Randyll Tarly",-151.802,53.11913
+"Dickon Tarly",-124.202354,133.43524
+"Koner",-808.9944,-458.76343
+"Henk",-861.9056,-360.86777
+"Meera Reed",-278.70682,667.52856
+"Tycho Nestoris",205.68056,546.9942
+"Olenna Redwyne",488.27304,-205.19492
+"Bernadette",1246.1179,413.54068
+"Ellaria Sand",462.64603,-349.3113
+"Tyene Sand",416.9151,-423.40707
+"Obara Sand",575.84955,-548.9185
+"Nymeria Sand",656.7156,-492.36945
+"Nymeria (direwolf)",0.5145135,661.78625
+"Hot Pie",-97.4512,-459.13354
+"Farmer Hamlet",-582.4116,474.51498
+"Farmer's Daughter",-426.8592,619.5381
+"Mag Mar Tun Doh Weg",-679.1748,926.9804
+"Joyeuse Erenford",649.5676,793.2991
+"Walder Frey",687.53125,692.8676
+"Wyman Manderly",-450.65936,416.561
+"Cley Cerwyn",-557.4059,-29.177397
+"Handmaid",784.0533,323.05075
+"Lothar Frey",826.557,699.08325
+"Walder Rivers",855.7922,618.75
+"Daario Naharis",-291.46524,-911.5655
+"Citadel Maester",-1078.4679,965.65717
+"Tommen Baratheon",475.97183,30.83404
+"Tommen's Manservant",1453.8015,-164.9472
+"Unella",988.8383,-176.24773
+"Margaery Tyrell",397.41037,-258.37268
+"High Sparrow",901.2859,6.984142
+"Loras Tyrell",335.09067,-47.973145
+"Mace Tyrell",438.03516,-142.90451
+"Kevan Lannister",763.49023,-291.38165
+"Lancel Lannister",653.63763,56.83224
+"Arthur",1072.1821,207.94543
+"Pycelle",566.7311,-21.322437
+"Frances",1104.7231,3.131239
+"Little Bird #3",980.1378,194.7066
+"Little Bird #4",1084.0619,101.11907
+"Little Bird #5",1076.1638,-102.40108
+"Little Bird #6",989.6785,85.409744
+"Little Bird #7",1010.2325,-25.96234
+"Ramsay Snow",-162.8815,813.5467
+"Rickon Stark",23.849035,570.10455
+"Bolton General",-30.172785,1489.0996
+"Jon Umber (son of Jon)",-391.9226,724.9781
+"Harald Karstark",-196.91739,731.4061
+"Shaggydog",-131.93594,644.9475
+"Yezzan zo Qaggaz",98.43367,-755.132
+"Razdal mo Eraz",32.205734,-677.9509
+"Belicho Paenymion",-23.926704,-761.3468
+"Jaqen H'ghar",-314.33414,-683.3608
+"Waif",-1009.9586,-895.58954
+"Lady Stork",-990.66376,-686.4783
+"Lem",-500.51694,-576.92065
+"Lannister Soldier",1005.1998,320.5303
+"Brynden Tully",566.6616,564.4236
+"Tully Bannerman",-443.5692,-6.8358064
+"Red Priestess",-301.4289,561.8988
+"Gatins",-658.9662,-690.47784
+"Morgan",3.1051908,-587.8859
+"Riddell",-770.08527,-688.6445
+"Steve",-797.9427,-797.12476
+"Clarenzo",-900.97186,-663.2391
+"Ray",-692.9565,-794.88855
+"Westerosi Trader",61.04339,-1238.0146
+"Bear Island Maester",-432.13794,838.5333
+"Northman Rioter",-445.87772,1026.5386
+"Wildling Rioter",-338.3575,1050.8971
+"Volantene Whore #1",-1008.30597,-8.254541
+"Volantene Whore #2",-1121.3082,-159.18103
+"Volantene Whore #3",-1104.6465,-35.269474
+"Volantene Whore #4",-1086.1005,80.62824
+"Volantene Whore #5",-1021.68787,-120.57222
+"Ironborn at Brothel",-1187.9899,31.382269
+"Ironborn Abusing a Volantene Whore",-1192.7822,-89.70173
+"Dim Dalba",-526.14246,755.60754
+"Bianca",-1143.3145,-747.16455
+"Izembaro",-1049.2148,-767.976
+"Camello",-1081.1659,-503.2478
+"Margaery Tyrell Mummer",-933.2171,-773.9405
+"Bobono",-1189.8577,-660.83997
+"Braavosi Theatre Sound Artist",-1105.9014,-386.43558
+"Mummer #2",-1008.70496,-580.6688
+"Mummer #3",-902.32874,-571.02545
+"Mummer #4",-1020.5406,-429.44412
+"Musician #1",-705.8713,-396.21323
+"Musician #2",-636.40594,-424.5767
+"Musician #3",-676.55286,-489.68268
+"Musician #4",-1128.353,-582.1753
+"Musician #5",-1083.0824,-664.6283
+"Melessa Florent",-823.98193,587.47833
+"Talla Tarly",-924.7759,511.9743
+"Aerys Targaryen",3.7585588,248.95633
+"Robb Stark",370.60428,599.8586
+"Leaf",-10.404307,829.539
+"Catelyn Stark",373.8794,439.20404
+"Ilyn Payne",220.7182,112.51783
+"Wyllis",232.44951,1154.7788
+"Hodor",-56.478977,529.3722
+"Nan",244.74197,970.89294
+"Brynden Rivers",69.48375,904.1387
+"Summer",7.528964,485.71307
+"Rodrik Cassel",282.9926,530.01
+"Rickard Stark",334.74097,1204.5884
+"Night's Watchman #2",-1294.9386,230.0663
+"Zanrush",1045.3716,-407.24133
+"Kinvara",1105.6842,-245.92068
+"Aeron Greyjoy",-804.94556,-60.55637
+"Ironborn #1",-696.4226,-134.19997
+"Ironborn #2",-899.7572,-112.38614
+"Ironborn #3",-793.8897,-168.76393
+"Braavosi Woman #1",-1210.685,-536.6263
+"Braavosi Woman #2",-1178.1321,-450.2424
+"Braavosi Theatre Server",-952.2878,-487.9574
+"High Priestess",216.00183,-1309.3239
+"Ornela",163.1518,-1207.2449
+"Moro",376.85648,-1154.6583
+"Dothraki Bloodrider #1",311.0439,-1274.9868
+"Dothraki Bloodrider #2",408.86996,-1251.3712
+"Forzho",559.5753,-1301.3448
+"Brozho",290.26978,-1418.9216
+"Rhalko",389.70523,-1393.6158
+"Qorro",484.1305,-1359.6842
+"Night's Watchman",-564.6318,66.45721
+"Osha",-21.108414,978.8901
+"Dothraki Widow #1",-75.79871,-1452.5553
+"Dothraki Widow #2",165.73189,-1457.0276
+"Aggo",60.1578,-1105.9591
+"Iggo",-214.28058,-1445.3497
+"Dothraki Woman Having Sex",-831.2719,-1191.7716
+"Dothraki Man Having Sex",-587.88513,-1355.6224
+"Kesh",-414.45703,-659.404
+"Ash",-539.57513,-686.7057
+"Olly",-872.7336,301.68192
+"Alliser Thorne",-745.85345,297.81494
+"Othell Yarwyck",-850.3519,447.57446
+"Bowen Marsh",-822.42413,193.55876
+"Vala",828.3905,-1031.1982
+"Howland Reed",253.1266,1289.2628
+"Arthur Dayne",379.22336,1304.1115
+"Gerold Hightower",479.09998,1285.5803
+"Balon Greyjoy",-881.39276,22.867748
+"Walda Frey (daughter of Merrett)",185.81906,900.95374
+"Newborn Bolton",378.21573,1425.8739
+"Roose Bolton",466.2385,580.9121
+"Myrcella Baratheon",369.6387,66.63786
+"King's Landing Boaster",1317.5258,-490.92978
+"Loyal Night's Watchman #1",-995.304,296.68533
+"Loyal Night's Watchman #2",-949.01483,386.0724
+"Moro's Wife #1",276.63724,-1172.1538
+"Moro's Wife #2",487.53003,-1177.0862
+"Meereenese Homeless Mother",-376.72348,496.21658
+"Trystane Martell",910.6073,-326.34885
+"Doran Martell",841.97363,-529.16925
+"Areo Hotah",927.29974,-439.57526
+"Caleotte",1142.2979,-713.39026
+"Bolton Officer",222.51833,-540.10547
+"Bolton Soldier",291.06857,-454.51962
+"Myranda",96.9235,983.69293
+"Night's Watchman #1",-1398.5712,412.1123
+"King's Landing Drunkard",1362.4166,-225.2689
+"King's Landing Whore",1148.0972,-364.1742
+"King's Landing Flasher #1",1416.3678,-306.90524
+"King's Landing Flasher #2",1380.5444,-402.11676
+"Moelle",1349.5952,-96.09456
+"Scolera",1354.242,16.75145
+"Meryn Trant",463.92795,249.88997
+"Ghita",382.5209,-685.52783
+"Brothel Child #1",903.6004,-777.5866
+"Brothel Child #2",805.9026,-883.5261
+"Stannis Baratheon",-601.6186,366.45758
+"Gordy",-757.2334,1254.5265
+"Simpson",-568.53595,1347.2426
+"Baratheon General",-1307.9401,-107.84943
+"Baratheon Soldier #1",-1338.5573,101.50694
+"Baratheon Soldier #2",-1437.7378,-20.14336
+"Selyse Florent",-914.0703,199.75133
+"Hizdahr zo Loraq",-312.34628,-799.8108
+"Pit Announcer",173.60487,-964.6287
+"Shireen Baratheon",-747.6188,480.97864
+"Braavosi Madam",559.4494,997.38025
+"Whore",689.5428,897.2095
+"Brea",579.8265,882.0051
+"Anara",384.8895,981.88574
+"Lannister Guard #1",480.67584,913.24
+"Lannister Guard #2",652.496,994.8232
+"Aya",462.71323,1033.7139
+"Brusco",190.56056,1060.2771
+"Lhara",-231.57828,941.3592
+"Young Braavosi",88.23406,1098.6418
+"Thin Man",-435.0654,-253.64198
+"Sailor",-1349.9856,-376.52853
+"Johnna",-789.8078,930.9955
+"Karsi",-733.16626,832.1838
+"Loboda",-631.62976,815.1082
+"Todder",-928.3538,826.9305
+"Rattleshirt",-1117.2461,633.2451
+"Braavosi Captain",-1236.7546,-339.88324
+"Tyrell Guard",1340.9044,547.0247
+"Malko",368.78638,-999.2576
+"Derek",-1079.617,776.8482
+"Brant",-1024.5503,861.47705
+"Old Woman",-669.0738,117.82566
+"Aemon Targaryen (son of Maekar I)",-702.16675,214.20181
+"Olyvar",874.50024,-219.05464
+"Slaver",459.75858,-1053.0596
+"Joss",186.83464,-349.168
+"Stone Man",571.38007,-1027.055
+"Winter Town Man",569.514,-847.7521
+"Great Master #2",-523.98047,-1096.6232
+"Great Master #3",-703.71295,-1116.6803
+"Great Master #4",-477.97992,-1179.3804
+"Great Master #5",-690.9933,-984.1575
+"Great Master #6",-764.8415,-1042.391
+"Great Master #7",-606.4826,-1032.6187
+"Great Master #1",-611.6603,-1142.3295
+"Barristan Selmy",87.990685,-373.2731
+"Second Son",1250.3438,-819.9803
+"Merchant Captain",793.0234,-768.64984
+"Lead Dornish Guard",1188.3293,694.95026
+"Faith Militant #1",1095.1993,-809.0228
+"Lead Kingsguard",1321.6614,-583.17145
+"Faith Militant #2",1054.8384,-958.1489
+"Brothel Customer",995.15814,-724.07605
+"Whore #1",914.6066,-914.0234
+"Whore #2",994.5286,-852.60394
+"Whore #3",910.1805,-1166.2341
+"Whore #4",942.40656,-1075.6428
+"Whore #5",820.4338,-1206.6011
+"Whore #6",1041.3795,-1070.5972
+"Clea",411.92062,-881.52405
+"Sellsword #1",329.52396,-810.8286
+"Sellsword #2",278.28534,-898.60034
+"Brothel Guard",-189.54962,580.1803
+"Beggar Woman",1216.0823,509.50323
+"The Stranger",1329.8948,147.53642
+"The Maiden",1293.1692,251.21109
+"The Warrior",1435.1906,289.20776
+"The Smith",1352.3076,341.50647
+"The Mother",1434.6774,187.19037
+"The Crone",1386.4893,430.85428
+"Janos Slynt",-149.2046,279.83887
+"Despondent Man",-903.8705,-891.7939
+"Mossador",-591.7179,-805.8441
+"Son of the Harpy",-908.4253,-1093.9124
+"Faceless Man",-39.24017,-1174.5752
+"Street Tough #1",171.87791,-1099.1051
+"Street Tough #2",-98.590546,-1259.2146
+"Denys Mallister",-947.1689,109.87307
+"Mallister Supporter",-1019.7395,205.14212
+"Dwarf Hunter #1",1171.5261,288.68753
+"Dwarf Hunter #2",1131.184,380.60953
+"Lollys Stokeworth",1262.7007,-355.12262
+"Eyrie Guard",336.16534,-572.4258
+"Inn Waitress",436.0815,-553.92413
+"Ternesio Terys",590.4026,-1127.6843
+"Mance Rayder",-805.4479,376.78766
+"Sparring Boy",440.27817,699.53485
+"Samwell Stone",318.4489,769.8844
+"White Rat",1168.5934,-939.0555
+"Tywin Lannister",545.9475,-296.9804
+"Melara Hetherspoon",1460.9348,82.51998
+"Maggy the Frog",1464.3019,-37.829384
+"Shae",583.86475,-148.00574
+"Jojen Reed",-307.99274,870.4293
+"Ygritte",-1033.595,434.77567
+"Grenn",-613.55,581.88965
+"Pypar",-686.5298,400.5476
+"Goatherd",119.46405,-876.91095
+"Fennesz",-98.59256,-862.92126
+"Dongo",-1164.4126,880.3363
+"Donnel Hill",-956.9316,1003.1018
+"Cooper",-742.4399,1069.5597
+"Styr",-1113.3322,354.20547
+"Thenn Warg",-1176.6665,287.38715
+"Oberyn Martell",659.4144,-333.8943
+"Donnel Waynwood",-66.57855,743.2833
+"Little Bird",-5.389557,-1328.4404
+"Anya Waynwood",659.86694,535.54407
+"Vance Corbray",773.5374,510.27728
+"Adrack Humble",-326.28348,1300.0883
+"Ralf Kenning",-421.65085,1387.3661
+"Mole's Town Whore",-1214.7966,428.2663
+"Kegs",-1236.8785,571.0712
+"Black Jack Bulwer",-1314.5214,478.41357
+"Mully",-1296.8483,348.79913
+"Lysa Arryn",545.4863,455.2712
+"Rorge",-600.104,-565.94257
+"Biter",-530.70074,-457.33817
+"Old Man",-786.4736,80.779045
+"Manservant",-459.7022,-759.4411
+"Goatherd's Son",111.25194,-1360.9221
+"First Mate",-375.9258,1155.6582
+"Ironborn in Skiff",-532.14923,1228.7382
+"Bolton Guard",-516.52625,1116.5806
+"Salladhor Saan",-846.6615,1056.395
+"Bathhouse Prostitute",-643.6799,1162.9657
+"Morag",-636.92145,1027.5808
+"Sissy",-533.13745,960.01294
+"Rast",-530.0432,662.05414
+"Locke",-194.65565,488.9022
+"Clubfoot Karl",-545.8749,867.6956
+"Craster's Wife #2",-935.7397,1140.259
+"Craster's Wife #3",-830.22925,1194.2177
+"Elder Meereen Slave",-1129.8315,-909.0487
+"Valyrian Slave",-1025.9248,-1019.6126
+"Oznak zo Pahl",-192.02283,-829.5021
+"Olly's Mother",-1464.4572,215.26103
+"Guymon",-1465.6027,99.50107
+"Mole's Town Madam",-1337.6874,590.31085
+"Joffrey Baratheon",286.7164,53.08186
+"Dontos Hollard",272.10712,-255.83449
+"King Joffrey Baratheon Dwarf",687.4899,-111.90558
+"King Stannis Baratheon Dwarf",640.11774,-243.25328
+"King Renly Baratheon Dwarf",595.5289,-388.534
+"King Robb Stark Dwarf",720.81915,-199.14824
+"King Balon Greyjoy Dwarf",517.0825,-436.9285
+"Kayla",722.0631,-594.76105
+"Wight Wildling Girl",-81.12969,1190.191
+"Axell Florent",-1140.5643,185.6138
+"Tansy",3.5879993,1351.4641
+"Polliver",-302.17993,-464.9269
+"Innkeeper",197.81847,-787.7711
+"Innkeeper's Daughter",251.04333,-701.5602
+"Endrew Tarth",-1445.7216,-143.14912
+"Morgan's Friend",655.2136,-675.7881
+"Lord Blackmont",688.1868,-791.8941
+"Fruit Vendor",765.30316,-462.79468
+"Frey Soldier #1",-960.78937,-306.71164
+"Frey Soldier #2",-1037.5438,-248.21289
+"Desmond Crakehall",463.09955,-754.0243
+"Eldrick Sarsfield",519.3629,-656.6472
+"Grey Wind",121.85819,381.01184
+"Talisa Stark",745.0541,779.52734
+"Wendel Manderly",896.59076,806.8328
+"Frey Guard",-385.85904,943.5223
+"Roslin Frey",822.18,886.0396
+"Septon",930.48804,897.6891
+"Orell",-753.2371,679.0426
+"Hog Farmer",198.73901,801.9984
+"Merianne Frey",784.8579,986.0067
+"Mero",-49.619747,-960.37286
+"Prendahl na Ghezn",57.50095,-986.8175
+"Yunkai'i Whore",26.601004,-1465.5123
+"Steelshanks Walton",-306.4991,-263.96793
+"Violet",-230.70598,1245.835
+"Anguy",-587.20416,-288.76343
+"Ros",594.9884,219.98087
+"Rickard Karstark",576.3765,678.2513
+"Martyn Lannister",783.8083,1251.7072
+"Willem Lannister",989.1824,1110.7897
+"Kraznys mo Nakloz",-394.9559,-833.5912
+"Greizhen mo Ullhor",14.412148,-875.6015
+"Craster",-803.9529,772.48505
+"Jeor Mormont",-704.2455,569.8001
+"Bannen",-898.12836,926.9103
+"Tyrell Lady",724.46814,-988.0986
+"Sorcerer",650.3587,-924.76733
+"Master Torturer",-425.3513,1274.242
+"Genna",790.29974,-663.6423
+"Tortured Slave",-609.4952,-911.94653
+"Craster's Wife",-1390.8514,296.58612
+"Craster's Younger Wife",-1272.6586,696.513
+"Hoster Tully",884.09576,1002.95667
+"Riverlands Traveller",519.737,782.50305
+"Tyrell Servant",580.8735,-749.31604
+"King's Landing Tailor",1241.4081,51.90952
+"Warlock",272.52173,-1047.7302
+"Unsullied",-761.4735,-905.71387
+"Margaery's Handmaiden",1063.2844,-627.7681
+"Orphan Kid",1264.9653,-681.2353
+"Boat Commander",-1337.2987,-226.05493
+"Mirelle",1217.4459,-70.94939
+"Man of the Nightswatch",-658.085,1278.56
+"Kovarro",-397.7073,-1052.5836
+"Xaro Xhoan Daxos",-480.87576,-984.6637
+"Doreah",-267.07983,-1142.9514
+"Qhorin Halfhand",-894.78235,723.2981
+"Pyat Pree",-502.22897,-893.2075
+"Drogo",-170.8073,-1136.6597
+"Rhaego Targaryen",-161.39978,-1339.2853
+"Luwin",186.40282,637.0099
+"Dagmer Cleftjaw",-118.53175,1011.0693
+"Black Lorren",-111.590065,918.6179
+"Soldier Tom",1109.1577,589.56506
+"Stark Soldier",1080.0103,698.4164
+"Mandon Moore",742.2693,-4.754541
+"Singing Lannister Soldier",807.8928,-108.86015
+"Captain of the Archers",802.9915,62.36609
+"Hallyne",694.226,259.23877
+"Matthos Seaworth",-1128.0017,501.40314
+"Armeca",912.8751,-107.45044
+"Stark Messenger",644.21735,1321.1176
+"Jacks",987.4505,589.67267
+"Spice King",-483.54648,-1293.7339
+"Silk King",-603.1222,-1246.8171
+"Quaithe of the Shadow",-409.58023,-1390.4868
+"Alton Lannister",624.9239,398.10663
+"Torrhen Karstark",1024.6292,805.3904
+"King's Landing Rioter #1",-883.5995,-227.0158
+"King's Landing Rioter #2",-689.27966,-253.94548
+"King's Landing Rioter #3",-780.25433,-294.8501
+"Winterfell Shepherd",-166.82176,1128.6804
+"Drennan",-103.05504,1312.425
+"Irri",-355.1748,-1135.7443
+"Quent",1203.881,841.2573
+"Amory Lorch",82.527534,-530.7214
+"Farlen",-24.071352,1108.6954
+"The Tickler",157.88866,-640.60455
+"Qartheen Woman",-722.9756,-1270.5076
+"Reginald Lannister",506.04993,-933.38434
+"Protestor",1196.017,152.99417
+"Renly Baratheon",152.76874,-11.4502535
+"Tortured Prisoner",-102.02734,-684.26636
+"Old Woman Prisoner",-732.7256,-581.2498
+"Daisy",821.9359,223.13977
+"Wounded Lannister Soldier",1098.956,911.0853
+"Rennick",333.78674,-318.41953
+"Yoren",100.322075,153.47664
+"Lommy Greenhands",-415.6043,-490.45602
+"Timett",1014.96216,-295.18744
+"Drowned Priest",-1014.0725,688.0566
+"Colen of Greenpools",869.0868,142.23506
+"Lordsport Dockhand",95.13674,1443.3324
+"Captain's Daughter",-294.3746,1429.105
+"Rakharo",-270.742,-1038.1923
+"Goldcloak",-308.8572,771.28375
+"Tobho Mott",-238.07753,1046.1669
+"Mhaegen",905.39484,531.1376
+"Barra",965.27576,705.4172
+"Cressen",-1221.959,139.38176
+"Lord Portan",152.55908,1357.0632
+"Northern Lord",257.37506,1400.2634
+"Mirri Maz Duur",-192.39041,-962.9183
+"Leo Lefford",1180.057,-478.48755
+"Addam Marbrand",1157.6028,-578.3077
+"Jon Umber",411.79056,825.3446
+"Jonos Bracken",534.2261,1114.6017
+"Mordane",266.18768,267.65344
+"Marillion",552.395,325.38995
+"King's Landing Baker",-1311.1039,-620.85364
+"Street Urchin",-1342.1295,-484.1721
+"Chella",965.3076,-560.6564
+"Shagga",903.14087,-639.63257
+"Qotho",-364.6129,-965.1267
+"Stevron Frey",871.0866,1145.9248
+"Ryger Rivers",1034.152,996.7874
+"Royal Steward",433.4197,354.29263
+"Lannister Scout",436.51932,1156.1753
+"Lannister Messenger",1050.776,-502.82474
+"Mago",-249.22559,-1271.87
+"Othor",-1041.2078,573.09924
+"Jafer Flowers",-1168.8793,740.20435
+"Red Keep Stableboy",1002.3868,436.55054
+"Syrio Forel",736.09985,610.3297
+"Varly",663.9114,1124.617
+"Robert I Baratheon",336.79114,296.0778
+"Wine merchant",-368.81107,-1279.5841
+"Tomard",591.12256,1219.1223
+"Jaremy Rykker",-935.7058,629.78406
+"Viserys Targaryen",-157.77669,-1046.0598
+"Vardis Egen",736.31116,416.93338
+"Mord",853.95233,421.74588
+"Dothraki Crones",-294.02548,-1368.7461
+"Stiv",35.977844,1229.5416
+"Wallen",134.8516,1225.3197
+"Jory Cassel",188.81393,345.8331
+"Illyrio Mopatis",-207.5395,-724.0986
+"Hugh of the Vale",489.96103,172.77554
+"Lady",101.30812,658.7243
+"Mycah",290.83362,668.55396
+"Jhiqui",-58.09663,-1063.2423
+"Catspaw",331.32205,1089.3533
+"Jon Arryn",1249.2412,622.41675
+"Will",70.39733,775.368
+"Gared",-218.1905,1354.9407
+"Waymar Royce",-134.24205,1416.2988
