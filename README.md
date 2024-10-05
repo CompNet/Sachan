@@ -14,6 +14,7 @@ Sachan is free software: you can redistribute it and/or modify it under the term
 
 -----------------------------------------------------------------------
 
+
 If you use this source code or the associated dataset, please cite reference [[A'24](#references)].
 ```bibtex
 @Article{Amalvy2024c,
@@ -133,5 +134,5 @@ Tested with `Python` version 3.12 with the following packages:
 
 
 # References
-* **[A'24]** Amalvy, A.; Janickyj, M.; Mannion, S.; MacCarron, P.; Labatut, V. *Interconnected Kingdoms: Comparing 'A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks*, Social Network Analysis and Mining, 14:199, 2024.  [⟨hal-xxxxxxxx⟩](https://hal.archives-ouvertes.fr/hal-xxxxxxxx) - DOI: [10.1007/s13278-024-01365-z](https://doi.org/10.1007/s13278-024-01365-z)
+* **[A'24]** Amalvy, A.; Janickyj, M.; Mannion, S.; MacCarron, P.; Labatut, V. *Interconnected Kingdoms: Comparing 'A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks*, Social Network Analysis and Mining, 14:199, 2024.  [⟨hal-04722579⟩](https://hal.archives-ouvertes.fr/hal-04722579) - DOI: [10.1007/s13278-024-01365-z](https://doi.org/10.1007/s13278-024-01365-z)
 
