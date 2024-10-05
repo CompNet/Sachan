@@ -8,7 +8,7 @@ Sachan is free software: you can redistribute it and/or modify it under the term
 
 * Lab site: http://lia.univ-avignon.fr/
 * GitHub repo: https://github.com/CompNet/Sachan
-* Data: https:doi.org/10.5281/zenodo.13893061
+* Data: https://doi.org/10.5281/zenodo.13893061
 * Contacts: Vincent Labatut <vincent.labatut@univ-avignon.fr>, Pádraig MacCarron <padraig.maccarron@ul.ie>
 
 
@@ -26,7 +26,7 @@ Some of the scripts also allow to compute various descriptive statistics. Finall
 
 
 # Data
-The networks representing all three media are available online on [Zenodo](https:doi.org/10.5281/zenodo.13893061). This collection includes various types of dynamic graphs (instant vs. cumulative), computed using various narrative units: chapters for novels, scenes and chapters for comics, scene, blocks and episodes for the TV show. The Zenodo repository also includes the many files produced by the scripts. 
+The networks representing all three media are available online on [Zenodo](https://doi.org/10.5281/zenodo.13893061). This collection includes various types of dynamic graphs (instant vs. cumulative), computed using various narrative units: chapters for novels, scenes and chapters for comics, scene, blocks and episodes for the TV show. The Zenodo repository also includes the many files produced by the scripts. 
 
 ![StaticNet](/out/visualization/narratives/static_all.jpg)
 
