@@ -8,8 +8,8 @@ Sachan is free software: you can redistribute it and/or modify it under the term
 
 * Lab site: http://lia.univ-avignon.fr/
 * GitHub repo: https://github.com/CompNet/Sachan
-* Data: <TODO>
-* Contacts: Vincent Labatut <vincent.labatut@univ-avignon.fr> / Pádraig MacCarron <padraig.maccarron@ul.ie>
+* Data: https:doi.org/10.5281/zenodo.13893061
+* Contacts: Vincent Labatut <vincent.labatut@univ-avignon.fr>, Pádraig MacCarron <padraig.maccarron@ul.ie>
 
 
 -----------------------------------------------------------------------
@@ -26,7 +26,7 @@ Some of the scripts also allow to compute various descriptive statistics. Finall
 
 
 # Data
-The networks representing all three media are available online on [Zenodo](xxxxx). This collection includes various types of dynamic graphs (instant vs. cumulative), computed using various narrative units: chapters for novels, scenes and chapters for comics, scene, blocks and episodes for the TV show. The Zenodo repository also includes the many files produced by the scripts. 
+The networks representing all three media are available online on [Zenodo](https:doi.org/10.5281/zenodo.13893061). This collection includes various types of dynamic graphs (instant vs. cumulative), computed using various narrative units: chapters for novels, scenes and chapters for comics, scene, blocks and episodes for the TV show. The Zenodo repository also includes the many files produced by the scripts. 
 
 ![StaticNet](/out/visualization/narratives/static_all.jpg)
 
@@ -72,6 +72,7 @@ For the `Python` scripts, the process is similar:
    2. _(optional)_ Create and activate a virtual environment: `python -m venv env && source env/bin/activate`
    3. Install the required dependencies: `pip install -r src/requirements.txt`
 
+
 # Use
 In order to apply the `R` scripts:
 
@@ -88,7 +89,7 @@ In order to apply the `Python` scripts:
 
 See [the Narrative Matching README](./src/narrative_matching/README.md) for more details.
 
-These scripts will produce a number of files in folder `out`.
+These scripts produce a number of files in folder `out`.
 
 
 # Dependencies
@@ -121,5 +122,5 @@ Tested with `Python` version 3.12 with the following packages:
 
 
 # References
-* **[A'24]** <!-- Amalvy, A.; Janickyj, M.; Mannion, S.; MacCarron, P.; Labatut, V. *Interconnected Kingdoms: Comparing 'A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks*, Submitted, 2024.  [⟨hal-xxxxxxxx⟩](https://hal.archives-ouvertes.fr/hal-xxxxxxxx) - DOI: [xxxxxxxx](http://doi.org/xxxxxxxx) -->
+* **[A'24]** Amalvy, A.; Janickyj, M.; Mannion, S.; MacCarron, P.; Labatut, V. *Interconnected Kingdoms: Comparing 'A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks*, Social Network Analysis and Mining, 14:199, 2024.  [⟨hal-xxxxxxxx⟩](https://hal.archives-ouvertes.fr/hal-xxxxxxxx) - DOI: [10.1007/s13278-024-01365-z](https://doi.org/10.1007/s13278-024-01365-z)
 
