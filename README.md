@@ -15,6 +15,17 @@ Sachan is free software: you can redistribute it and/or modify it under the term
 -----------------------------------------------------------------------
 
 If you use this source code or the associated dataset, please cite reference [[A'24](#references)].
+```bibtex
+@Article{Amalvy2024c,
+  author    = {Amalvy, Arthur and Janickyj, Madeleine and Mannion, Shane and MacCarron, Pádraig and Labatut, Vincent},
+  title     = {Interconnected Kingdoms: Comparing `A Song of Ice and Fire' Crossmedia Adaptations Using Complex Networks},
+  journal   = {Social Network Analysis and Mining},
+  year      = {2024},
+  volume    = {14},
+  pages     = {199},
+  doi       = {10.1007/s13278-024-01365-z},
+}
+```
 
 
 # Description
